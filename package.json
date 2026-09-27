@@ -42,7 +42,8 @@
     "schedule:status": "tsx src/cli/schedule.ts status",
     "media:preview": "tsx src/cli/media-preview.ts",
     "video:reset": "tsx src/cli/video.ts reset",
-    "media:timeline": "tsx src/cli/media-timeline.ts"
+    "media:timeline": "tsx src/cli/media-timeline.ts",
+    "export": "tsx src/cli/export.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",
