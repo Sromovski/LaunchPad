@@ -41,7 +41,7 @@ Google redesigns these screens often. If a name below doesn't match, look for th
 **D. The YouTube API audit (why start now)**
 Google locks uploads from new, unaudited API projects to **private**, even when we ask for public. The fix is a free audit:
 10. Fill in the **YouTube API Services: Audit and Quota Extension Form** (search that name; it's on Google's support site).
-11. What to say (I'll draft exact answers when you're ready):
+11. What to say: **drafted in `docs/YOUTUBE_AUDIT.md`** (fill in the [BRACKETS]). The privacy policy is `docs/privacy/index.html`; switch on GitHub Pages (steps at the end of that file) so it's live at https://sromovski.github.io/LaunchPad/privacy/, and tell me which **contact email** to put in it (it will be public).
    - **What it is:** a private, single-user tool that uploads your own videos to your own channel after you approve each one by hand. No other users, no viewing or storing of other people's data.
    - **API use:** `videos.insert` only, about 1–2 uploads a day, with `selfDeclaredMadeForKids: true`.
    - They may ask for a **privacy policy URL** and a **screen recording** of the app. I can write a one-page privacy policy (e.g. hosted free on GitHub Pages from this repo) and you'd record the review site's approve flow.
