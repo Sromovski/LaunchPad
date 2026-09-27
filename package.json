@@ -12,7 +12,14 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "doctor": "tsx src/cli/doctor.ts"
+    "doctor": "tsx src/cli/doctor.ts",
+    "nasa:search": "tsx src/cli/nasa-search.ts",
+    "nasa:fetch": "tsx src/cli/nasa-fetch.ts",
+    "video:new": "tsx src/cli/video.ts new",
+    "video:status": "tsx src/cli/video.ts status",
+    "video:show": "tsx src/cli/video.ts show",
+    "run:start": "tsx src/cli/video.ts run-start",
+    "run:finish": "tsx src/cli/video.ts run-finish"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
