@@ -6,6 +6,7 @@ const clip = (o: Partial<RenderClip>): RenderClip => ({
   start_s: 0,
   end_s: 10,
   mode: 'blur_bg',
+  audio: 'mute',
   source_in_s: 0,
   why: '',
   local_path: 'C:/runs/1/assets/x.jpg',

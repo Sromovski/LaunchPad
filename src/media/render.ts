@@ -7,6 +7,8 @@
  */
 import type { EditClip } from './edit.js';
 import type { Loudness } from './probe.js';
+import { buildAudioGraph } from './audio-mix.js';
+import type { PauseWindow } from './timeline.js';
 import { FPS, H, KENBURNS_MAX_ZOOM, SAFE_BOTTOM_Y, W } from './layout.js';
 
 export const XFADE_S = 0.4;
@@ -29,6 +31,8 @@ export interface RenderPlanInput {
   duration_s: number;
   voicePath: string;
   loudness: Loudness;
+  /** Narration pauses in final time; clips with audio "full" are heard only inside them. */
+  windows?: PauseWindow[];
   /** Paths used inside the filter graph are relative to ffmpeg's cwd (the run dir) to avoid Windows drive-letter escaping. */
   captionsFile: string;
   fontsDir: string;
@@ -158,13 +162,12 @@ export function buildRenderPlan(p: RenderPlanInput): RenderPlan {
   // NASA JPEGs are full-range (yuvj420p); convert to TV range so every player shows the same levels.
   chains.push(`[${videoIn}]subtitles=${p.captionsFile}:fontsdir=${p.fontsDir},scale=out_range=tv,format=yuv420p[vout]`);
 
-  const L = p.loudness;
-  chains.push(
-    `[${audioIndex}:a]loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=${L.input_i}:measured_TP=${L.input_tp}:` +
-      `measured_LRA=${L.input_lra}:measured_thresh=${L.input_thresh}:offset=${L.target_offset}:linear=true,` +
-      // Hard peak limit after resampling (video 7 clipped at 0 dB): −2 dBFS leaves room for AAC overshoot. level=false: no make-up gain.
-      `aresample=48000,alimiter=limit=0.8:level=false:attack=5:release=50,apad=whole_dur=${f(p.duration_s)}[aout]`,
-  );
+  // Narration + any clips' own sound (heard only inside narration pauses), then the peak limiter.
+  const clipAudio = p.clips
+    .map((c, i) => ({ c, i }))
+    .filter(({ c }) => c.audio === 'full' && c.media_type === 'video')
+    .map(({ c, i }) => ({ inputIndex: i, start_s: c.start_s, end_s: c.end_s }));
+  chains.push(...buildAudioGraph({ voiceIndex: audioIndex, loudness: p.loudness, duration_s: p.duration_s, clips: clipAudio, windows: p.windows ?? [] }));
 
   const filter = chains.join(';\n');
   args.push(

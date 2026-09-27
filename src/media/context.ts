@@ -3,7 +3,7 @@
  * in one place: validated script, voice timings, timeline, normalized edit,
  * assets and the per-clip credit lines.
  */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type Database from 'better-sqlite3';
 import { z } from 'zod';
 import { runPath } from '../cli/_lib.js';
@@ -13,6 +13,9 @@ import { Edit, computeTimeline, normalizeEdit, type AssetInfo, type EditClip } f
 import type { AlignedWord, SegmentTiming } from './align.js';
 import type { CreditSpan } from './captions.js';
 import { probe } from './probe.js';
+import { MAX_TOTAL_PAUSE_S } from './edit.js';
+import { insertSilence, pauseWindows, shiftSegments, type PauseWindow } from './timeline.js';
+import { decodeWav, encodeWav } from './wav.js';
 
 export interface VoiceMeta {
   duration_s: number;
@@ -35,6 +38,10 @@ export interface EditContext {
   assets: Map<string, AssetRow>;
   credits: CreditSpan[];
   warnings: string[];
+  /** Narration pauses in final time ([] when none). Words from words.json must go through shiftWords(). */
+  windows: PauseWindow[];
+  /** Voice file to render (voice.wav, or voice-edit.wav with the pauses inserted). */
+  voiceFile: string;
 }
 
 const readJson = (path: string) => {
@@ -62,16 +69,32 @@ export function loadEditContext(db: Database.Database, videoId: number): EditCon
     const v = p.streams.find((s) => s.codec_type === 'video');
     a.width = v?.width;
     a.height = v?.height;
+    a.has_audio = p.streams.some((s) => s.codec_type === 'audio');
     if (a.media_type === 'video') a.duration_s = p.duration;
   }
 
-  const { duration_s, end_card_start_s } = computeTimeline(voice.segments);
+  // Sound moments: pause the narration so a clip's own audio is heard. Everything after a pause shifts.
+  const pauseTotal = edit.pauses.reduce((n, p) => n + p.seconds, 0);
+  if (pauseTotal > MAX_TOTAL_PAUSE_S) throw new Error(`edit.json problems:\n- pauses add ${pauseTotal} s; max ${MAX_TOTAL_PAUSE_S} s`);
+  const lastSegment = voice.segments[voice.segments.length - 1]?.index;
+  if (edit.pauses.some((p) => p.after_segment === lastSegment)) throw new Error('edit.json problems:\n- no pause after the closing question (the end card follows it)');
+  const windows = pauseWindows(voice.segments, edit.pauses);
+  const segments = shiftSegments(voice.segments, windows);
+  let voiceFile = 'voice.wav';
+  if (windows.length) {
+    const { samples, sampleRate } = decodeWav(readFileSync(runPath(videoId, 'voice.wav')));
+    writeFileSync(runPath(videoId, 'voice-edit.wav'), encodeWav(insertSilence(samples, sampleRate, windows), sampleRate));
+    voiceFile = 'voice-edit.wav';
+  }
+  const { duration_s, end_card_start_s } = computeTimeline(segments);
   const { clips, errors, warnings } = normalizeEdit(edit, duration_s, rows);
   if (errors.length) throw new Error(`edit.json problems:\n- ${errors.join('\n- ')}`);
 
   const assets = new Map(rows.map((r) => [r.nasa_id, r]));
   const credits = clips.map((c) => ({ text: creditLine(assets.get(c.nasa_id)!), start: c.start_s, end: c.end_s }));
-  return { videoId, script, voice, duration_s, end_card_start_s, clips, assets, credits, warnings };
+  const clipsWithoutSound = clips.filter((c) => c.audio === 'full' && !windows.some((w) => w.start_s < c.end_s && w.end_s > c.start_s));
+  for (const c of clipsWithoutSound) warnings.push(`clip at ${c.start_s.toFixed(1)} s has audio "full" but no narration pause overlaps it, so its sound is never heard`);
+  return { videoId, script, voice: { ...voice, segments }, duration_s, end_card_start_s, clips, assets, credits, warnings, windows, voiceFile };
 }
 
 export const WordsFile = z.object({

@@ -2,6 +2,7 @@
 import { writeFileSync } from 'node:fs';
 import { buildAss, coveredWordCount, type CaptionInput } from '../media/captions.js';
 import { loadEditContext, loadWords } from '../media/context.js';
+import { shiftWords } from '../media/timeline.js';
 import { args, logger, main, requireVideoId, runPath } from './_lib.js';
 
 const a = args({ video: { type: 'string' } });
@@ -10,7 +11,7 @@ await main((db) => {
   const videoId = requireVideoId(a.video);
   const log = logger(videoId, 'media-captions');
   const ctx = loadEditContext(db, videoId);
-  const { words } = loadWords(videoId);
+  const words = shiftWords(loadWords(videoId).words, ctx.windows); // no-op without pauses
 
   const input: CaptionInput = {
     words,

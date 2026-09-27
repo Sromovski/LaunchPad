@@ -28,13 +28,19 @@ export const EditClip = z.object({
     .object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), w: z.number().min(0.1).max(1), h: z.number().min(0.1).max(1) })
     .refine((r) => r.x + r.w <= 1.0001 && r.y + r.h <= 1.0001, 'crop must stay inside the picture')
     .optional(),
+  /** Video only: 'full' plays the clip's own sound, but only inside narration pauses (see Edit.pauses). */
+  audio: z.enum(['mute', 'full']).default('mute'),
   /** Video only: where in the source clip to start. */
   source_in_s: z.number().min(0).default(0),
   why: z.string().default(''),
 });
 export type EditClip = z.infer<typeof EditClip>;
 
-export const Edit = z.object({ clips: z.array(EditClip).min(1) });
+/** Pause the narration after a script line so a clip's own sound can be heard (index into voice.json segments). */
+export const EditPause = z.object({ after_segment: z.number().int().min(0), seconds: z.number().min(0.5).max(8) });
+export const MAX_TOTAL_PAUSE_S = 12;
+
+export const Edit = z.object({ clips: z.array(EditClip).min(1), pauses: z.array(EditPause).default([]) });
 export type Edit = z.infer<typeof Edit>;
 
 export const MIN_CLIP_S = 1.5;
@@ -61,6 +67,7 @@ export interface AssetInfo {
   duration_s?: number | null;
   width?: number;
   height?: number;
+  has_audio?: boolean;
 }
 
 /** Filling 1080×1920 from a smaller still looks soft past this; prefer blur_bg. */
@@ -102,6 +109,8 @@ export function normalizeEdit(
     if (a.media_type === 'video' && a.duration_s && c.source_in_s + len > a.duration_s + TOLERANCE_S) {
       errors.push(`clip ${n}: needs ${len.toFixed(1)} s from ${c.source_in_s} s but source is ${a.duration_s.toFixed(1)} s`);
     }
+    if (c.audio === 'full' && a.media_type !== 'video') errors.push(`clip ${n}: audio "full" is for video clips only`);
+    if (c.audio === 'full' && a.media_type === 'video' && a.has_audio === false) errors.push(`clip ${n}: ${c.nasa_id} has no sound track`);
     if ((c.mode === 'pan' || c.mode === 'pano') && c.direction && !['left', 'right'].includes(c.direction)) {
       errors.push(`clip ${n}: ${c.mode} direction must be left|right`);
     }

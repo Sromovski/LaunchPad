@@ -27,13 +27,14 @@ await main((db) => {
   });
 
   log('measuring voice loudness');
-  const loudness = measureLoudness(runPath(videoId, 'voice.wav'));
+  const loudness = measureLoudness(runPath(videoId, ctx.voiceFile));
 
   const plan = buildRenderPlan({
     clips,
     duration_s: ctx.duration_s,
-    voicePath: 'voice.wav',
+    voicePath: ctx.voiceFile,
     loudness,
+    windows: ctx.windows,
     captionsFile: 'captions.ass',
     fontsDir: relative(dir, `${PROJECT_ROOT}/${FONTS_DIR}`).replace(/\\/g, '/'),
     output: 'final.mp4',
@@ -45,6 +46,7 @@ await main((db) => {
       {
         duration_s: ctx.duration_s,
         end_card_start_s: ctx.end_card_start_s,
+        pauses: ctx.windows,
         clips,
         credits: ctx.credits,
         loudness,
