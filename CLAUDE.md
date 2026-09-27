@@ -82,7 +82,7 @@ idea → researched → scripted → fact_checked → rendered → qa_passed →
 in_review → approved → (Phase 4) scheduled → published
 in_review → changes_requested → scripted (loop, max 2 revisions, then rejected)
 in_review → rejected
-any step failure → failed (with error), retryable once
+any step failure → failed (with error), retryable once automatically; after that only Thomas can reset it (`npm run video:reset -- --video <id> --reason "..."`, denied to agents), e.g. when the failure was a pipeline bug that has been fixed
 ```
 
 Implement transitions in one module (`src/db/status.ts`) that throws on illegal moves. Unit-test it thoroughly.

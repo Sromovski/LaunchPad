@@ -5,6 +5,7 @@ import {
   MAX_REVISIONS,
   STATUSES,
   canTransition,
+  manualReset,
   nextState,
   type Status,
   type VideoState,
@@ -186,5 +187,24 @@ describe('failure and retry', () => {
 describe('terminal statuses', () => {
   it.each<Status>(['rejected', 'published'])('%s has no way out', (from) => {
     for (const to of STATUSES) expect(canTransition(at(from), to)).toBe(false);
+  });
+});
+
+describe('manualReset (Thomas only, after a pipeline bug)', () => {
+  it('puts a failed video back where it failed, even after the automatic retry was used', () => {
+    let s = nextState(at('rendered'), 'failed');
+    s = nextState(s, 'rendered'); // automatic retry used
+    s = nextState(s, 'failed');
+    expect(canTransition(s, 'rendered')).toBe(false); // the automatic rule still says no
+    const r = manualReset(s);
+    expect(r).toMatchObject({ status: 'rendered', failed_from_status: null, retry_count: 1 });
+  });
+
+  it('only works on failed videos', () => {
+    expect(() => manualReset(at('in_review'))).toThrow(IllegalTransitionError);
+  });
+
+  it('refuses when the failed step is unknown', () => {
+    expect(() => manualReset(at('failed', { failed_from_status: null }))).toThrow(/unknown/);
   });
 });

@@ -5,11 +5,12 @@
  *   video:show   -- --video <id>
  *   run:start    -- --video <id> --step <step> [--agent <name>]
  *   run:finish   -- --video <id> --step <step> --ok true|false
+ *   video:reset  -- --video <id> --reason "..." (Thomas only; denied to agents in .claude/settings.json)
  */
 import { relative } from 'node:path';
 import { PROJECT_ROOT } from '../db/index.js';
-import { STATUSES, transitionVideo, type Status } from '../db/status.js';
-import { args, getVideo, main, requireVideoId, runDir } from './_lib.js';
+import { STATUSES, manualReset, transitionVideo, type Status, type VideoState } from '../db/status.js';
+import { args, getVideo, logger, main, requireVideoId, runDir } from './_lib.js';
 
 const command = process.argv[2];
 process.argv.splice(2, 1);
@@ -21,6 +22,7 @@ const a = args({
   step: { type: 'string' },
   agent: { type: 'string' },
   ok: { type: 'string' },
+  reason: { type: 'string' },
 });
 
 await main((db) => {
@@ -64,7 +66,20 @@ await main((db) => {
       db.prepare("UPDATE runs SET finished_at = datetime('now'), ok = ? WHERE id = ?").run(a.ok === 'true' ? 1 : 0, open.id);
       return { run_id: open.id };
     }
+    case 'reset': {
+      const id = requireVideoId(a.video);
+      if (!a.reason?.trim()) throw new Error('--reason is required (why this failure should not count)');
+      const before = db.prepare('SELECT status, revision_count, retry_count, failed_from_status, error FROM videos WHERE id = ?').get(id) as (VideoState & { error: string | null }) | undefined;
+      if (!before) throw new Error(`Video ${id} not found`);
+      const after = manualReset(before);
+      db.transaction(() => {
+        db.prepare("UPDATE videos SET status = ?, failed_from_status = NULL, error = NULL, updated_at = datetime('now') WHERE id = ?").run(after.status, id);
+        db.prepare("INSERT INTO runs (video_id, step, agent, finished_at, ok, log_path) VALUES (?, 'manual-reset', 'Thomas', datetime('now'), 1, ?)").run(id, `logs/manual-reset.log`);
+      })();
+      logger(id, 'manual-reset')(`reset ${before.status} -> ${after.status}. Previous error: ${before.error ?? '(none)'}. Reason: ${a.reason.trim()}`);
+      return { video_id: id, from: 'failed', to: after.status, reason: a.reason.trim() };
+    }
     default:
-      throw new Error(`unknown command "${command}" (new|status|show|run-start|run-finish)`);
+      throw new Error(`unknown command "${command}" (new|status|show|run-start|run-finish|reset)`);
   }
 });

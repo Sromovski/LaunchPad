@@ -143,3 +143,15 @@ export function transitionVideo(
     return next;
   })();
 }
+
+/**
+ * Thomas-only escape hatch (not used by any agent; `video:reset` is denied in
+ * .claude/settings.json). Puts a failed video back at the step it failed, even
+ * after its one automatic retry — for failures caused by a pipeline bug that has
+ * since been fixed. The automatic rule in nextState() is unchanged.
+ */
+export function manualReset(state: VideoState): VideoState {
+  if (state.status !== 'failed') throw new IllegalTransitionError(state.status, 'reset', 'only failed videos can be reset');
+  if (!state.failed_from_status) throw new IllegalTransitionError(state.status, 'reset', 'failed step is unknown');
+  return { ...state, status: state.failed_from_status, failed_from_status: null };
+}
