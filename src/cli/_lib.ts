@@ -9,7 +9,8 @@ import { parseArgs, type ParseArgsConfig } from 'node:util';
 import type Database from 'better-sqlite3';
 import { PROJECT_ROOT, openDb } from '../db/index.js';
 
-export const RUNS_ROOT = resolve(PROJECT_ROOT, 'runs');
+/** Overridable so tests (e.g. Playwright) can point at a throwaway folder. */
+export const RUNS_ROOT = process.env.LAUNCHPAD_RUNS ? resolve(process.env.LAUNCHPAD_RUNS) : resolve(PROJECT_ROOT, 'runs');
 
 export function runDir(videoId: number): string {
   const dir = resolve(RUNS_ROOT, String(videoId));

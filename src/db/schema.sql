@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS videos (
   final_path         TEXT,
   duration_s         REAL,
   error              TEXT,
+  -- Publishing text (drafted by qa-reviewer, edited by Thomas in the review site)
+  description        TEXT,
+  hashtags           TEXT CHECK (hashtags IS NULL OR json_valid(hashtags)),
   -- State-machine bookkeeping (see src/db/status.ts, docs/DECISIONS.md)
   revision_count     INTEGER NOT NULL DEFAULT 0,
   retry_count        INTEGER NOT NULL DEFAULT 0,

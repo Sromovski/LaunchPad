@@ -46,6 +46,26 @@ export interface FetchResult {
   reused: boolean;
 }
 
+/**
+ * If Thomas already cleared this exact asset (same nasa_id AND same credit)
+ * while approving another video, reuse that decision. Never overrides `rejected`.
+ */
+export function priorClearance(
+  db: Database.Database,
+  nasaId: string,
+  credit: string | null,
+  videoId: number,
+): { video_id: number; rights_note: string } | undefined {
+  if (!credit) return undefined;
+  return db
+    .prepare(
+      `SELECT video_id, rights_note FROM assets
+       WHERE nasa_id = ? AND credit = ? AND video_id != ? AND rights_status = 'clear' AND rights_note LIKE '%cleared by Thomas%'
+       ORDER BY id DESC LIMIT 1`,
+    )
+    .get(nasaId, credit, videoId) as { video_id: number; rights_note: string } | undefined;
+}
+
 export async function fetchAsset(db: Database.Database, videoId: number, nasaId: string, dir: string, log: Logger): Promise<FetchResult> {
   const item = await getItem(nasaId);
   const hrefs = await getAssetManifest(nasaId);
@@ -67,6 +87,14 @@ export async function fetchAsset(db: Database.Database, videoId: number, nasaId:
 
   const rights = creditCheckFor(item);
   log(`credit: ${rights.credit ?? '(none)'} → ${rights.status} ${rights.note}`);
+  if (rights.status === 'needs_review') {
+    const prior = priorClearance(db, item.nasa_id, rights.credit, videoId);
+    if (prior) {
+      rights.status = 'clear';
+      rights.note = `${rights.note}; previously ${prior.rights_note.match(/cleared by Thomas[^;]*/)?.[0] ?? 'cleared by Thomas'} (seen on video ${prior.video_id})`;
+      log(`reusing Thomas's earlier clearance from video ${prior.video_id}`);
+    }
+  }
 
   // Sidecar with the full metadata, so rights can be audited later without the API.
   writeFileSync(`${localPath}.json`, JSON.stringify({ item, download_url: url, rights }, null, 2));

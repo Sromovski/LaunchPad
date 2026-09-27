@@ -91,6 +91,12 @@ export function saveRender(db: Database.Database, videoId: number, r: Render) {
 }
 
 export function saveQaReview(db: Database.Database, videoId: number, q: QaReview) {
-  db.prepare("UPDATE videos SET title = ?, updated_at = datetime('now') WHERE id = ?").run(q.title, videoId);
+  // The review site edits these; Phase 4 publishes them.
+  db.prepare("UPDATE videos SET title = ?, description = ?, hashtags = ?, updated_at = datetime('now') WHERE id = ?").run(
+    q.title,
+    q.description,
+    JSON.stringify(q.hashtags),
+    videoId,
+  );
   return { pass: q.pass, title: q.title };
 }

@@ -29,5 +29,7 @@ function migrate(db: Database.Database) {
     if (!cols.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`);
   };
   addColumn('sources', 'ref', 'TEXT');
+  addColumn('videos', 'description', 'TEXT');
+  addColumn('videos', 'hashtags', 'TEXT');
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_sources_ref ON sources(video_id, ref)');
 }
