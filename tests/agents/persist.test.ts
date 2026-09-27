@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
 import { openDb } from '../../src/db/index.js';
-import { saveFactCheck, saveResearch, saveScript } from '../../src/agents/persist.js';
+import { knownSourceIds, saveFactCheck, saveResearch, saveScript } from '../../src/agents/persist.js';
 import { FactCheck, QaReview, Research, Script } from '../../src/agents/schemas.js';
 import type { ScriptValidation } from '../../src/script/validate.js';
 
@@ -149,5 +149,22 @@ describe('fact-check extra sources (§2.5: every fact maps to a stored source)',
       extra_sources: [{ id: 's9', url: 'https://en.wikipedia.org/wiki/Mars', title: 't', excerpt: 'e' }],
     });
     expect(r.success).toBe(false);
+  });
+});
+
+describe('knownSourceIds', () => {
+  it('includes research sources and sources the fact-checker stored', () => {
+    saveResearch(db, vid, research());
+    saveScript(db, vid, script(), okValidation);
+    saveFactCheck(
+      db,
+      vid,
+      FactCheck.parse({
+        claims: [{ claim: 'x', line_index: 0, source_id: 's7', verdict: 'supported' }],
+        pass: true,
+        extra_sources: [{ id: 's7', url: 'https://science.nasa.gov/x', title: 't', excerpt: 'e' }],
+      }),
+    );
+    expect([...knownSourceIds(db, vid, research())].sort()).toEqual(['s1', 's2', 's3', 's7']);
   });
 });

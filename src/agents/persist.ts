@@ -106,3 +106,13 @@ export function saveQaReview(db: Database.Database, videoId: number, q: QaReview
   );
   return { pass: q.pass, title: q.title };
 }
+
+/**
+ * Source ids a script may cite: research.json plus every source stored for the
+ * video (e.g. extra_sources the fact-checker saved). Run 7 showed the scriptwriter
+ * had to copy those into research.json by hand to pass validation.
+ */
+export function knownSourceIds(db: Database.Database, videoId: number, research: Research): Set<string> {
+  const stored = db.prepare('SELECT ref FROM sources WHERE video_id = ? AND ref IS NOT NULL').all(videoId) as { ref: string }[];
+  return new Set([...research.sources.map((s) => s.id), ...stored.map((s) => s.ref)]);
+}

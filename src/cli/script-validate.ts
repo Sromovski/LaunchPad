@@ -6,11 +6,12 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { Research, Script } from '../agents/schemas.js';
 import { validateScript } from '../script/validate.js';
+import { knownSourceIds } from '../agents/persist.js';
 import { args, logger, main, requireVideoId, runPath, sha256 } from './_lib.js';
 
 const a = args({ video: { type: 'string' } });
 
-await main(() => {
+await main((db) => {
   const videoId = requireVideoId(a.video);
   const log = logger(videoId, 'script-validate');
   const scriptFile = runPath(videoId, 'script.json');
@@ -21,7 +22,7 @@ await main(() => {
   const raw = readFileSync(scriptFile, 'utf8');
   const script = Script.parse(JSON.parse(raw));
   const research = Research.parse(JSON.parse(readFileSync(researchFile, 'utf8')));
-  const result = validateScript(script, new Set(research.sources.map((s) => s.id)));
+  const result = validateScript(script, knownSourceIds(db, videoId, research));
 
   writeFileSync(runPath(videoId, 'script-validation.json'), JSON.stringify({ ...result, script_sha256: sha256(raw) }, null, 2));
   log(`${result.ok ? 'PASS' : 'FAIL'} words=${result.word_count} grade=${result.reading_grade} ${result.errors.join('; ')}`);

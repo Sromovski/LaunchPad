@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { z } from 'zod';
 import { STEP_FILES, Research, type Step } from '../agents/schemas.js';
-import { saveFactCheck, saveQaReview, saveRender, saveResearch, saveScript } from '../agents/persist.js';
+import { knownSourceIds, saveFactCheck, saveQaReview, saveRender, saveResearch, saveScript } from '../agents/persist.js';
 import { PROJECT_ROOT } from '../db/index.js';
 import { validateScript } from '../script/validate.js';
 import { args, getVideo, logger, main, requireVideoId, runPath } from './_lib.js';
@@ -41,7 +41,7 @@ await main((db) => {
     case 'script': {
       const script = parsed.data as z.infer<typeof STEP_FILES.script.schema>;
       const research = Research.parse(JSON.parse(readFileSync(runPath(videoId, 'research.json'), 'utf8')));
-      const v = validateScript(script, new Set(research.sources.map((s) => s.id)));
+      const v = validateScript(script, knownSourceIds(db, videoId, research));
       saved = { ...saveScript(db, videoId, script, v), word_count: v.word_count, reading_grade: v.reading_grade };
       break;
     }
