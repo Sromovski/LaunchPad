@@ -91,6 +91,7 @@ test('request changes needs notes, then updates the DB', async ({ page, request 
   await page.getByTestId('notes').fill('Show the Sun sooner.');
   await page.getByTestId('confirm').click();
   await expect(page.getByText('Changes requested. Press J for the next video.')).toBeVisible();
+  await expect(page.getByTestId('revision-pending')).toContainText('next automatic run');
   expect(await statusOf(request, 3)).toBe('changes_requested');
 });
 
@@ -105,4 +106,6 @@ test('history shows decided videos and filters them', async ({ page }) => {
 test('queue is empty after every video is decided', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Nothing to review' })).toBeVisible();
+  // The video sent back for changes is listed as waiting, not lost.
+  await expect(page.getByTestId('revisions')).toContainText('Needs changes');
 });

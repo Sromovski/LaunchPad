@@ -43,4 +43,4 @@ If the researcher writes `{ "error": ... }` because nothing usable exists (not a
 
 ## 5. Finish
 If the topic came from the backlog: `npm run topics:mark -- --topic "<topic>" --status done --note "video <id> in review"`.
-Report to Thomas: video id, title, duration, rights warnings (any `needs_review` assets), and that it is waiting at http://localhost:5173.
+Report to Thomas: video id, title, duration, rights warnings (any `needs_review` assets), and that it is waiting at http://launchpad.localhost.

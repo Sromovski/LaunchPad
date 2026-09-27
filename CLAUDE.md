@@ -163,7 +163,7 @@ Each agent reads/writes JSON files in `runs/<id>/` and calls CLI scripts. Every 
 
 ## 9. Review site (local)
 
-Run with `npm run review` → opens `http://localhost:5173`. Local only, no auth.
+Run with `npm run review` → opens `http://launchpad.localhost`. Local only, no auth.
 
 Must-haves:
 - **Queue view:** cards for videos `in_review`, newest first, with thumbnail, title, duration, topic, and badges (rights warning, revision count).

@@ -15,7 +15,7 @@ You are the **orchestrator** again (same rules as /make-video): run subagents, v
 ## 1. Choose where to restart
 Decide from the notes (when unsure, restart from the script):
 - **Words, facts, tone, length, the hook or the question** → restart from the **scriptwriter**: `npm run video:status -- --video <id> --to scripted`
-- **Only pictures, timing, zoom, framing, captions** (no word changes) → restart from the **producer**: `npm run video:status -- --video <id> --to fact_checked`
+- **Only pictures, timing, zoom, framing, captions, or how the narrator pronounces/paces the same words** (no word changes) → restart from the **producer** (it re-runs `media:tts`, so voice fixes land): `npm run video:status -- --video <id> --to fact_checked`
 
 Either move counts as one revision.
 
@@ -35,4 +35,6 @@ Same per-step routine as /make-video (`run:start` → Agent → `agent:validate`
 Tell the qa-reviewer that Thomas may have edited the title/description/hashtags in the review site (`npm run video:show -- --video <id>` → `video.title`, `video.description`, `video.hashtags`); it should start from his wording and change only what the revision made wrong.
 
 ## 3. Finish
-Report to Thomas: video id, what the notes asked for, what changed (script diff summary or edit changes), new duration, revision count (n of 2), and that it's back at http://localhost:5173.
+This skill also runs unattended: scheduled runs pick up any `changes_requested` video before making a new one. Nobody is watching, so never ask questions — decide from the notes and explain your choice in the report.
+
+Report to Thomas: video id, what the notes asked for, what changed (script diff summary or edit changes), new duration, revision count (n of 2), and that it's back at http://launchpad.localhost.

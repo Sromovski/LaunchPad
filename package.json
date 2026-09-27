@@ -30,7 +30,7 @@
     "qa:check": "tsx src/cli/qa.ts check",
     "qa:frames": "tsx src/cli/qa.ts frames",
     "media:test-clip": "tsx src/cli/media-test-clip.ts",
-    "review": "vite --config review-site/vite.config.ts --open",
+    "review": "vite --config review-site/vite.config.ts",
     "test:e2e": "playwright test",
     "topics:next": "tsx src/cli/topics.ts next",
     "topics:mark": "tsx src/cli/topics.ts mark",

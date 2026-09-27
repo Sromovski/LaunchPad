@@ -47,6 +47,13 @@ export function DecisionPanel({ id, status, rightsNeeded, mode, setMode, onDone 
     return () => removeEventListener('keydown', onKey);
   }, [mode, setMode]);
 
+  if (status === 'changes_requested') {
+    return (
+      <p className="mt-4 text-center text-muted" data-testid="revision-pending">
+        {done ? `${done} ` : ''}Claude applies your notes at the next automatic run (7:00 or 15:00), or right away with /revise-video {id} in Claude Code. The new version comes back to the queue.
+      </p>
+    );
+  }
   if (status !== 'in_review') {
     return <p className="mt-4 text-center text-muted">{done ?? `${STATUS_LABEL[status] ?? status}. Nothing to decide.`}</p>;
   }

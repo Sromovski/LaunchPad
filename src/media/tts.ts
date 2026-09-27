@@ -4,6 +4,10 @@
  * every line starts without guessing, and the hook starts right away.
  */
 import { concatWithGaps, nonSilentRange } from './wav.js';
+import { spokenForm } from './speech.js';
+
+/** Bump when spokenForm() rules change so cached voice.wav files are regenerated. */
+export const SPEECH_RULES_VERSION = 1;
 
 export const KOKORO_MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';
 export const DEFAULT_VOICE = process.env.LAUNCHPAD_VOICE ?? 'af_heart';
@@ -61,7 +65,8 @@ export async function synthesize(texts: string[], opts: TtsOptions = {}): Promis
   const parts: Float32Array[] = [];
   let sampleRate = 24000;
   for (const text of texts) {
-    const out = await tts.generate(text, { voice, speed });
+    // Speak numbers as words ("2,400" → "two thousand four hundred"); segments keep the script text for captions.
+    const out = await tts.generate(spokenForm(text), { voice, speed });
     sampleRate = out.sampling_rate;
     const [a, b] = nonSilentRange(out.audio, 0.005);
     parts.push(out.audio.slice(a, b));

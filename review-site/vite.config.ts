@@ -5,6 +5,10 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 const root = resolve(import.meta.dirname);
+// Browsers resolve any *.localhost name to this PC, so http://launchpad.localhost needs no hosts-file edit.
+// Port 80 hides the port in the URL; tests pass REVIEW_PORT to use another one.
+const port = Number(process.env.REVIEW_PORT ?? 80);
+export const REVIEW_URL = `http://launchpad.localhost${port === 80 ? '' : `:${port}`}/`;
 
 export default defineConfig({
   root,
@@ -16,8 +20,10 @@ export default defineConfig({
   ],
   server: {
     host: '127.0.0.1', // local only (§9: no auth)
-    port: Number(process.env.REVIEW_PORT ?? 5173),
+    port,
     strictPort: true,
+    allowedHosts: ['launchpad.localhost', 'localhost', '127.0.0.1'],
+    open: process.env.REVIEW_PORT ? false : REVIEW_URL,
     fs: { allow: [resolve(root, '..')] }, // fonts live in ../assets/fonts
   },
 });

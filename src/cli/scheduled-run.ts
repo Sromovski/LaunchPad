@@ -72,8 +72,15 @@ try {
   } catch {
     /* unsupported: skip the check */
   }
+  // Thomas's "Request changes" notes come first: a waiting revision is handled before any new video.
+  // (It doesn't add to the queue, so the queue cap doesn't apply.)
+  const revision = a.topic
+    ? undefined
+    : (db.prepare("SELECT id, title FROM videos WHERE status = 'changes_requested' ORDER BY updated_at, id LIMIT 1").get() as { id: number; title: string | null } | undefined);
+  const label = revision ? `revise video ${revision.id}: ${revision.title ?? ''}`.trim() : topic;
+
   const pre = evaluatePreflight({
-    inReview,
+    inReview: revision ? 0 : inReview,
     tools: [
       { name: 'ffmpeg', ok: !!ffmpegPath() },
       { name: 'ffprobe', ok: !!ffprobePath() },
@@ -81,18 +88,18 @@ try {
       { name: 'whisper model', ok: !!whisperModelPath() },
     ],
     freeBytes,
-    nextTopic: topic,
+    nextTopic: revision ? label : topic,
   });
   if (!pre.go) {
-    finish({ outcome: pre.outcome === 'skip' ? 'skip' : 'preflight_fail', topic, error: pre.reasons.join('; ') });
+    finish({ outcome: pre.outcome === 'skip' ? 'skip' : 'preflight_fail', topic: label, error: pre.reasons.join('; ') });
     process.exitCode = pre.outcome === 'skip' ? 0 : 1;
   } else {
     // ---- Headless run -----------------------------------------------------------------
-    const prompt = a.topic ? `/make-video ${a.topic}` : '/make-video';
+    const prompt = revision ? `/revise-video ${revision.id}` : a.topic ? `/make-video ${a.topic}` : '/make-video';
     const outPath = resolve(LOG_DIR, `${stamp}-run${runId}.json`);
     const errPath = resolve(LOG_DIR, `${stamp}-run${runId}.err.log`);
     const startedAt = (db.prepare('SELECT started_at FROM automation_runs WHERE id = ?').get(runId) as { started_at: string }).started_at;
-    db.prepare('UPDATE automation_runs SET topic = ?, log_path = ? WHERE id = ?').run(topic, outPath, runId);
+    db.prepare('UPDATE automation_runs SET topic = ?, log_path = ? WHERE id = ?').run(label, outPath, runId);
 
     const t0 = Date.now();
     const child = spawn(claudeBin(), ['-p', prompt, '--permission-mode', 'dontAsk', '--output-format', 'json'], {
@@ -115,14 +122,15 @@ try {
     if (stderr.trim()) writeFileSync(errPath, stderr);
 
     // The video this run created (if any) — judged from the DB, not from the agent's summary.
-    const video = db
-      .prepare('SELECT id, status, error FROM videos WHERE created_at >= ? ORDER BY id DESC LIMIT 1')
-      .get(startedAt) as { id: number; status: string; error: string | null } | undefined;
+    type V = { id: number; status: string; error: string | null } | undefined;
+    const video = revision
+      ? (db.prepare('SELECT id, status, error FROM videos WHERE id = ?').get(revision.id) as V)
+      : (db.prepare('SELECT id, status, error FROM videos WHERE created_at >= ? ORDER BY id DESC LIMIT 1').get(startedAt) as V);
     const stats = parseClaudeJson(stdout);
     const outcome = decideOutcome({ timedOut, exitCode, stats, videoStatus: video?.status ?? null });
     finish({
       outcome,
-      topic,
+      topic: label,
       video_id: video?.id ?? null,
       duration_s: Math.round((Date.now() - t0) / 1000),
       num_turns: stats?.num_turns ?? null,
