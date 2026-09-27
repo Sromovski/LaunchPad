@@ -1,0 +1,98 @@
+import { describe, expect, it } from 'vitest';
+import { XFADE_S, buildRenderPlan, type RenderClip, type RenderPlanInput } from '../../src/media/render.js';
+
+const clip = (o: Partial<RenderClip>): RenderClip => ({
+  nasa_id: 'X',
+  start_s: 0,
+  end_s: 10,
+  mode: 'blur_bg',
+  source_in_s: 0,
+  why: '',
+  local_path: 'C:/runs/1/assets/x.jpg',
+  media_type: 'image',
+  ...o,
+});
+
+const plan = (clips: RenderClip[], duration = 40) =>
+  buildRenderPlan({
+    clips,
+    duration_s: duration,
+    voicePath: 'voice.wav',
+    loudness: { input_i: '-20', input_tp: '-3', input_lra: '4', input_thresh: '-30', target_offset: '0.1' },
+    captionsFile: 'captions.ass',
+    fontsDir: '../../assets/fonts',
+    output: 'final.mp4',
+  } satisfies RenderPlanInput);
+
+const three = [
+  clip({ nasa_id: 'A', start_s: 0, end_s: 12, mode: 'kenburns' }),
+  clip({ nasa_id: 'B', start_s: 12, end_s: 25, mode: 'pan', direction: 'left' }),
+  clip({ nasa_id: 'C', start_s: 25, end_s: 40, mode: 'blur_bg', media_type: 'video', local_path: 'v.mp4', source_in_s: 3 }),
+];
+
+describe('buildRenderPlan', () => {
+  const { args, filter } = plan(three);
+
+  it('outputs the §6 spec: H.264 yuv420p 30 fps, AAC 48 kHz, exact duration', () => {
+    const s = args.join(' ');
+    expect(s).toContain('-c:v libx264');
+    expect(s).toContain('-pix_fmt yuv420p -color_range tv');
+    expect(s).toContain('-r 30');
+    expect(s).toContain('-c:a aac');
+    expect(s).toContain('-ar 48000');
+    expect(s).toContain('-t 40');
+    expect(args.at(-1)).toBe('final.mp4');
+  });
+
+  it('loops stills and seeks into video sources', () => {
+    const s = args.join(' ');
+    expect(s).toContain(`-loop 1 -framerate 30 -t ${12 + XFADE_S} -i C:/runs/1/assets/x.jpg`);
+    expect(s).toContain('-ss 3 -t 15 -i v.mp4'); // last clip is not extended
+  });
+
+  it('every clip is scaled/cropped to 1080×1920', () => {
+    for (const i of [0, 1, 2]) expect(filter).toContain(`[c${i}]`);
+    expect(filter.match(/crop=1080:1920/g)?.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('ken burns zoom never exceeds 1.15×', () => {
+    expect(filter).toContain('(1+0.15*t/12.4)');
+  });
+
+  it('pan left moves from the right edge to the left', () => {
+    expect(filter).toContain("x='(iw-ow)*(1-t/13.4)'");
+  });
+
+  it('video blur_bg has no zoom on the foreground', () => {
+    expect(filter).toContain('[fgsrc2]scale=1080:-2[fg2]');
+  });
+
+  it('crossfades at the clip boundaries so the timeline stays exact', () => {
+    expect(filter).toContain('xfade=transition=fade:duration=0.4:offset=12[x1]');
+    expect(filter).toContain('xfade=transition=fade:duration=0.4:offset=25[vx]');
+  });
+
+  it('burns in captions with the bundled fonts', () => {
+    expect(filter).toContain('[vx]subtitles=captions.ass:fontsdir=../../assets/fonts,scale=out_range=tv,format=yuv420p[vout]');
+  });
+
+  it('two-pass loudnorm to −14 LUFS, padded to the full duration', () => {
+    expect(filter).toContain('loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=-20');
+    expect(filter).toContain('apad=whole_dur=40');
+    expect(filter).toContain('[3:a]'); // voice is the input after the 3 clips
+  });
+
+  it('single clip skips the crossfade', () => {
+    const p = plan([clip({ end_s: 40 })]);
+    expect(p.filter).not.toContain('xfade');
+    expect(p.filter).toContain('[c0]subtitles=');
+  });
+});
+
+describe('edge trim', () => {
+  it('shaves still-image borders but not video', () => {
+    const { filter } = plan(three);
+    expect(filter).toContain('[0:v]fps=30,setsar=1,crop=iw-8:ih-8');
+    expect(filter).toContain('[2:v]fps=30,setsar=1,split');
+  });
+});

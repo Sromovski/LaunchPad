@@ -26,6 +26,12 @@ describe('computeTimeline', () => {
 });
 
 describe('normalizeEdit', () => {
+  it('warns when a fill mode upscales a small still', () => {
+    const small = [{ ...assets[0]!, width: 1024, height: 1024 }];
+    expect(normalizeEdit(edit([{ nasa_id: 'IMG', start_s: 0, end_s: 40, mode: 'kenburns' }]), 40, small).warnings.join()).toMatch(/1\.9×/);
+    expect(normalizeEdit(edit([{ nasa_id: 'IMG', start_s: 0, end_s: 40, mode: 'blur_bg' }]), 40, small).warnings).toEqual([]);
+  });
+
   it('accepts a contiguous edit and snaps the last clip to the duration', () => {
     const r = normalizeEdit(
       edit([

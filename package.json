@@ -23,7 +23,12 @@
     "script:validate": "tsx src/cli/script-validate.ts",
     "agent:validate": "tsx src/cli/agent-validate.ts",
     "media:tts": "tsx src/cli/media-tts.ts",
-    "media:voices": "tsx src/cli/voice-samples.ts"
+    "media:voices": "tsx src/cli/voice-samples.ts",
+    "media:align": "tsx src/cli/media-align.ts",
+    "media:captions": "tsx src/cli/media-captions.ts",
+    "media:render": "tsx src/cli/media-render.ts",
+    "qa:check": "tsx src/cli/qa.ts check",
+    "qa:frames": "tsx src/cli/qa.ts frames"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

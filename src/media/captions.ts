@@ -153,7 +153,7 @@ export function buildAss(input: CaptionInput): string {
   ev(0, input.endCardStart, input.duration, 'Dim', `{\\fad(300,0)}${box}`);
   const cx = Math.round((CAPTION.marginL + SAFE_RIGHT_X) / 2);
   const cy = Math.round(SAFE_BOTTOM_Y / 2) + 40;
-  ev(3, input.endCardStart, input.duration, 'EndCard', `{\\an5\\pos(${cx},${cy})\\fad(300,0)}${wrap(assEscape(input.endQuestion), 15)}`);
+  ev(3, input.endCardStart, input.duration, 'EndCard', `{\\an5\\pos(${cx},${cy})\\fad(300,0)}${wrap(assEscape(input.endQuestion), 18)}`);
 
   return [...header, ...events, ''].join('\n');
 }

@@ -127,5 +127,6 @@ describe('helpers', () => {
   });
   it('wraps text', () => {
     expect(wrap('What color would your sunset be?', 15)).toBe('What color\\Nwould your\\Nsunset be?');
+    expect(wrap('If you stood on Mars at sunset, which color would you look for?', 18)).not.toMatch(/\\N\w+\?$/);
   });
 });

@@ -4,7 +4,7 @@
  * never writes ffmpeg itself.
  */
 import { z } from 'zod';
-import { END_CARD_MIN_S, FPS } from './layout.js';
+import { END_CARD_MIN_S, FPS, H, W } from './layout.js';
 import type { SegmentTiming } from './align.js';
 
 export const EditClip = z.object({
@@ -46,11 +46,21 @@ export interface AssetInfo {
   rights_status: string;
   credit: string | null;
   duration_s?: number | null;
+  width?: number;
+  height?: number;
 }
 
+/** Filling 1080×1920 from a smaller still looks soft past this; prefer blur_bg. */
+export const MAX_FILL_UPSCALE = 1.6;
+
 /** Validates an edit against the timeline + assets and snaps it to cover exactly [0, duration]. */
-export function normalizeEdit(edit: Edit, duration: number, assets: AssetInfo[]): { clips: EditClip[]; errors: string[] } {
+export function normalizeEdit(
+  edit: Edit,
+  duration: number,
+  assets: AssetInfo[],
+): { clips: EditClip[]; errors: string[]; warnings: string[] } {
   const errors: string[] = [];
+  const warnings: string[] = [];
   const byId = new Map(assets.map((a) => [a.nasa_id, a]));
   const clips = edit.clips.map((c) => ({ ...c }));
 
@@ -80,6 +90,12 @@ export function normalizeEdit(edit: Edit, duration: number, assets: AssetInfo[])
       errors.push(`clip ${n}: needs ${len.toFixed(1)} s from ${c.source_in_s} s but source is ${a.duration_s.toFixed(1)} s`);
     }
     if (c.mode === 'pan' && c.direction && !['left', 'right'].includes(c.direction)) errors.push(`clip ${n}: pan direction must be left|right`);
+    if (c.mode !== 'blur_bg' && a.width && a.height) {
+      const upscale = Math.max(W / a.width, H / a.height);
+      if (upscale > MAX_FILL_UPSCALE) {
+        warnings.push(`clip ${n}: ${c.mode} upscales ${c.nasa_id} (${a.width}×${a.height}) ${upscale.toFixed(1)}× — will look soft; consider blur_bg`);
+      }
+    }
   });
-  return { clips, errors };
+  return { clips, errors, warnings };
 }
