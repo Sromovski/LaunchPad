@@ -120,6 +120,15 @@ describe('buildAss', () => {
   });
 });
 
+describe('zero-length events', () => {
+  it('are never emitted (libass stops rendering everything if one is a drawing)', () => {
+    const ass = buildAss({ words: [], endQuestionSegment: -1, endQuestion: '', endCardStart: 5, duration: 5, credits: [{ text: 'Image: NASA', start: 0, end: 5 }] });
+    const d = ass.split('\n').filter((l) => l.startsWith('Dialogue:'));
+    expect(d).toHaveLength(1);
+    expect(d[0]).toContain(',Credit,');
+  });
+});
+
 describe('helpers', () => {
   it('formats ASS time', () => {
     expect(assTime(0)).toBe('0:00:00.00');

@@ -89,8 +89,45 @@ export function evaluate(f: QaFacts): { pass: boolean; checks: QaCheck[] } {
   return { pass: checks.every((c) => c.ok), checks };
 }
 
-/** Frame times for visual review: hook, four spread through the body, and the end card. */
-export function frameTimes(duration: number, endCardStart: number): number[] {
-  const body = [0.2, 0.4, 0.6, 0.8].map((p) => Math.round(duration * p * 100) / 100);
-  return [1.0, ...body, Math.round(((endCardStart + duration) / 2) * 100) / 100];
+export const MIN_FRAMES = 6;
+/** Stay this far from a cut so a frame never lands mid-crossfade. */
+const CUT_MARGIN_S = 0.5;
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * Frame times for visual review: the hook, the middle of EVERY clip (so a
+ * short clip can't go unseen), and the end card — topped up to MIN_FRAMES
+ * with frames spread through the longest clips.
+ */
+export function frameTimes(duration: number, endCardStart: number, clips: { start_s: number; end_s: number }[] = []): number[] {
+  const times = [1.0, ...clips.map((c) => (c.start_s + c.end_s) / 2), (endCardStart + duration) / 2];
+  const cuts = clips.slice(1).map((c) => c.start_s);
+  const nearCut = (t: number) => cuts.some((c) => Math.abs(t - c) < CUT_MARGIN_S);
+  const tooClose = (t: number) => times.some((x) => Math.abs(x - t) < 1);
+
+  // Top up: split the widest gaps between chosen frames.
+  for (let guard = 0; times.length < MIN_FRAMES && guard < 50; guard++) {
+    const sorted = [...times].sort((a, b) => a - b);
+    const bounds = [0, ...sorted, duration];
+    let best = -1;
+    let bestGap = 0;
+    for (let i = 0; i < bounds.length - 1; i++) {
+      const gap = bounds[i + 1]! - bounds[i]!;
+      if (gap > bestGap) {
+        bestGap = gap;
+        best = i;
+      }
+    }
+    let t = (bounds[best]! + bounds[best + 1]!) / 2;
+    if (nearCut(t)) t += CUT_MARGIN_S * 1.5;
+    if (tooClose(t) || t >= duration) break;
+    times.push(t);
+  }
+  // Drop near-duplicates (e.g. last clip's middle ≈ end-card frame); the kept one is still inside that clip.
+  const out: number[] = [];
+  for (const t of times.map(r2).filter((x) => x > 0 && x < duration).sort((a, b) => a - b)) {
+    if (out.length === 0 || t - out[out.length - 1]! >= 0.5) out.push(t);
+  }
+  return out;
 }

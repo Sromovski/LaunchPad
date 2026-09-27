@@ -17,7 +17,7 @@ const a = args({ video: { type: 'string' } });
 interface RenderConfig {
   duration_s: number;
   end_card_start_s: number;
-  clips: { nasa_id: string }[];
+  clips: { nasa_id: string; start_s: number; end_s: number }[];
   credits: { text: string }[];
 }
 
@@ -42,7 +42,7 @@ await main((db) => {
   if (command === 'frames') {
     const dir = runPath(videoId, 'frames');
     mkdirSync(dir, { recursive: true });
-    const frames = frameTimes(cfg.duration_s, cfg.end_card_start_s).map((t, i) => {
+    const frames = frameTimes(cfg.duration_s, cfg.end_card_start_s, cfg.clips).map((t, i) => {
       const file = `frame-${i + 1}.png`;
       run(ffmpegBin(), ['-y', '-loglevel', 'error', '-ss', String(t), '-i', finalPath, '-frames:v', '1', `${dir}/${file}`]);
       return { file: `frames/${file}`, t };

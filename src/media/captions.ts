@@ -123,8 +123,11 @@ export function buildAss(input: CaptionInput): string {
     'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
   ];
   const events: string[] = [];
-  const ev = (layer: number, start: number, end: number, style: string, text: string) =>
+  // Never emit zero-length events: libass drops ALL rendering when a zero-length drawing (\p1) is present.
+  const ev = (layer: number, start: number, end: number, style: string, text: string) => {
+    if (assTime(end) <= assTime(start)) return;
     events.push(`Dialogue: ${layer},${assTime(start)},${assTime(end)},${style},,0,0,0,,${text}`);
+  };
 
   // Captions (everything except the closing question, which the end card shows).
   const spoken = input.words.filter((w) => w.segment !== input.endQuestionSegment);

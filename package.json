@@ -28,7 +28,8 @@
     "media:captions": "tsx src/cli/media-captions.ts",
     "media:render": "tsx src/cli/media-render.ts",
     "qa:check": "tsx src/cli/qa.ts check",
-    "qa:frames": "tsx src/cli/qa.ts frames"
+    "qa:frames": "tsx src/cli/qa.ts frames",
+    "media:test-clip": "tsx src/cli/media-test-clip.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

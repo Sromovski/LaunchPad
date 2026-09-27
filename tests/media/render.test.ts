@@ -121,3 +121,27 @@ describe('focus + zoom on stills', () => {
     expect(() => plan([clip({ end_s: 40, width: undefined })])).toThrow(/width\/height/);
   });
 });
+describe('pano (panoramas)', () => {
+  // Real case: PIA24935 is 4884×958.
+  const pano = (o: Partial<RenderClip> = {}) =>
+    plan([clip({ end_s: 10, mode: 'pano', width: 4884, height: 958, ...o })], 10).filter;
+
+  it('shows a tall band (≤1.2× upscale) instead of filling the frame', () => {
+    // (958-8)·1.2 = 1140 → capped at 1100; width 4876·1100/950 = 5646
+    expect(pano()).toContain('[fgsrc0]scale=5646:1100,crop=1080:1100:');
+  });
+
+  it('slides at most 80 px/s, centred on the focus', () => {
+    const f = pano();
+    // travel = 800 px over 10 s, centred: centre = 0.5·5646 − 540 = 2283 → start 1883
+    expect(f).toContain("x='1883+800*t/10'");
+  });
+
+  it('left direction slides the other way', () => {
+    expect(pano({ direction: 'left' })).toContain("x='2683+-800*t/10'");
+  });
+
+  it('band sits in the middle of the safe area', () => {
+    expect(pano()).toContain('overlay=x=0:y=218');
+  });
+});

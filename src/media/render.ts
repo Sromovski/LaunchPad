@@ -10,6 +10,9 @@ import type { Loudness } from './probe.js';
 import { FPS, H, KENBURNS_MAX_ZOOM, SAFE_BOTTOM_Y, W } from './layout.js';
 
 export const XFADE_S = 0.4;
+/** pano: band height cap, max upscale, and slide speed (px/s) so short clips don't whip past. */
+export const PANO = { maxBandH: 1100, maxUpscale: 1.2, speedPxPerS: 80 } as const;
+
 /** Gentle zoom on stills shown over a blurred background. */
 const BLUR_BG_ZOOM = 1.08;
 
@@ -68,6 +71,25 @@ function clipChain(c: RenderClip, i: number, d: number): string {
     case 'pan': {
       const progress = c.direction === 'left' ? `(1-t/${f(d)})` : `(t/${f(d)})`;
       return `${src},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H}:x='(iw-ow)*${progress}':y='(ih-oh)/2',${tail}`;
+    }
+    case 'pano': {
+      if (!c.width || !c.height) throw new Error(`pano clip ${c.nasa_id} needs width/height`);
+      const srcW = c.width - (isImage ? 8 : 0);
+      const srcH = c.height - (isImage ? 8 : 0);
+      const bandH = Math.round(Math.min(PANO.maxBandH, srcH * PANO.maxUpscale) / 2) * 2;
+      const scaledW = Math.round((srcW * bandH) / srcH / 2) * 2;
+      const maxX = Math.max(0, scaledW - W);
+      // Slide a limited distance around focus.x instead of sweeping the whole panorama.
+      const travel = Math.min(maxX, PANO.speedPxPerS * d);
+      const centre = Math.min(maxX, Math.max(0, (c.focus?.x ?? 0.5) * scaledW - W / 2));
+      const start = Math.min(maxX - travel, Math.max(0, centre - travel / 2));
+      const [x0, x1] = c.direction === 'left' ? [start + travel, start] : [start, start + travel];
+      return (
+        `${src},split[bgsrc${i}][fgsrc${i}];` +
+        `[bgsrc${i}]${cover},boxblur=40:4,eq=brightness=-0.15:saturation=1.1[bg${i}];` +
+        `[fgsrc${i}]scale=${scaledW}:${bandH},crop=${W}:${bandH}:x='${f(x0)}+${f(x1 - x0)}*t/${f(d)}':y=0[fg${i}];` +
+        `[bg${i}][fg${i}]overlay=x=0:y=${Math.round((SAFE_BOTTOM_Y - bandH) / 2)},${tail}`
+      );
     }
     case 'kenburns': {
       const z = zoomExpr(c.zoom ?? KENBURNS_MAX_ZOOM, d, c.direction);

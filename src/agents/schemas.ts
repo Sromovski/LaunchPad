@@ -78,7 +78,7 @@ export const Render = z.object({
         start_s: z.number().min(0),
         end_s: z.number().positive(),
         nasa_id: nonEmpty,
-        mode: z.enum(['blur_bg', 'pan', 'kenburns']),
+        mode: z.enum(['blur_bg', 'pan', 'kenburns', 'pano']),
         why: z.string(),
       }),
     )

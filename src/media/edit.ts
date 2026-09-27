@@ -11,8 +11,12 @@ export const EditClip = z.object({
   nasa_id: z.string().min(1),
   start_s: z.number().min(0),
   end_s: z.number().positive(),
-  /** blur_bg: fit width over a blurred copy (default). pan: fill height, slide sideways. kenburns: fill frame, slow zoom (stills). */
-  mode: z.enum(['blur_bg', 'pan', 'kenburns']).default('blur_bg'),
+  /**
+   * blur_bg: fit width over a blurred copy (default). pan: fill the frame, slide sideways.
+   * kenburns: fill frame, slow zoom (stills). pano: panoramas — a tall band over a blurred copy,
+   * sliding slowly across part of the picture (centred on focus.x).
+   */
+  mode: z.enum(['blur_bg', 'pan', 'kenburns', 'pano']).default('blur_bg'),
   /** pan: which way the view moves. kenburns / blur_bg stills: zoom in or out. */
   direction: z.enum(['left', 'right', 'in', 'out']).optional(),
   /** Stills: point to zoom toward, as fractions of the picture (0,0 = top-left). Default: centre. */
@@ -93,8 +97,13 @@ export function normalizeEdit(
     if (a.media_type === 'video' && a.duration_s && c.source_in_s + len > a.duration_s + TOLERANCE_S) {
       errors.push(`clip ${n}: needs ${len.toFixed(1)} s from ${c.source_in_s} s but source is ${a.duration_s.toFixed(1)} s`);
     }
-    if (c.mode === 'pan' && c.direction && !['left', 'right'].includes(c.direction)) errors.push(`clip ${n}: pan direction must be left|right`);
-    if (c.mode !== 'blur_bg' && a.width && a.height) {
+    if ((c.mode === 'pan' || c.mode === 'pano') && c.direction && !['left', 'right'].includes(c.direction)) {
+      errors.push(`clip ${n}: ${c.mode} direction must be left|right`);
+    }
+    if (c.mode === 'pano' && a.width && a.height && a.width / a.height < 1.8) {
+      warnings.push(`clip ${n}: pano is meant for wide pictures; ${c.nasa_id} is ${a.width}×${a.height}`);
+    }
+    if ((c.mode === 'pan' || c.mode === 'kenburns') && a.width && a.height) {
       const upscale = Math.max(W / a.width, H / a.height);
       if (upscale > MAX_FILL_UPSCALE) {
         warnings.push(`clip ${n}: ${c.mode} upscales ${c.nasa_id} (${a.width}×${a.height}) ${upscale.toFixed(1)}× — will look soft; consider blur_bg`);

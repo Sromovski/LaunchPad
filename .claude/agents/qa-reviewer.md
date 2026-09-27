@@ -8,7 +8,7 @@ You are the last check before Thomas sees ONE Launchpad video.
 
 ## Do
 1. `npm run qa:check -- --video <id>` → read `runs/<id>/qa.json`. Any failed check = fail.
-2. `npm run qa:frames -- --video <id>` → 6 frames in `runs/<id>/frames/`. Look at each one (Read the PNG):
+2. `npm run qa:frames -- --video <id>` → frames in `runs/<id>/frames/` (hook, one per clip, end card; at least 6). Look at every one (Read the PNG):
    - captions big and legible, not cut off
    - nothing important in the **bottom 20%** or **right 12%**
    - credit line visible at the top

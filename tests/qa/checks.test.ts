@@ -59,10 +59,39 @@ describe('evaluate', () => {
 });
 
 describe('frameTimes', () => {
-  it('returns 6 frames: hook, 4 body, end card', () => {
-    const t = frameTimes(40, 35);
-    expect(t).toHaveLength(6);
+  // Video 2's real edit: the 33.2–36.8 s clip was missed by the old fixed times.
+  const clips = [
+    { start_s: 0, end_s: 5.1 },
+    { start_s: 5.1, end_s: 9.9 },
+    { start_s: 9.9, end_s: 24.7 },
+    { start_s: 24.7, end_s: 33.2 },
+    { start_s: 33.2, end_s: 36.8 },
+    { start_s: 36.8, end_s: 41.4 },
+  ];
+
+  it('puts a frame inside every clip, plus the hook and the end card', () => {
+    const t = frameTimes(41.4, 37.2, clips);
     expect(t[0]).toBe(1);
-    expect(t[5]).toBe(37.5);
+    expect(t.at(-1)).toBeGreaterThan(37.2); // lands on the end card
+    for (let i = 1; i < t.length; i++) expect(t[i]! - t[i - 1]!).toBeGreaterThanOrEqual(0.5); // no near-duplicates
+    for (const c of clips) expect(t.some((x) => x > c.start_s && x < c.end_s), `clip ${c.start_s}`).toBe(true);
+  });
+
+  it('always returns at least 6 frames, even with one clip', () => {
+    const t = frameTimes(40, 35, [{ start_s: 0, end_s: 40 }]);
+    expect(t.length).toBeGreaterThanOrEqual(6);
+    expect([...t].sort((a, b) => a - b)).toEqual(t);
+  });
+
+  it('keeps top-up frames away from crossfades', () => {
+    const t = frameTimes(40, 35, [
+      { start_s: 0, end_s: 20 },
+      { start_s: 20, end_s: 40 },
+    ]);
+    for (const x of t) expect(Math.abs(x - 20)).toBeGreaterThanOrEqual(0.5);
+  });
+
+  it('works without clip info (old behaviour: spread frames)', () => {
+    expect(frameTimes(40, 35).length).toBeGreaterThanOrEqual(6);
   });
 });

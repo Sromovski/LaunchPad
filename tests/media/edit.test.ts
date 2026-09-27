@@ -76,3 +76,10 @@ describe('focus/zoom schema', () => {
     expect(() => Edit.parse({ clips: [{ nasa_id: 'IMG', start_s: 0, end_s: 40, focus: { x: 1.2, y: 0.5 } }] })).toThrow();
   });
 });
+
+describe('pano validation', () => {
+  it('warns when pano is used on a picture that is not wide', () => {
+    const square = [{ ...assets[0]!, width: 1024, height: 1024 }];
+    expect(normalizeEdit(Edit.parse({ clips: [{ nasa_id: 'IMG', start_s: 0, end_s: 40, mode: 'pano' }] }), 40, square).warnings.join()).toMatch(/wide/);
+  });
+});
