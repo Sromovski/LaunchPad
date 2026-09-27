@@ -10,6 +10,8 @@ const clip = (o: Partial<RenderClip>): RenderClip => ({
   why: '',
   local_path: 'C:/runs/1/assets/x.jpg',
   media_type: 'image',
+  width: 1352,
+  height: 1088,
   ...o,
 });
 
@@ -94,5 +96,28 @@ describe('edge trim', () => {
     const { filter } = plan(three);
     expect(filter).toContain('[0:v]fps=30,setsar=1,crop=iw-8:ih-8');
     expect(filter).toContain('[2:v]fps=30,setsar=1,split');
+  });
+});
+
+describe('focus + zoom on stills', () => {
+  it('blur_bg zooms inside a fixed box toward the focus point', () => {
+    const { filter } = plan([clip({ end_s: 40, focus: { x: 0.34, y: 0.59 }, zoom: 1.15, direction: 'in' })]);
+    // box = 1080 wide, height from the trimmed 1344×1080 source → 868
+    expect(filter).toContain("scale=w='trunc(1080*(1+0.15*t/40)/2)*2':h=-2:eval=frame,crop=1080:868:x='0.34*(1080*(1+0.15*t/40)-1080)':y='0.59*(868*(1+0.15*t/40)-868)'");
+  });
+
+  it('defaults to a gentle centred zoom', () => {
+    const { filter } = plan([clip({ end_s: 40 })]);
+    expect(filter).toContain("(1+0.08*t/40)");
+    expect(filter).toContain("x='0.5*(1080*(1+0.08*t/40)-1080)'");
+  });
+
+  it('kenburns honours focus', () => {
+    const { filter } = plan([clip({ end_s: 40, mode: 'kenburns', focus: { x: 0.2, y: 0.8 } })]);
+    expect(filter).toContain("crop=1080:1920:x='0.2*(1080*(1+0.15*t/40)-1080)':y='0.8*(1920*(1+0.15*t/40)-1920)'");
+  });
+
+  it('refuses a still without dimensions', () => {
+    expect(() => plan([clip({ end_s: 40, width: undefined })])).toThrow(/width\/height/);
   });
 });

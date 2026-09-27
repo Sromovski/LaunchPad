@@ -69,3 +69,10 @@ describe('normalizeEdit', () => {
     expect(r.errors.join()).toMatch(/source is 20/);
   });
 });
+
+describe('focus/zoom schema', () => {
+  it('rejects zoom above the 1.15× cap and focus outside the picture', () => {
+    expect(() => Edit.parse({ clips: [{ nasa_id: 'IMG', start_s: 0, end_s: 40, zoom: 1.3 }] })).toThrow();
+    expect(() => Edit.parse({ clips: [{ nasa_id: 'IMG', start_s: 0, end_s: 40, focus: { x: 1.2, y: 0.5 } }] })).toThrow();
+  });
+});

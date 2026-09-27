@@ -7,8 +7,13 @@ import { concatWithGaps, nonSilentRange } from './wav.js';
 
 export const KOKORO_MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';
 export const DEFAULT_VOICE = process.env.LAUNCHPAD_VOICE ?? 'af_heart';
-/** Slightly slower than default: the audience is 6–10. */
-export const DEFAULT_SPEED = 0.95;
+/** Slower than Kokoro's default: the audience is 6–10. Thomas asked for ~10% slower than 0.95 after video 1. */
+export const DEFAULT_SPEED = 0.86;
+
+/** Pauses scale with speed so the whole video slows evenly, not just the words. */
+export const DEFAULT_GAP_MS = 400;
+export const DEFAULT_LEAD_MS = 150;
+export const DEFAULT_TAIL_MS = 300;
 
 export interface TtsOptions {
   voice?: string;
@@ -63,9 +68,9 @@ export async function synthesize(texts: string[], opts: TtsOptions = {}): Promis
   }
 
   const ms = (v: number) => Math.round((v / 1000) * sampleRate);
-  const gap = ms(opts.gapMs ?? 350);
-  const lead = ms(opts.leadMs ?? 150);
-  const tail = ms(opts.tailMs ?? 300);
+  const gap = ms(opts.gapMs ?? DEFAULT_GAP_MS);
+  const lead = ms(opts.leadMs ?? DEFAULT_LEAD_MS);
+  const tail = ms(opts.tailMs ?? DEFAULT_TAIL_MS);
 
   const segments: SpokenSegment[] = [];
   let off = lead;

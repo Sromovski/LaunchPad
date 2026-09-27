@@ -16,6 +16,9 @@ const BLUR_BG_ZOOM = 1.08;
 export interface RenderClip extends EditClip {
   local_path: string;
   media_type: string;
+  /** Source pixel size — needed to frame stills over the blurred background. */
+  width?: number;
+  height?: number;
 }
 
 export interface RenderPlanInput {
@@ -42,6 +45,18 @@ function zoomExpr(max: number, d: number, direction: EditClip['direction']): str
   return direction === 'out' ? `(${f(max)}-${k}*t/${f(d)})` : `(1+${k}*t/${f(d)})`;
 }
 
+/**
+ * Crop offsets that keep the focus point fixed on screen while zooming.
+ * For a box w×h scaled by z, x = fx·(w·z − w) pins the point at fx.
+ * Written in terms of z (not iw/ih): crop reads iw/ih once at startup, before
+ * the per-frame scale has grown the picture, so iw−ow would always be 0.
+ */
+function focusXY(c: EditClip, w: number, h: number, z: string): string {
+  const fx = f(c.focus?.x ?? 0.5);
+  const fy = f(c.focus?.y ?? 0.5);
+  return `x='${fx}*(${w}*${z}-${w})':y='${fy}*(${h}*${z}-${h})'`;
+}
+
 function clipChain(c: RenderClip, i: number, d: number): string {
   const isImage = c.media_type === 'image';
   // Stills: shave 4 px per edge — some NASA JPEGs have coloured sensor/border rows that show as lines.
@@ -55,15 +70,21 @@ function clipChain(c: RenderClip, i: number, d: number): string {
       return `${src},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H}:x='(iw-ow)*${progress}':y='(ih-oh)/2',${tail}`;
     }
     case 'kenburns': {
-      const z = zoomExpr(KENBURNS_MAX_ZOOM, d, c.direction);
-      return `${src},${cover},scale=w='trunc(${W}*${z}/2)*2':h='trunc(${H}*${z}/2)*2':eval=frame,crop=${W}:${H},${tail}`;
+      const z = zoomExpr(c.zoom ?? KENBURNS_MAX_ZOOM, d, c.direction);
+      return `${src},${cover},scale=w='trunc(${W}*${z}/2)*2':h='trunc(${H}*${z}/2)*2':eval=frame,crop=${W}:${H}:${focusXY(c, W, H, z)},${tail}`;
     }
     case 'blur_bg':
     default: {
       // Foreground fits the width and is centred in the safe area (above the platform UI band).
-      const fgScale = isImage
-        ? `scale=w='trunc(${W}*${zoomExpr(BLUR_BG_ZOOM, d, c.direction)}/2)*2':h=-2:eval=frame`
-        : `scale=${W}:-2`;
+      // Stills zoom *inside* a fixed picture box (the box doesn't grow), toward the focus point.
+      let fgScale = `scale=${W}:-2`;
+      if (isImage) {
+        if (!c.width || !c.height) throw new Error(`still ${c.nasa_id} needs width/height to frame`);
+        // Source loses 8 px per axis to the edge trim above.
+        const boxH = Math.round((W * (c.height - 8)) / (c.width - 8) / 2) * 2;
+        const z = zoomExpr(c.zoom ?? BLUR_BG_ZOOM, d, c.direction);
+        fgScale = `scale=w='trunc(${W}*${z}/2)*2':h=-2:eval=frame,crop=${W}:${boxH}:${focusXY(c, W, boxH, z)}`;
+      }
       return (
         `${src},split[bgsrc${i}][fgsrc${i}];` +
         `[bgsrc${i}]${cover},boxblur=40:4,eq=brightness=-0.15:saturation=1.1[bg${i}];` +

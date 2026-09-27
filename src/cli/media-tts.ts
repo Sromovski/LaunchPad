@@ -5,7 +5,7 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { loadValidatedScript } from '../script/load.js';
-import { synthesize, DEFAULT_SPEED, DEFAULT_VOICE } from '../media/tts.js';
+import { synthesize, DEFAULT_GAP_MS, DEFAULT_LEAD_MS, DEFAULT_SPEED, DEFAULT_TAIL_MS, DEFAULT_VOICE } from '../media/tts.js';
 import { encodeWav } from '../media/wav.js';
 import { args, logger, main, requireVideoId, runPath, sha256 } from './_lib.js';
 
@@ -24,7 +24,7 @@ await main(async () => {
   const voice = a.voice ?? DEFAULT_VOICE;
   const speed = a.speed ? Number(a.speed) : DEFAULT_SPEED;
   const texts = [script.hook, ...script.lines.map((l) => l.text), script.end_question].map((t) => t.trim());
-  const key = sha256(JSON.stringify({ raw, voice, speed }));
+  const key = sha256(JSON.stringify({ raw, voice, speed, gap: DEFAULT_GAP_MS, lead: DEFAULT_LEAD_MS, tail: DEFAULT_TAIL_MS }));
 
   const wavPath = runPath(videoId, 'voice.wav');
   const metaPath = runPath(videoId, 'voice.json');

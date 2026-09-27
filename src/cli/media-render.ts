@@ -23,7 +23,7 @@ await main((db) => {
   const ctx = loadEditContext(db, videoId);
   const clips = ctx.clips.map((c) => {
     const asset = ctx.assets.get(c.nasa_id)!;
-    return { ...c, local_path: asset.local_path, media_type: asset.media_type };
+    return { ...c, local_path: asset.local_path, media_type: asset.media_type, width: asset.width, height: asset.height };
   });
 
   log('measuring voice loudness');

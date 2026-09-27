@@ -4,7 +4,7 @@
  * never writes ffmpeg itself.
  */
 import { z } from 'zod';
-import { END_CARD_MIN_S, FPS, H, W } from './layout.js';
+import { END_CARD_MIN_S, FPS, H, KENBURNS_MAX_ZOOM, W } from './layout.js';
 import type { SegmentTiming } from './align.js';
 
 export const EditClip = z.object({
@@ -15,6 +15,10 @@ export const EditClip = z.object({
   mode: z.enum(['blur_bg', 'pan', 'kenburns']).default('blur_bg'),
   /** pan: which way the view moves. kenburns / blur_bg stills: zoom in or out. */
   direction: z.enum(['left', 'right', 'in', 'out']).optional(),
+  /** Stills: point to zoom toward, as fractions of the picture (0,0 = top-left). Default: centre. */
+  focus: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).optional(),
+  /** Stills: how far to zoom over the clip (1 = none). Capped at KENBURNS_MAX_ZOOM (§6). */
+  zoom: z.number().min(1).max(KENBURNS_MAX_ZOOM).optional(),
   /** Video only: where in the source clip to start. */
   source_in_s: z.number().min(0).default(0),
   why: z.string().default(''),
