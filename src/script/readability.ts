@@ -1,0 +1,32 @@
+/**
+ * Flesch-Kincaid grade level with a standard English syllable heuristic.
+ * Not perfect, but deterministic and good enough to keep scripts at grade 2–4.
+ */
+
+export function splitSentences(text: string): string[] {
+  return (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? []).map((s) => s.trim()).filter(Boolean);
+}
+
+/** Words = runs of letters/digits, keeping apostrophes and inner hyphens. */
+export function words(text: string): string[] {
+  return text.match(/[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*/g) ?? [];
+}
+
+export function countSyllables(word: string): number {
+  if (/\d/.test(word)) return 2; // numbers: rough average when spoken
+  let w = word.toLowerCase().replace(/[^a-z]/g, '');
+  if (!w) return 0;
+  if (w.length <= 3) return 1;
+  w = w.replace(/(?:[^laeiouy]es|[^laeiouy]ed|[^laeiouy]e)$/, '').replace(/^y/, '');
+  const groups = w.match(/[aeiouy]{1,2}/g);
+  return Math.max(1, groups?.length ?? 1);
+}
+
+export function fleschKincaidGrade(text: string): number {
+  const ws = words(text);
+  const sentences = Math.max(1, splitSentences(text).length);
+  if (ws.length === 0) return 0;
+  const syllables = ws.reduce((n, w) => n + countSyllables(w), 0);
+  const grade = 0.39 * (ws.length / sentences) + 11.8 * (syllables / ws.length) - 15.59;
+  return Math.round(grade * 10) / 10;
+}

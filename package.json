@@ -19,7 +19,9 @@
     "video:status": "tsx src/cli/video.ts status",
     "video:show": "tsx src/cli/video.ts show",
     "run:start": "tsx src/cli/video.ts run-start",
-    "run:finish": "tsx src/cli/video.ts run-finish"
+    "run:finish": "tsx src/cli/video.ts run-finish",
+    "script:validate": "tsx src/cli/script-validate.ts",
+    "agent:validate": "tsx src/cli/agent-validate.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

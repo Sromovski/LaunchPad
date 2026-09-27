@@ -18,6 +18,7 @@ You write the voiceover for ONE Launchpad video. Read `runs/<id>/research.json` 
 {
   "title": "",
   "hook": "",
+  "hook_source_ids": ["s1"],
   "lines": [{ "text": "", "source_ids": ["s1"] }],
   "end_question": "",
   "on_screen_text": [""]
@@ -26,6 +27,7 @@ You write the voiceover for ONE Launchpad video. Read `runs/<id>/research.json` 
 Then run `npm run script:validate -- --video <id>` and fix anything it reports until it passes.
 
 ## Rules
-- Every factual line needs ≥1 `source_id` from research.json. Lines with no facts (e.g. "Let's find out!") use `[]`.
+- **Every line** needs ≥1 `source_id` from research.json. Fold filler ("Let's find out!") into a sourced line rather than giving it its own line. If the hook states a fact, cite it in `hook_source_ids`.
+- Hook: max 10 words (spoken within 2 s). No sentence over 18 words. Grade ≤ 4.5. No links, no "subscribe/comment/visit".
 - If you cannot support a fact, cut it. Simplifying is fine; wrong is not.
 - When revising, address every note and say how in a `revision_notes` field.

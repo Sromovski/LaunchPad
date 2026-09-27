@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS scripts (
 CREATE TABLE IF NOT EXISTS sources (
   id       INTEGER PRIMARY KEY AUTOINCREMENT,
   video_id INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  ref      TEXT,           -- research.json source id (s1, s2…) that scripts cite
   url      TEXT NOT NULL,
   title    TEXT,
   excerpt  TEXT

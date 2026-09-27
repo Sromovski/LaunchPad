@@ -18,3 +18,14 @@ Short log of design choices. Newest last.
 - **Kokoro:** `onnx-community/Kokoro-82M-v1.0-ONNX`, `dtype: q8`, voice `af_heart` for now (style choice in Phase 1). Synthesis takes ~14 s for one sentence on first run, including the model download.
 - **`npm audit`: 3 high findings in `sharp`** (libvips/libheif), pulled in by `kokoro-js` → `@huggingface/transformers`. No fix is available. Accepted because we never pass images to sharp; transformers only uses it for image pipelines. Re-check when kokoro-js updates.
 - **CLI scripts beyond §6 that the agents/skill expect (to build in Phase 1):** `video:new`, `video:status`, `run:start`, `run:finish`, `agent:validate` (zod schemas for each agent output), `qa:frames` (extract 6 frames). These keep "code does mechanics": agents never touch the DB or ffmpeg directly. The producer writes `edit.json` (clip timing choices) for `media:render` to read.
+
+## 2026-09-26 — Phase 1 (build)
+
+- **Credit aliases approved by Thomas:** exact spelled-out forms ("NASA's Jet Propulsion Laboratory", "NASA Goddard", …) normalize to their allowlisted short form. Anything else stays `needs_review`.
+- **Credit checker also reads `Credit:` lines in the description** and the strictest verdict wins. Real JPL videos list `photographer: NASA's Jet Propulsion Laboratory` but the description credits universities and people.
+- **Private photographer rule:** we can't tell NASA staff from private photographers by name. So a credit with ©/copyright and no NASA is `rejected`; a bare person name with no NASA is `needs_review` (a human decides).
+- **Source domains:** any `https://*.nasa.gov` host (superset of the four in §7; includes photojournal.jpl.nasa.gov and images.nasa.gov). Checked with a strict hostname suffix, not a substring.
+- **`sources.ref`** (s1, s2…) added so scripts and fact checks can cite research sources. Added via a tiny additive migration in `openDb`.
+- **Every script line needs ≥1 source** (CLAUDE.md §6 wins over my first scriptwriter prompt). Optional `hook_source_ids` for a factual hook.
+- **Script rules in code:** 90–130 words over hook+lines+end question; Flesch-Kincaid ≤ 4.5; hook ≤ 10 words (≈2 s); no sentence > 18 words; no links or calls to action. The syllable counter is a heuristic (e.g. "curiosity" → 4), good enough for a threshold.
+- **`script:validate` writes `script-validation.json` with the script's sha256**, so `qa:check` can confirm the rendered script is the validated one.

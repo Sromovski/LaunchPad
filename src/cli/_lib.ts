@@ -2,6 +2,7 @@
  * Shared plumbing for pipeline CLI scripts: argument parsing, the run dir,
  * per-step log files, and the "JSON summary on stdout" convention (§6).
  */
+import { createHash } from 'node:crypto';
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseArgs, type ParseArgsConfig } from 'node:util';
@@ -19,6 +20,8 @@ export function runDir(videoId: number): string {
 export function runPath(videoId: number, ...parts: string[]): string {
   return resolve(runDir(videoId), ...parts);
 }
+
+export const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 
 export type Logger = (msg: string) => void;
 

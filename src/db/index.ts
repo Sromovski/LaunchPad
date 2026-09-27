@@ -15,5 +15,19 @@ export function openDb(path: string = process.env.LAUNCHPAD_DB ?? DEFAULT_DB_PAT
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
+  migrate(db);
   return db;
+}
+
+/**
+ * Additive migrations for DBs created before a column existed. schema.sql
+ * always has the latest shape; this only patches older files. Keep it additive.
+ */
+function migrate(db: Database.Database) {
+  const addColumn = (table: string, column: string, ddl: string) => {
+    const cols = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+    if (!cols.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`);
+  };
+  addColumn('sources', 'ref', 'TEXT');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_sources_ref ON sources(video_id, ref)');
 }
