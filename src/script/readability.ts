@@ -3,13 +3,17 @@
  * Not perfect, but deterministic and good enough to keep scripts at grade 2–4.
  */
 
+/** A "." between two digits (1.61) is a decimal point, not the end of a sentence. */
 export function splitSentences(text: string): string[] {
-  return (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? []).map((s) => s.trim()).filter(Boolean);
+  return (text.match(/(?:\d\.\d|[^.!?])+[.!?]+|(?:\d\.\d|[^.!?])+$/g) ?? []).map((s) => s.trim()).filter(Boolean);
 }
 
-/** Words = runs of letters/digits, keeping apostrophes and inner hyphens. */
+/**
+ * Words = numbers (keeping thousands commas and decimals: "2,400", "1.61" — video 3
+ * showed "2" / "400" as separate captions) or runs of letters/digits with inner ' and -.
+ */
 export function words(text: string): string[] {
-  return text.match(/[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*/g) ?? [];
+  return text.match(/\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+\.\d+|[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*/g) ?? [];
 }
 
 export function countSyllables(word: string): number {

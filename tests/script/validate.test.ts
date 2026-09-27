@@ -17,6 +17,16 @@ describe('readability', () => {
     expect(countSyllables(w)).toBe(n);
   });
 
+  it('keeps numbers with thousands commas and decimals as one word (video 3 bug: "2,400" became "2" / "400")', () => {
+    expect(words('They spun about 2,400 times a minute.')).toEqual(['They', 'spun', 'about', '2,400', 'times', 'a', 'minute']);
+    expect(words('It landed at 1.61 mph, 12,000,000 km away.')).toEqual(['It', 'landed', 'at', '1.61', 'mph', '12,000,000', 'km', 'away']);
+    expect(words('Red, blue, and 3, 4 or 5.')).toEqual(['Red', 'blue', 'and', '3', '4', 'or', '5']);
+  });
+
+  it('does not end a sentence at a decimal point', () => {
+    expect(splitSentences('It landed at 1.61 mph. Wow!')).toEqual(['It landed at 1.61 mph.', 'Wow!']);
+  });
+
   it('splits sentences on . ! ?', () => {
     expect(splitSentences('Hi there! Is it blue? Yes. It is.')).toEqual(['Hi there!', 'Is it blue?', 'Yes.', 'It is.']);
   });

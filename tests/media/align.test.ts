@@ -100,3 +100,28 @@ describe('alignWords', () => {
     }
   });
 });
+
+describe('numbers in captions (video 3 bug)', () => {
+  it('keeps "2,400" as one caption word with the script punctuation', () => {
+    const out = alignWords(
+      [seg(0, 'They spun about 2,400 times a minute.', 0, 3)],
+      [
+        { text: 'They', start: 0, end: 0.2 },
+        { text: 'spun', start: 0.2, end: 0.5 },
+        { text: 'about', start: 0.5, end: 0.8 },
+        { text: 'two', start: 0.8, end: 1.0 },
+        { text: 'thousand', start: 1.0, end: 1.4 },
+        { text: 'four', start: 1.4, end: 1.6 },
+        { text: 'hundred', start: 1.6, end: 2.0 },
+        { text: 'times', start: 2.0, end: 2.3 },
+        { text: 'a', start: 2.3, end: 2.4 },
+        { text: 'minute.', start: 2.4, end: 2.9 },
+      ],
+    );
+    expect(out.words.map((w) => w.text)).toEqual(['They', 'spun', 'about', '2,400', 'times', 'a', 'minute.']);
+    const n = out.words[3]!;
+    // spans the four spoken words between "about" and "times"
+    expect(n.start).toBeCloseTo(0.8, 1);
+    expect(n.end).toBeCloseTo(2.0, 1);
+  });
+});
