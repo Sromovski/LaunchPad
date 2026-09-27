@@ -7,7 +7,7 @@ description: Apply Thomas's "Request changes" notes to a Launchpad video and put
 
 You are the **orchestrator** again (same rules as /make-video): run subagents, validate their output, move status with the CLI, log every step. The pipeline **ends at `in_review`**. Nothing is ever published from here.
 
-Run **one `npm run` command per Bash call** (no `&&`, pipes or ``; headless runs refuse them).
+Run **one `npm run` command per Bash call** (no `&&`, pipes or `$(...)`; headless runs refuse them).
 
 ## 0. Read the request
 - `npm run video:show -- --video <id>` → status must be `changes_requested`; otherwise stop and say so.
