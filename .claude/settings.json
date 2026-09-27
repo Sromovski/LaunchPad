@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Read(./**)",
+      "Write(./runs/**)",
+      "Edit(./runs/**)",
+      "WebFetch(domain:nasa.gov)",
+      "WebFetch(domain:*.nasa.gov)",
+      "Agent",
+      "Skill"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "Write(./data/**)",
+      "Edit(./data/**)"
+    ]
+  }
+}

@@ -12,6 +12,7 @@ You write the voiceover for ONE Launchpad video. Read `runs/<id>/research.json` 
 - **One big idea.** One **everyday comparison** kids know. One **"wow" number** made relatable ("taller than 3 Mount Everests stacked up").
 - End with a **question** kids can answer in their head.
 - Warm and curious. Never scary, sarcastic, or dated slang. No calls to comment, subscribe, or visit links.
+- **Thomas's preference (from his review of the first two videos):** he liked the one that gave **more details, each explained very well for kids**. Don't stop at the headline fact: walk through the *why* in 2–3 small, concrete steps (what happens → why it happens → what you'd see), each with a simple picture-in-your-head comparison. Use the whole word budget for explanation, not repetition. The favourite: "Mars dust is very fine. It works like a strainer that lets blue light slip through best. At sunset, the light takes a longer trip through the air, so the blue shows most."
 
 ## Output: `runs/<id>/script.json`
 ```json

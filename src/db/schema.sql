@@ -92,3 +92,23 @@ CREATE TABLE IF NOT EXISTS runs (
 CREATE INDEX IF NOT EXISTS idx_videos_status ON videos(status);
 CREATE INDEX IF NOT EXISTS idx_assets_video ON assets(video_id);
 CREATE INDEX IF NOT EXISTS idx_runs_video ON runs(video_id);
+
+-- Phase 3: one row per scheduled/manual headless run (src/cli/scheduled-run.ts)
+CREATE TABLE IF NOT EXISTS automation_runs (
+  id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+  trigger            TEXT NOT NULL CHECK (trigger IN ('scheduled','manual')),
+  started_at         TEXT NOT NULL DEFAULT (datetime('now')),
+  finished_at        TEXT,
+  topic              TEXT,
+  video_id           INTEGER REFERENCES videos(id),
+  -- in_review = success; skip = nothing to do (queue full / no topics); the rest are failures
+  outcome            TEXT CHECK (outcome IN ('running','in_review','skip','preflight_fail','failed','incomplete','timeout','locked','error')),
+  duration_s         REAL,
+  num_turns          INTEGER,
+  input_tokens       INTEGER,
+  output_tokens      INTEGER,
+  cost_usd_equiv     REAL,   -- API-equivalent cost reported by claude -p; not billed on the subscription
+  permission_denials INTEGER,
+  log_path           TEXT,
+  error              TEXT
+);

@@ -12,12 +12,12 @@ const newVideo = (topic = 'Why are sunsets on Mars blue?') =>
   Number(db.prepare('INSERT INTO videos (topic) VALUES (?)').run(topic).lastInsertRowid);
 
 describe('schema', () => {
-  it('creates all §5 tables', () => {
+  it('creates all §5 tables (+ automation_runs from Phase 3)', () => {
     const names = (db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[])
       .map((r) => r.name)
       .filter((n) => !n.startsWith('sqlite_'))
       .sort();
-    expect(names).toEqual(['assets', 'fact_checks', 'reviews', 'runs', 'scripts', 'sources', 'videos']);
+    expect(names).toEqual(['assets', 'automation_runs', 'fact_checks', 'reviews', 'runs', 'scripts', 'sources', 'videos']);
   });
 
   it('is idempotent (re-applying does not throw)', () => {

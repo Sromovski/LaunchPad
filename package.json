@@ -31,7 +31,15 @@
     "qa:frames": "tsx src/cli/qa.ts frames",
     "media:test-clip": "tsx src/cli/media-test-clip.ts",
     "review": "vite --config review-site/vite.config.ts --open",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "topics:next": "tsx src/cli/topics.ts next",
+    "topics:mark": "tsx src/cli/topics.ts mark",
+    "topics:check": "tsx src/cli/topics.ts check",
+    "scheduled": "tsx src/cli/scheduled-run.ts",
+    "report": "tsx src/cli/report.ts",
+    "schedule:install": "tsx src/cli/schedule.ts install",
+    "schedule:uninstall": "tsx src/cli/schedule.ts uninstall",
+    "schedule:status": "tsx src/cli/schedule.ts status"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",
