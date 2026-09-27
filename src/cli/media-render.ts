@@ -9,6 +9,7 @@ import { PROJECT_ROOT } from '../db/index.js';
 import { loadEditContext } from '../media/context.js';
 import { ffmpegBin, measureLoudness, probe, run } from '../media/probe.js';
 import { buildRenderPlan } from '../media/render.js';
+import { clipGainDb } from '../media/audio-mix.js';
 import { FONTS_DIR } from '../media/layout.js';
 import { args, logger, main, requireVideoId, runDir, runPath } from './_lib.js';
 
@@ -21,9 +22,17 @@ await main((db) => {
   if (!existsSync(runPath(videoId, 'captions.ass'))) throw new Error('run media:captions first');
 
   const ctx = loadEditContext(db, videoId);
+  // Clip sound: one fixed gain per recording, from its whole-file loudness (keeps NASA's own loud/quiet contrasts).
+  const gains = new Map<string, number>();
+  for (const c of ctx.clips) {
+    if (c.audio !== 'full' || gains.has(c.nasa_id)) continue;
+    const lufs = Number(measureLoudness(ctx.assets.get(c.nasa_id)!.local_path).input_i);
+    gains.set(c.nasa_id, clipGainDb(lufs));
+    log(`clip sound ${c.nasa_id}: ${lufs} LUFS -> gain ${gains.get(c.nasa_id)} dB`);
+  }
   const clips = ctx.clips.map((c) => {
     const asset = ctx.assets.get(c.nasa_id)!;
-    return { ...c, local_path: asset.local_path, media_type: asset.media_type, width: asset.width, height: asset.height };
+    return { ...c, local_path: asset.local_path, media_type: asset.media_type, width: asset.width, height: asset.height, audio_gain_db: gains.get(c.nasa_id) };
   });
 
   log('measuring voice loudness');

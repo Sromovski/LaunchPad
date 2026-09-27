@@ -24,6 +24,8 @@ export interface RenderClip extends EditClip {
   /** Source pixel size — needed to frame stills over the blurred background. */
   width?: number;
   height?: number;
+  /** Fixed gain for this clip's own sound (clipGainDb of the whole recording); only used with audio "full". */
+  audio_gain_db?: number;
 }
 
 export interface RenderPlanInput {
@@ -166,7 +168,7 @@ export function buildRenderPlan(p: RenderPlanInput): RenderPlan {
   const clipAudio = p.clips
     .map((c, i) => ({ c, i }))
     .filter(({ c }) => c.audio === 'full' && c.media_type === 'video')
-    .map(({ c, i }) => ({ inputIndex: i, start_s: c.start_s, end_s: c.end_s }));
+    .map(({ c, i }) => ({ inputIndex: i, start_s: c.start_s, end_s: c.end_s, gain_db: c.audio_gain_db ?? 0 }));
   chains.push(...buildAudioGraph({ voiceIndex: audioIndex, loudness: p.loudness, duration_s: p.duration_s, clips: clipAudio, windows: p.windows ?? [] }));
 
   const filter = chains.join(';\n');

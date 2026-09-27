@@ -13,13 +13,28 @@ export interface ClipAudio {
   /** Where the clip starts/ends in the final video. */
   start_s: number;
   end_s: number;
+  /** One fixed gain for the whole source recording (see clipGainDb). */
+  gain_db: number;
+}
+
+/** Clip sound sits a little under the narration (−14 LUFS). */
+export const CLIP_TARGET_LUFS = -18;
+
+/**
+ * A single gain for a whole NASA recording, from its integrated loudness. Deliberately NOT
+ * per-moment loudnorm: that flattened NASA's loud-Earth-bell / quiet-Mars-bell comparison
+ * in video 9 (the quiet one came out louder). Capped at ±20 dB.
+ */
+export function clipGainDb(integratedLufs: number): number {
+  if (!Number.isFinite(integratedLufs)) return 0;
+  return Math.max(-20, Math.min(20, Math.round((CLIP_TARGET_LUFS - integratedLufs) * 10) / 10));
 }
 
 export const FADE_S = 0.15;
 const f = (n: number) => Number(n.toFixed(3)).toString();
 
 /** 0 outside the pause windows that overlap the clip, 1 inside, with linear fades. ffmpeg min/max take two args. */
-export function gateExpr(clip: ClipAudio, windows: PauseWindow[]): string | null {
+export function gateExpr(clip: Pick<ClipAudio, 'start_s' | 'end_s'>, windows: PauseWindow[]): string | null {
   const parts = windows
     .map((w) => ({ s: Math.max(w.start_s, clip.start_s), e: Math.min(w.end_s, clip.end_s) }))
     .filter((w) => w.e - w.s > 2 * FADE_S)
@@ -43,9 +58,9 @@ export function buildAudioGraph(o: { voiceIndex: number; loudness: Loudness; dur
   gated.forEach(({ c, gate }, k) => {
     const delayMs = Math.round(c.start_s * 1000);
     chains.push(
-      // NASA clips vary a lot in level: normalise each to a bit under the narration.
-      `[${c.inputIndex}:a]aresample=48000,aformat=sample_rates=48000:channel_layouts=stereo,loudnorm=I=-16:TP=-3:LRA=11,` +
-        `aresample=48000,adelay=${delayMs}:all=1,volume='${gate}':eval=frame[clipa${k}]`,
+      // NASA clips vary a lot in level: one fixed gain per recording keeps its own loud/quiet contrasts.
+      `[${c.inputIndex}:a]aresample=48000,aformat=sample_rates=48000:channel_layouts=stereo,volume=${f(c.gain_db)}dB,` +
+        `adelay=${delayMs}:all=1,volume='${gate}':eval=frame[clipa${k}]`,
     );
   });
   chains.push(`[voice]${gated.map((_, k) => `[clipa${k}]`).join('')}amix=inputs=${gated.length + 1}:normalize=0:duration=first:dropout_transition=0,${tail}`);
