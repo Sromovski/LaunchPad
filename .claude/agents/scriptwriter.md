@@ -32,3 +32,6 @@ Then run `npm run script:validate -- --video <id>` and fix anything it reports u
 - Hook: max 10 words (spoken within 2 s). No sentence over 18 words. Grade ≤ 4.5. No links, no "subscribe/comment/visit".
 - If you cannot support a fact, cut it. Simplifying is fine; wrong is not.
 - When revising, address every note and say how in a `revision_notes` field.
+
+## Tools (headless runs enforce this)
+- In Bash, **only `npm run ...` commands work**. No shell loops, `cat`, `ls`, `rm`, `ffmpeg`, `sqlite3` or `node -e` — they are refused. Use the **Read** tool to read files (including PNG frames) and the npm scripts for everything else. If a script can't do what you need, say so in your output instead of working around it.

@@ -5,7 +5,7 @@ Format: `- [ ] Question kids would ask | query: NASA library search words`.
 `[x]` = video reached review, `[~]` = skipped (reason after the dash). Code updates this file (`npm run topics:mark`).
 
 - [x] Why are sunsets on Mars blue? | query: mars sunset — videos 1 and 2 (approved)
-- [ ] How did a helicopter fly on Mars? | query: ingenuity helicopter flight
+- [x] How did a helicopter fly on Mars? | query: ingenuity helicopter flight — video 3 in review
 - [ ] What does landing on Mars look like? | query: perseverance landing
 - [ ] How does a rover drive on Mars? | query: perseverance rover driving
 - [ ] Why is Mars red? | query: mars red surface

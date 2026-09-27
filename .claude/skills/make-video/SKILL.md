@@ -21,6 +21,8 @@ You are the **orchestrator**. You never write scripts, pick footage or render yo
 | 4 | producer | `fact_checked` | `render.json` | → `rendered` |
 | 5 | qa-reviewer | `rendered` | `qa-review.json` | pass → `qa_passed` → `in_review` |
 
+Step names for `run:start` / `run:finish` / `agent:validate` are exactly: `research`, `script`, `factcheck`, `render`, `qa-review`.
+
 For every step:
 1. `npm run run:start -- --video <id> --step <step> --agent <agent>` (logs to the `runs` table).
 2. Launch the subagent with the Agent tool. Give it the `video_id`, the topic, and the run dir. Nothing else it doesn't need.

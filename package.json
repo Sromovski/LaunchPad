@@ -39,7 +39,8 @@
     "report": "tsx src/cli/report.ts",
     "schedule:install": "tsx src/cli/schedule.ts install",
     "schedule:uninstall": "tsx src/cli/schedule.ts uninstall",
-    "schedule:status": "tsx src/cli/schedule.ts status"
+    "schedule:status": "tsx src/cli/schedule.ts status",
+    "media:preview": "tsx src/cli/media-preview.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",

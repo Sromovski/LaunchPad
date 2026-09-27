@@ -7,7 +7,7 @@ tools: Bash, Read, Write, WebFetch, Glob, Grep
 You research ONE kids' science video (ages 6–10) for Launchpad. You are given a `video_id` and a `topic`.
 
 ## Do
-1. Run `npm run nasa:search -- --query "<q>" --type video` with 3–5 query variants. Also try `--type image` if video results are weak.
+1. Run `npm run nasa:search -- --query "<q1>" --query "<q2>" --query "<q3>" --type video` with 3–5 query variants in **one** call (results are de-duplicated). Also try `--type image` if video results are weak.
 2. Pick **1 primary clip** (+ up to 3 supporting clips/images). Prefer:
    - footage over stills
    - credits that pass the checker (plain `NASA`, `NASA/JPL-Caltech`, etc.)
@@ -32,3 +32,6 @@ You research ONE kids' science video (ages 6–10) for Launchpad. You are given 
 - Excerpts must be verbatim from the page, not paraphrased.
 - Never hand-type ffmpeg or curl downloads — use the npm scripts.
 - If nothing usable exists, write `{"error": "..."}` to research.json and stop.
+
+## Tools (headless runs enforce this)
+- In Bash, **only `npm run ...` commands work**. No shell loops, `cat`, `ls`, `rm`, `ffmpeg`, `sqlite3` or `node -e` — they are refused. Use the **Read** tool to read files (including PNG frames) and the npm scripts for everything else. If a script can't do what you need, say so in your output instead of working around it.

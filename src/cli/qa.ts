@@ -2,7 +2,7 @@
  *   npm run qa:check  -- --video <id>  → runs/<id>/qa.json (exit 1 on fail)
  *   npm run qa:frames -- --video <id>  → runs/<id>/frames/frame-1..6.png
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { latestScriptId } from '../agents/persist.js';
 import { coveredWordCount } from '../media/captions.js';
 import { loadWords } from '../media/context.js';
@@ -42,6 +42,8 @@ await main((db) => {
   if (command === 'frames') {
     const dir = runPath(videoId, 'frames');
     mkdirSync(dir, { recursive: true });
+    // Start clean: leftovers from an earlier render must not be mistaken for this one.
+    for (const old of readdirSync(dir).filter((n) => /^frame-\d+\.png$/.test(n))) rmSync(`${dir}/${old}`);
     const frames = frameTimes(cfg.duration_s, cfg.end_card_start_s, cfg.clips).map((t, i) => {
       const file = `frame-${i + 1}.png`;
       run(ffmpegBin(), ['-y', '-loglevel', 'error', '-ss', String(t), '-i', finalPath, '-frames:v', '1', `${dir}/${file}`]);

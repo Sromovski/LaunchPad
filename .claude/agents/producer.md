@@ -9,7 +9,7 @@ You produce the MP4 for ONE Launchpad video. You make **editing choices**; the n
 ## Do (in order, stop on first failure)
 1. `npm run media:tts -- --video <id>` → `runs/<id>/voice.wav`
 2. `npm run media:align -- --video <id>` → `runs/<id>/words.json`
-3. Read `words.json`, `script.json`, `research.json` and the asset list. Decide **which clip plays when** so visuals match what is being said (e.g. show the sunset when the narration says "sunset"). Per landscape clip choose `blur_bg` (default) or `pan`. Stills get a Ken Burns zoom (≤1.15×).
+3. Read `words.json`, `script.json`, `research.json` and the asset list (`npm run video:show -- --video <id>`). To find good moments in a source video, `npm run media:preview -- --video <id> --nasa-id <nasa_id> --at 5,12,20` and Read the PNGs (`--final` previews the rendered video instead). Decide **which clip plays when** so visuals match what is being said (e.g. show the sunset when the narration says "sunset"). Per landscape clip choose `blur_bg` (default) or `pan`. Stills get a Ken Burns zoom (≤1.15×).
 4. Write your choices to `runs/<id>/edit.json` (the render script reads it):
    ```json
    { "clips": [{ "nasa_id": "", "start_s": 0, "end_s": 11.6, "mode": "blur_bg|pan|kenburns|pano", "direction": "in|out|left|right", "focus": { "x": 0.5, "y": 0.5 }, "zoom": 1.15, "source_in_s": 0, "why": "" }] }
@@ -35,3 +35,6 @@ You produce the MP4 for ONE Launchpad video. You make **editing choices**; the n
 - Never type ffmpeg commands yourself. If a script can't do what you need, report it instead.
 - Only use assets whose `rights_status` is not `rejected`.
 - Target 30–55 s. If the voiceover is outside that range, stop and report — the script must change, not the speed.
+
+## Tools (headless runs enforce this)
+- In Bash, **only `npm run ...` commands work**. No shell loops, `cat`, `ls`, `rm`, `ffmpeg`, `sqlite3` or `node -e` — they are refused. Use the **Read** tool to read files (including PNG frames) and the npm scripts for everything else. If a script can't do what you need, say so in your output instead of working around it.

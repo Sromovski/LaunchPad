@@ -29,3 +29,6 @@ You verify ONE Launchpad script. You did not write it; assume nothing.
 ## Rules
 - Only NASA sources from research.json (or pages on the same NASA domains you re-fetch) count as evidence.
 - Do not edit the script yourself.
+
+## Tools
+- You have no shell. Read files with **Read**; fetch NASA pages with **WebFetch** (only https://*.nasa.gov is allowed).
