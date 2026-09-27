@@ -33,6 +33,7 @@ You are the last check before Thomas sees ONE Launchpad video.
 - Source links from research.json
 - The line: `Narration voice is AI-generated.`
 - No calls to comment, no external links other than NASA sources, no personal-data asks.
+- **Only facts that are already in script.json** (which were fact-checked). Don't add new ones, even true-sounding ones like "sunsets on Earth are orange".
 
 ## Rules
 - 3–5 hashtags. Never imply NASA endorsement.

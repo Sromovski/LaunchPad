@@ -41,3 +41,8 @@ Short log of design choices. Newest last.
 - **Voice pace (Thomas, 2026-09-27):** "slightly fast, slow by ~10%". Kokoro speed 0.95 → 0.86 and inter-line pause 350 → 400 ms so the whole video slows evenly (video 1: 38.75 s → 42.1 s of voice). Voice `af_heart` confirmed. TTS cache key now includes pause settings.
 - **Focus + zoom for stills (Thomas asked to zoom in on the sun):** `edit.json` clips take `focus {x,y}` (fractions of the picture) and `zoom` (≤ 1.15, the §6 cap). blur_bg stills now zoom *inside* a fixed picture box instead of the box growing.
 - **Bug fixed:** ffmpeg `crop` reads `iw/ih` once at startup, so offsets like `(iw-ow)/2` were always 0 after a per-frame `scale` and every zoom was anchored top-left. Offsets are now computed from the zoom expression itself.
+- **Style sign-off (Thomas, 2026-09-27):** video 1 at speed 0.86 with the sun push-in "looks good now". Zoom cap stays 1.15×.
+
+- **First `/make-video` run (video 2, same topic):** ~13.5 min end to end. The fact check failed once ("colors switched places" implied an unsourced claim about Earth sunsets); the scriptwriter cut the line and the re-check passed 14/14. The producer ran for 7.4 min (it re-rendered once to avoid a soft 2× pan).
+- **qa-reviewer now only states facts already in the script** (video 1's draft description added "On Earth, sunsets glow orange and red").
+- **Backlog found by the agents:** (1) `qa:frames` uses fixed timestamps, so short clips can go unchecked → take at least one frame per clip. (2) Panoramas have no good framing: `pan` fills the frame at 2× upscale, `blur_bg` leaves a thin strip → add a partial pan (taller strip over blur, slow slide across part of the width).
