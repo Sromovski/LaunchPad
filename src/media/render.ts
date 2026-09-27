@@ -162,7 +162,8 @@ export function buildRenderPlan(p: RenderPlanInput): RenderPlan {
   chains.push(
     `[${audioIndex}:a]loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=${L.input_i}:measured_TP=${L.input_tp}:` +
       `measured_LRA=${L.input_lra}:measured_thresh=${L.input_thresh}:offset=${L.target_offset}:linear=true,` +
-      `aresample=48000,apad=whole_dur=${f(p.duration_s)}[aout]`,
+      // Hard peak limit after resampling (video 7 clipped at 0 dB): −2 dBFS leaves room for AAC overshoot. level=false: no make-up gain.
+      `aresample=48000,alimiter=limit=0.8:level=false:attack=5:release=50,apad=whole_dur=${f(p.duration_s)}[aout]`,
   );
 
   const filter = chains.join(';\n');

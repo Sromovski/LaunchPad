@@ -81,6 +81,8 @@ describe('buildRenderPlan', () => {
   it('two-pass loudnorm to −14 LUFS, padded to the full duration', () => {
     expect(filter).toContain('loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=-20');
     expect(filter).toContain('apad=whole_dur=40');
+    // Video 7 clipped at 0 dB: a true-peak limiter after loudnorm keeps peaks under −1.5 dBFS.
+    expect(filter).toMatch(/loudnorm=[^;]*,aresample=48000,alimiter=limit=0\.8:level=false[^;]*,apad=/);
     expect(filter).toContain('[3:a]'); // voice is the input after the 3 clips
   });
 
