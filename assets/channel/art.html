@@ -1,0 +1,140 @@
+<!doctype html>
+<!--
+  Blast of Facts channel art: original vector drawing, no NASA imagery or logos
+  (CLAUDE.md §11). Rendered to PNG by render.mjs. Open with ?guides to see
+  YouTube's banner safe area (1546×423, the only part every device shows).
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: Fredoka; src: url(../fonts/Fredoka-Bold.ttf); font-weight: 700; }
+  html, body { margin: 0; background: #000; }
+  svg { display: block; }
+  text { font-family: Fredoka, sans-serif; font-weight: 700; paint-order: stroke; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+
+<!-- Shared shapes. The rocket is drawn pointing straight up, centred on 0,0, about 520 tall with flame. -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="flameOuter" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ff5a36" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="flameInner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff4c2"/><stop offset="0.6" stop-color="#ffd23f"/><stop offset="1" stop-color="#ffd23f" stop-opacity="0"/>
+    </linearGradient>
+    <g id="rocket" stroke="#0b1026" stroke-width="10" stroke-linejoin="round">
+      <path d="M-60,100 C-70,190 -35,260 0,330 C35,260 70,190 60,100 Z" fill="url(#flameOuter)" stroke="none"/>
+      <path d="M-36,100 C-40,160 -18,210 0,265 C18,210 40,160 36,100 Z" fill="url(#flameInner)" stroke="none"/>
+      <path d="M-80,20 L-150,120 L-150,160 L-78,122 Z" fill="#e8563a"/>
+      <path d="M80,20 L150,120 L150,160 L78,122 Z" fill="#e8563a"/>
+      <rect x="-52" y="92" width="104" height="30" rx="6" fill="#9aa3b5"/>
+      <path d="M0,-200 C62,-140 84,-40 82,96 L-82,96 C-84,-40 -62,-140 0,-200 Z" fill="#f4f1ea"/>
+      <path d="M0,-200 C38,-163 56,-118 64,-78 C22,-66 -22,-66 -64,-78 C-56,-118 -38,-163 0,-200 Z" fill="#e8563a"/>
+      <circle cx="0" cy="0" r="38" fill="#6fb7ff"/>
+      <circle cx="-12" cy="-12" r="11" fill="#dff0ff" stroke="none"/>
+      <path d="M0,40 L0,92" stroke="#e8563a" stroke-width="22" stroke-linecap="round" fill="none"/>
+    </g>
+    <!-- Sparkle star (4 points) -->
+    <path id="spark" d="M0,-30 C4,-6 6,-4 30,0 C6,4 4,6 0,30 C-4,6 -6,4 -30,0 C-6,-4 -4,-6 0,-30 Z" fill="#ffd23f"/>
+  </defs>
+</svg>
+
+<!-- ============ BANNER 2560×1440 ============ -->
+<svg id="banner" width="2560" height="1440" viewBox="0 0 2560 1440" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#070b1f"/><stop offset="0.45" stop-color="#14224f"/>
+      <stop offset="0.72" stop-color="#2d5aa0"/><stop offset="0.86" stop-color="#8fcaff"/>
+    </linearGradient>
+    <radialGradient id="bGlow" cx="0.5" cy="0.84" r="0.45">
+      <stop offset="0" stop-color="#c9e7ff" stop-opacity="0.9"/><stop offset="1" stop-color="#6fb7ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bTrail" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd23f" stop-opacity="0"/><stop offset="0.7" stop-color="#ffb13d" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#fff4c2" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+  <rect width="2560" height="1440" fill="url(#bSky)"/>
+  <rect width="2560" height="1440" fill="url(#bGlow)"/>
+  <g id="bStars"></g>
+
+  <!-- Planets (outside the safe area: extra detail for desktop/TV) -->
+  <g transform="translate(2290,300)">
+    <ellipse rx="190" ry="44" fill="none" stroke="#ffd23f" stroke-width="16" transform="rotate(-18)" opacity="0.9"/>
+    <circle r="105" fill="#f29e4c" stroke="#0b1026" stroke-width="10"/>
+    <path d="M-100,-20 Q0,-45 100,-20" stroke="#d9773a" stroke-width="18" fill="none"/>
+    <path d="M-95,35 Q0,10 95,35" stroke="#d9773a" stroke-width="14" fill="none"/>
+    <path d="M-190,44 A190,44 0 0 0 190,-44" fill="none" stroke="#ffd23f" stroke-width="16" transform="rotate(-18)"/>
+  </g>
+  <circle cx="260" cy="260" r="62" fill="#dfe4ee" stroke="#0b1026" stroke-width="10"/>
+  <circle cx="240" cy="245" r="14" fill="#b9c1d1"/><circle cx="282" cy="282" r="10" fill="#b9c1d1"/>
+
+  <!-- Mars ground (bottom, TV only) -->
+  <path d="M0,1230 C300,1170 520,1250 820,1210 C1120,1170 1350,1240 1650,1200 C1950,1160 2250,1230 2560,1190 L2560,1440 L0,1440 Z" fill="#b5552f"/>
+  <path d="M0,1310 C400,1270 700,1330 1100,1300 C1500,1270 1900,1330 2560,1290 L2560,1440 L0,1440 Z" fill="#8a3d22"/>
+
+  <!-- Exhaust trail sweeping up to the rocket -->
+  <path d="M-40,1060 C300,1020 500,930 600,810" stroke="url(#bTrail)" stroke-width="70" stroke-linecap="round" fill="none"/>
+  <g fill="#ffffff" opacity="0.85">
+    <circle cx="210" cy="1030" r="34"/><circle cx="330" cy="1000" r="26"/><circle cx="440" cy="955" r="20"/>
+  </g>
+
+  <!-- Safe area content: rocket + title + tagline -->
+  <use href="#rocket" transform="translate(680,700) rotate(42) scale(0.7)"/>
+  <use href="#spark" transform="translate(880,575) scale(1.0)"/>
+  <use href="#spark" transform="translate(1985,575) scale(0.7)" fill="#ffffff"/>
+  <text x="1405" y="738" text-anchor="middle" font-size="156" stroke="#0b1026" stroke-width="30">
+    <tspan fill="#ffd23f">BLAST</tspan><tspan fill="#ffffff" font-size="106" dx="22">OF</tspan><tspan fill="#ffffff" dx="22">FACTS</tspan>
+  </text>
+  <text x="1405" y="852" text-anchor="middle" font-size="64" fill="#ffffff" stroke="#0b1026" stroke-width="16">Big space facts for curious kids</text>
+
+  <rect id="bGuide" x="507" y="508.5" width="1546" height="423" fill="none" stroke="#ff00ff" stroke-width="4" stroke-dasharray="20 12" display="none"/>
+</svg>
+
+<!-- ============ PROFILE PICTURE 800×800 (shown as a circle) ============ -->
+<svg id="profile" width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="pSky" cx="0.5" cy="0.85" r="0.85">
+      <stop offset="0" stop-color="#8fcaff"/><stop offset="0.35" stop-color="#2d5aa0"/><stop offset="1" stop-color="#0b1330"/>
+    </radialGradient>
+    <linearGradient id="pTrail" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd23f" stop-opacity="0"/><stop offset="1" stop-color="#fff4c2" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#pSky)"/>
+  <g id="pStars"></g>
+  <!-- Mars horizon -->
+  <circle cx="400" cy="1330" r="720" fill="#b5552f" stroke="#0b1026" stroke-width="12"/>
+  <path d="M110,700 Q230,670 330,690" stroke="#8a3d22" stroke-width="22" stroke-linecap="round" fill="none"/>
+  <path d="M470,680 Q580,660 690,700" stroke="#8a3d22" stroke-width="22" stroke-linecap="round" fill="none"/>
+  <!-- Trail + rocket, kept inside the centre circle -->
+  <path d="M40,780 C150,720 230,650 285,570" stroke="url(#pTrail)" stroke-width="60" stroke-linecap="round" fill="none"/>
+  <use href="#rocket" transform="translate(420,370) rotate(35) scale(0.95)"/>
+  <use href="#spark" transform="translate(640,210) scale(1.3)"/>
+  <use href="#spark" transform="translate(180,250) scale(0.8)" fill="#ffffff"/>
+</svg>
+
+<script>
+  // Deterministic stars so re-renders are identical.
+  function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+  function stars(id, w, h, n, maxY, seed) {
+    const r = rng(seed), g = document.getElementById(id);
+    for (let i = 0; i < n; i++) {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', (r() * w).toFixed(1));
+      c.setAttribute('cy', (r() * maxY).toFixed(1));
+      c.setAttribute('r', (1.5 + r() * 3.5).toFixed(1));
+      c.setAttribute('fill', '#ffffff');
+      c.setAttribute('opacity', (0.35 + r() * 0.6).toFixed(2));
+      g.appendChild(c);
+    }
+  }
+  stars('bStars', 2560, 1440, 260, 950, 7);
+  stars('pStars', 800, 800, 45, 520, 11);
+  if (location.search.includes('guides')) document.getElementById('bGuide').removeAttribute('display');
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # CLAUDE.md — Project "Launchpad"
 
-> Codename **Launchpad**. Public channel name is TBD. This is a standalone project (not part of Lantern).
+> Codename **Launchpad**. Public channel name: **Blast of Facts** (YouTube: a Brand Account channel under Thomas's Google login, renamed from Story_Clips). This is a standalone project (not part of Lantern).
 
 ## 1. Mission
 
@@ -213,6 +213,7 @@ Do phases in order. Don't start the next until the current one's DoD passes and 
 
 ## 11. Kids' content and platform rules
 
+- YouTube channel: **Blast of Facts** (separate Brand Account, never Thomas's main channel). Set the channel audience to Made for Kids. Channel name/logo must not include "NASA".
 - YouTube: mark every video **Made for Kids**. Expect comments off and lower ad revenue; that's accepted.
 - Description always includes: footage credit(s), source links, and "Narration voice is AI-generated."
 - No personal data collection, no calls to comment, no links to external sites in the video itself.

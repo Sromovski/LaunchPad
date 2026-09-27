@@ -62,3 +62,8 @@ Short log of design choices. Newest last.
 - **Publishing text in the DB:** `videos.description`, `videos.hashtags` (qa-review saves the draft; the site edits it; the AI-voice line stays mandatory).
 - **e2e isolation:** Playwright seeds `tests/e2e/.tmp` (DB + generated MP4s) and serves on port 5199, never touching real data.
 - **/revise-video** added (§8): restarts from the scriptwriter (word/fact notes) or the producer (visual-only notes); both count as a revision.
+
+## 2026-09-27 — Channel
+
+- **Public name: "Blast of Facts"** (Thomas). On YouTube it's a Brand Account channel under Thomas's Google login, separate from his main channel. Thomas first planned a new channel, then chose to rename the existing Story_Clips one instead. Channel audience is set to Made for Kids, and the name/logo avoid "NASA" (no implied endorsement, §11). Phase 4 OAuth must pick this channel on Google's channel picker. Setup steps are in `NEEDS_FROM_THOMAS.md`.
+- **Channel art:** original vector art (no NASA imagery or logos) in `assets/channel/art.html`, rendered to PNG by `node assets/channel/render.mjs`: banner 2560×1440 (text inside YouTube's 1546×423 safe area) and profile picture 800×800 (reads as a circle).
