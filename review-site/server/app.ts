@@ -10,6 +10,7 @@ import { Hono } from 'hono';
 import { ZodError } from 'zod';
 import { ReviewError, assetsNeedingReview, decide, saveDraft } from '../../src/review/decide.js';
 import { STATUSES } from '../../src/db/status.js';
+import { postingQueue } from '../../src/publish/queue.js';
 
 export interface AppDeps {
   db: Database.Database;
@@ -86,6 +87,19 @@ export function createApp({ db, runsRoot }: AppDeps) {
       .prepare('SELECT id, trigger, started_at, finished_at, topic, video_id, outcome, duration_s, error FROM automation_runs ORDER BY id DESC LIMIT 5')
       .all();
     return c.json({ runs });
+  });
+
+  // ---- Posting (Phase 4) -------------------------------------------------------------
+  app.get('/api/publishing', (c) => {
+    const next = postingQueue(db).map(({ id, title, topic, approved_at }) => ({ id, title: title ?? topic, approved_at }));
+    const posted = db
+      .prepare(
+        `SELECT p.video_id, v.title, p.url, p.visibility, p.playlist_id IS NOT NULL AS in_playlist, p.method, p.posted_at
+         FROM posts p JOIN videos v ON v.id = p.video_id ORDER BY p.id DESC LIMIT 10`,
+      )
+      .all();
+    const held = db.prepare('SELECT id, title, do_not_post_reason AS reason FROM videos WHERE do_not_post = 1 ORDER BY id').all();
+    return c.json({ next, posted, held });
   });
 
   // ---- Detail ---------------------------------------------------------------------

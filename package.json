@@ -44,7 +44,10 @@
     "video:reset": "tsx src/cli/video.ts reset",
     "media:timeline": "tsx src/cli/media-timeline.ts",
     "export": "tsx src/cli/export.ts",
-    "video:mark-posted": "tsx src/cli/video.ts mark-posted"
+    "video:mark-posted": "tsx src/cli/video.ts mark-posted",
+    "video:hold": "tsx src/cli/video.ts hold",
+    "youtube:auth": "tsx src/cli/youtube-auth.ts",
+    "publish": "tsx src/cli/publish.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",

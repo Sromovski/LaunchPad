@@ -20,7 +20,14 @@
       "Bash(npm run -s video:reset *)",
       "Bash(npm run video:mark-posted)",
       "Bash(npm run video:mark-posted *)",
-      "Bash(npm run -s video:mark-posted *)"
+      "Bash(npm run -s video:mark-posted *)",
+      "Bash(npm run publish)",
+      "Bash(npm run publish *)",
+      "Bash(npm run -s publish *)",
+      "Bash(npm run youtube:auth*)",
+      "Bash(npm run video:hold*)",
+      "Bash(npm run -s video:hold*)",
+      "Read(./data/google/**)"
     ]
   }
 }

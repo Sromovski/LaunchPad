@@ -7,12 +7,14 @@
  *   run:finish   -- --video <id> --step <step> --ok true|false
  *   video:reset  -- --video <id> --reason "..." (Thomas only; denied to agents in .claude/settings.json)
  *   video:mark-posted -- --video <id> --url <youtube link>   (Thomas hand-posted it; denied to agents)
+ *   video:hold   -- --video <id> --reason "..."   (keep an approved video off the channel; denied to agents)
  */
 import { relative } from 'node:path';
 import { PROJECT_ROOT } from '../db/index.js';
 import { STATUSES, manualReset, transitionVideo, type Status, type VideoState } from '../db/status.js';
 import { args, getVideo, logger, main, requireVideoId, runDir } from './_lib.js';
 import { recordPost } from '../publish/posts.js';
+import { holdVideo } from '../publish/queue.js';
 
 const command = process.argv[2];
 process.argv.splice(2, 1);
@@ -87,7 +89,12 @@ await main((db) => {
       if (!a.url) throw new Error('--url <youtube link> is required');
       return { post: recordPost(db, id, 'youtube', a.url, 'manual'), status: getVideo(db, id).status };
     }
+    case 'hold': {
+      const id = requireVideoId(a.video);
+      holdVideo(db, id, a.reason ?? '');
+      return { video_id: id, held: true, reason: a.reason };
+    }
     default:
-      throw new Error(`unknown command "${command}" (new|status|show|run-start|run-finish|reset|mark-posted)`);
+      throw new Error(`unknown command "${command}" (new|status|show|run-start|run-finish|reset|mark-posted|hold)`);
   }
 });

@@ -1,6 +1,7 @@
 import { seconds, type VideoSummary } from './api';
 import { RunHealth } from './RunHealth';
 import { Revisions } from './Revisions';
+import { Publishing } from './Publishing';
 
 export function Queue({ videos, error }: { videos: VideoSummary[] | null; error: string | null }) {
   if (error) return <p className="text-rust">Couldn't load the queue: {error}. Is the database at data/launchpad.db?</p>;
@@ -11,7 +12,10 @@ export function Queue({ videos, error }: { videos: VideoSummary[] | null; error:
         <h1 className="font-display text-3xl font-bold">Nothing to review</h1>
         <p className="mt-2 text-muted">New videos land here after QA. Make one with /make-video in Claude Code.</p>
         <RunHealth />
-        <div className="text-left"><Revisions /></div>
+        <div className="text-left">
+          <Revisions />
+          <Publishing />
+        </div>
       </section>
     );
   }
@@ -48,6 +52,7 @@ export function Queue({ videos, error }: { videos: VideoSummary[] | null; error:
         ))}
       </ul>
       <Revisions />
+      <Publishing />
     </section>
   );
 }

@@ -31,7 +31,7 @@ Google redesigns these screens often. If a name below doesn't match, look for th
 **B. OAuth consent (called "Google Auth Platform" in newer consoles)**
 4. **Branding / OAuth consent screen:** App name `Launchpad uploader`, your email as support and developer contact. Leave the logo empty. A logo triggers extra review.
 5. **Audience / User type: External.** Add your own Google address under **Test users**.
-6. **Data access / Scopes:** add `https://www.googleapis.com/auth/youtube.upload` (upload only: it can't delete videos or read anything else).
+6. **Data access / Scopes:** add `https://www.googleapis.com/auth/youtube` ("manage your YouTube account"). You chose full automation, and adding videos to the playlist needs this; upload-only permission can't touch playlists. Our code only ever uploads, creates or fills the **Mars Facts for Kids** playlist and reads which channel it's signed in to.
 7. **Publishing status:** while the app is in **Testing**, Google makes our login expire every **7 days**, which would break unattended posting. Once uploads work, click **Publish app → In production**. It's only for you, so you'll see an "unverified app" warning when you sign in. That's expected for a personal tool; click *Advanced → continue*. Full Google verification isn't needed for one user.
 
 **C. Credentials**
@@ -47,7 +47,7 @@ Google locks uploads from new, unaudited API projects to **private**, even when 
    - They may ask for a **privacy policy URL** and a **screen recording** of the app. I can write a one-page privacy policy (e.g. hosted free on GitHub Pages from this repo) and you'd record the review site's approve flow.
 12. Replies usually take days to weeks. Until then, uploads land as **private** and you'd flip them to public by hand, which still works for testing.
 
-**E. When you've done A–C**, tell me and I'll build Phase 4 (YouTube only). The first run opens a browser once so you can sign in and pick **Blast of Facts** on Google's channel picker. After that the saved login only uploads to that channel.
+**E. Connect Launchpad to the channel (once, after A–C):** in a terminal in `C:\Projects\LaunchPad` run **`npm run youtube:auth`**. A browser opens: sign in and pick **Blast of Facts** on Google's channel picker (you'll see an "unverified app" warning; click *Advanced → continue*). It only saves the login if you picked Blast of Facts. From then on the 16:00 job posts one approved video a day and adds it to **Mars Facts for Kids** (it creates the playlist if you haven't). To check what would go next without posting: `npm run publish -- --dry-run`. To post one right now: `npm run publish`.
 
 ### Other
 - **ffmpeg on PATH (optional):** ffmpeg 9.0.2 is installed via winget but isn't on PATH in all shells. Launchpad finds it anyway (winget folder fallback). To use it from your own terminal, open a new one or run `winget install Gyan.FFmpeg --force`.

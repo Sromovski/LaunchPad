@@ -169,3 +169,15 @@ describe('posts on the detail page', () => {
     expect(d.posts).toEqual([expect.objectContaining({ platform: 'youtube', url: 'https://www.youtube.com/shorts/6qJq2lvEuV0' })]);
   });
 });
+
+describe('publishing overview', () => {
+  it('lists next-to-post (not held, not posted), posted and held videos', async () => {
+    const a = seedVideo('approved');
+    const b = seedVideo('approved');
+    db.prepare("UPDATE videos SET do_not_post = 1, do_not_post_reason = 'superseded' WHERE id = ?").run(b);
+    const d = await (await app.request('/api/publishing')).json();
+    expect(d.next.map((v: { id: number }) => v.id)).toEqual([a]);
+    expect(d.held).toEqual([{ id: b, title: 'Blue Sunsets', reason: 'superseded' }]);
+    expect(d.posted).toEqual([]);
+  });
+});

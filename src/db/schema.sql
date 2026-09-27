@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS videos (
   -- Publishing text (drafted by qa-reviewer, edited by Thomas in the review site)
   description        TEXT,
   hashtags           TEXT CHECK (hashtags IS NULL OR json_valid(hashtags)),
+  -- Thomas can hold an approved video back from automatic posting (e.g. superseded by a remake)
+  do_not_post        INTEGER NOT NULL DEFAULT 0 CHECK (do_not_post IN (0,1)),
+  do_not_post_reason TEXT,
   -- State-machine bookkeeping (see src/db/status.ts, docs/DECISIONS.md)
   revision_count     INTEGER NOT NULL DEFAULT 0,
   retry_count        INTEGER NOT NULL DEFAULT 0,
@@ -121,6 +124,9 @@ CREATE TABLE IF NOT EXISTS posts (
   external_id TEXT NOT NULL,
   url         TEXT NOT NULL,
   method      TEXT NOT NULL CHECK (method IN ('manual','api')),
+  -- what YouTube reports after upload; unaudited API projects are forced to private
+  visibility  TEXT NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','unlisted','private')),
+  playlist_id TEXT,  -- set once the video was added to the channel playlist
   posted_at   TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (video_id, platform),
   UNIQUE (platform, external_id)

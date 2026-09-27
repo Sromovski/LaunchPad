@@ -31,5 +31,9 @@ function migrate(db: Database.Database) {
   addColumn('sources', 'ref', 'TEXT');
   addColumn('videos', 'description', 'TEXT');
   addColumn('videos', 'hashtags', 'TEXT');
+  addColumn('videos', 'do_not_post', 'INTEGER NOT NULL DEFAULT 0');
+  addColumn('videos', 'do_not_post_reason', 'TEXT');
+  addColumn('posts', 'visibility', "TEXT NOT NULL DEFAULT 'public'");
+  addColumn('posts', 'playlist_id', 'TEXT');
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_sources_ref ON sources(video_id, ref)');
 }
