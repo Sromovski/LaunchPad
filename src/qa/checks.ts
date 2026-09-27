@@ -29,7 +29,7 @@ export interface QaFacts {
   usedAssets: { nasa_id: string; credit: string | null; rights_status: string }[];
   scriptValidated: boolean;
   scriptValidationNote: string;
-  factChecks: { verdict: string }[];
+  factChecks: { verdict: string; source_id: number | null }[];
 }
 
 export interface QaCheck {
@@ -80,10 +80,15 @@ export function evaluate(f: QaFacts): { pass: boolean; checks: QaCheck[] } {
 
   add('script validated', f.scriptValidated, f.scriptValidationNote);
   const bad = f.factChecks.filter((c) => c.verdict !== 'supported');
+  const unsourced = f.factChecks.filter((c) => c.verdict === 'supported' && c.source_id == null);
   add(
     'fact checks supported',
-    f.factChecks.length > 0 && bad.length === 0,
-    f.factChecks.length === 0 ? 'no fact checks recorded' : `${f.factChecks.length - bad.length}/${f.factChecks.length} supported`,
+    f.factChecks.length > 0 && bad.length === 0 && unsourced.length === 0,
+    f.factChecks.length === 0
+      ? 'no fact checks recorded'
+      : unsourced.length
+        ? `${unsourced.length} supported claim(s) have no stored source`
+        : `${f.factChecks.length - bad.length}/${f.factChecks.length} supported`,
   );
 
   return { pass: checks.every((c) => c.ok), checks };

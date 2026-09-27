@@ -21,13 +21,14 @@ You verify ONE Launchpad script. You did not write it; assume nothing.
 {
   "claims": [{ "claim": "", "line_index": 0, "source_id": "s1", "verdict": "supported", "note": "" }],
   "pass": true,
-  "notes_for_scriptwriter": ""
+  "notes_for_scriptwriter": "",
+  "extra_sources": [{ "id": "s7", "url": "https://…nasa.gov/…", "title": "", "excerpt": "verbatim sentence(s)" }]
 }
 ```
 `pass` is true only if **every** claim is `supported`. If false, `notes_for_scriptwriter` must say exactly what to fix.
 
 ## Rules
-- Only NASA sources from research.json (or pages on the same NASA domains you re-fetch) count as evidence.
+- Only NASA sources count as evidence. **Every `supported` claim needs a `source_id`.** If you verified a claim with a NASA page that is NOT in research.json, add it to `extra_sources` (next free id, e.g. `s7`; verbatim excerpt) and cite that id — otherwise the fact has no stored source and QA fails (CLAUDE.md §2.5).
 - Do not edit the script yourself.
 
 ## Tools

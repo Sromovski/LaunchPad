@@ -23,6 +23,8 @@ const a = args({
   direction: { type: 'string' },
   focus: { type: 'string' },
   zoom: { type: 'string' },
+  crop: { type: 'string' }, // x,y,w,h fractions
+  in: { type: 'string', default: '0' }, // video: start point in the source
   credit: { type: 'string', default: 'Image: TEST' },
 });
 
@@ -45,6 +47,8 @@ await main(() => {
     direction: a.direction,
     focus: a.focus ? { x: fx, y: fy } : undefined,
     zoom: a.zoom ? Number(a.zoom) : undefined,
+    crop: a.crop ? (([x, y, w, h]) => ({ x, y, w, h }))(a.crop.split(',').map(Number)) : undefined,
+    source_in_s: Number(a.in),
   });
 
   writeFileSync(resolve(dir, 'silence.wav'), encodeWav(new Float32Array(Math.round(d * 24000)), 24000));

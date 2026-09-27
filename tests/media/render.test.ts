@@ -145,3 +145,18 @@ describe('pano (panoramas)', () => {
     expect(pano()).toContain('overlay=x=0:y=218');
   });
 });
+
+describe('crop (part of the picture)', () => {
+  it('crops a video to one camera view, then frames it', () => {
+    // 1920×1080 split screen, take the left half.
+    const { filter } = plan([clip({ end_s: 40, media_type: 'video', local_path: 'v.mp4', width: 1920, height: 1080, crop: { x: 0, y: 0, w: 0.5, h: 1 } })]);
+    expect(filter).toContain('[0:v]fps=30,setsar=1,crop=960:1080:0:0,split');
+  });
+
+  it('box height follows the cropped shape for stills', () => {
+    const { filter } = plan([clip({ end_s: 40, width: 1352, height: 1088, crop: { x: 0.25, y: 0, w: 0.5, h: 1 } })]);
+    // trimmed 1344×1080 → crop 672×1080 → box 1080 wide × 1736 tall
+    expect(filter).toContain('crop=iw-8:ih-8,crop=672:1080:336:0');
+    expect(filter).toContain('crop=1080:1736:');
+  });
+});

@@ -63,6 +63,12 @@ export function latestScriptId(db: Database.Database, videoId: number): number {
 /** Replaces the fact checks for the latest script version. */
 export function saveFactCheck(db: Database.Database, videoId: number, f: FactCheck): { script_id: number; claims: number; pass: boolean } {
   const scriptId = latestScriptId(db, videoId);
+  // Extra pages the fact-checker relied on become stored sources first (§2.5).
+  const upsertSource = db.prepare(
+    `INSERT INTO sources (video_id, ref, url, title, excerpt) VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT (video_id, ref) DO UPDATE SET url = excluded.url, title = excluded.title, excerpt = excluded.excerpt`,
+  );
+  for (const s of f.extra_sources) upsertSource.run(videoId, s.id, s.url, s.title, s.excerpt);
   const refs = new Map(
     (db.prepare('SELECT id, ref FROM sources WHERE video_id = ?').all(videoId) as { id: number; ref: string }[]).map((r) => [r.ref, r.id]),
   );

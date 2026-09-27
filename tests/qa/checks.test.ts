@@ -17,7 +17,7 @@ const good = (): QaFacts => ({
   ],
   scriptValidated: true,
   scriptValidationNote: 'ok',
-  factChecks: [{ verdict: 'supported' }, { verdict: 'supported' }],
+  factChecks: [{ verdict: 'supported', source_id: 1 }, { verdict: 'supported', source_id: 2 }],
 });
 
 const failing = (f: QaFacts) => evaluate(f).checks.filter((c) => !c.ok).map((c) => c.name);
@@ -50,6 +50,7 @@ describe('evaluate', () => {
     ['unsupported claim', (f) => (f.factChecks[1]!.verdict = 'unsupported'), 'fact checks supported'],
     ['unclear claim', (f) => (f.factChecks[0]!.verdict = 'unclear'), 'fact checks supported'],
     ['no fact checks', (f) => (f.factChecks = []), 'fact checks supported'],
+    ['supported claim with no stored source (§2.5)', (f) => (f.factChecks[0]!.source_id = null), 'fact checks supported'],
   ])('%s → fails "%s"', (_label, mutate, check) => {
     const f = good();
     mutate(f);

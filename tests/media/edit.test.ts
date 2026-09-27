@@ -83,3 +83,10 @@ describe('pano validation', () => {
     expect(normalizeEdit(Edit.parse({ clips: [{ nasa_id: 'IMG', start_s: 0, end_s: 40, mode: 'pano' }] }), 40, square).warnings.join()).toMatch(/wide/);
   });
 });
+
+describe('crop validation', () => {
+  it('must stay inside the picture', () => {
+    expect(() => Edit.parse({ clips: [{ nasa_id: 'IMG', start_s: 0, end_s: 40, crop: { x: 0.6, y: 0, w: 0.5, h: 1 } }] })).toThrow();
+    expect(Edit.parse({ clips: [{ nasa_id: 'IMG', start_s: 0, end_s: 40, crop: { x: 0.5, y: 0, w: 0.5, h: 1 } }] }).clips[0]!.crop).toBeDefined();
+  });
+});

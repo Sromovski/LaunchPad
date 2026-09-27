@@ -63,7 +63,19 @@ function focusXY(c: EditClip, w: number, h: number, z: string): string {
 function clipChain(c: RenderClip, i: number, d: number): string {
   const isImage = c.media_type === 'image';
   // Stills: shave 4 px per edge — some NASA JPEGs have coloured sensor/border rows that show as lines.
-  const src = `[${i}:v]fps=${FPS},setsar=1${isImage ? ',crop=iw-8:ih-8' : ''}`;
+  const trim = isImage ? 8 : 0;
+  let src = `[${i}:v]fps=${FPS},setsar=1${isImage ? ',crop=iw-8:ih-8' : ''}`;
+  // Effective picture size after trim + optional crop (e.g. one camera view out of a NASA split screen).
+  let effW = c.width ? c.width - trim : undefined;
+  let effH = c.height ? c.height - trim : undefined;
+  if (c.crop) {
+    if (!effW || !effH) throw new Error(`clip ${c.nasa_id} needs width/height to crop`);
+    const cw = Math.round((effW * c.crop.w) / 2) * 2;
+    const ch = Math.round((effH * c.crop.h) / 2) * 2;
+    src += `,crop=${cw}:${ch}:${Math.round(effW * c.crop.x)}:${Math.round(effH * c.crop.y)}`;
+    effW = cw;
+    effH = ch;
+  }
   const tail = `trim=duration=${f(d)},setpts=PTS-STARTPTS,format=yuv420p,setsar=1,settb=AVTB[c${i}]`;
   const cover = `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H}`;
 
@@ -73,9 +85,9 @@ function clipChain(c: RenderClip, i: number, d: number): string {
       return `${src},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H}:x='(iw-ow)*${progress}':y='(ih-oh)/2',${tail}`;
     }
     case 'pano': {
-      if (!c.width || !c.height) throw new Error(`pano clip ${c.nasa_id} needs width/height`);
-      const srcW = c.width - (isImage ? 8 : 0);
-      const srcH = c.height - (isImage ? 8 : 0);
+      if (!effW || !effH) throw new Error(`pano clip ${c.nasa_id} needs width/height`);
+      const srcW = effW;
+      const srcH = effH;
       const bandH = Math.round(Math.min(PANO.maxBandH, srcH * PANO.maxUpscale) / 2) * 2;
       const scaledW = Math.round((srcW * bandH) / srcH / 2) * 2;
       const maxX = Math.max(0, scaledW - W);
@@ -101,9 +113,8 @@ function clipChain(c: RenderClip, i: number, d: number): string {
       // Stills zoom *inside* a fixed picture box (the box doesn't grow), toward the focus point.
       let fgScale = `scale=${W}:-2`;
       if (isImage) {
-        if (!c.width || !c.height) throw new Error(`still ${c.nasa_id} needs width/height to frame`);
-        // Source loses 8 px per axis to the edge trim above.
-        const boxH = Math.round((W * (c.height - 8)) / (c.width - 8) / 2) * 2;
+        if (!effW || !effH) throw new Error(`still ${c.nasa_id} needs width/height to frame`);
+        const boxH = Math.round((W * effH) / effW / 2) * 2;
         const z = zoomExpr(c.zoom ?? BLUR_BG_ZOOM, d, c.direction);
         fgScale = `scale=w='trunc(${W}*${z}/2)*2':h=-2:eval=frame,crop=${W}:${boxH}:${focusXY(c, W, boxH, z)}`;
       }

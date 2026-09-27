@@ -60,6 +60,13 @@ export const FactCheck = z
       .min(1),
     pass: z.boolean(),
     notes_for_scriptwriter: z.string().default(''),
+    /** Pages the fact-checker had to fetch beyond research.json. Saved as sources so every fact maps to a stored URL (§2.5). */
+    extra_sources: z
+      .array(z.object({ id: z.string().regex(/^s\d+$/), url: NasaUrl, title: nonEmpty, excerpt: nonEmpty.max(800) }))
+      .default([]),
+  })
+  .refine((f) => f.claims.every((c) => c.verdict !== 'supported' || !!c.source_id), {
+    message: 'every supported claim needs a source_id (add pages you fetched to extra_sources)',
   })
   .refine((f) => f.pass === f.claims.every((c) => c.verdict === 'supported'), {
     message: '"pass" must be true exactly when every claim is supported',

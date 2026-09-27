@@ -122,3 +122,32 @@ describe('saveScript / saveFactCheck', () => {
     expect(() => saveFactCheck(db, vid, fc)).toThrow(/s7/);
   });
 });
+
+describe('fact-check extra sources (§2.5: every fact maps to a stored source)', () => {
+  it('schema refuses a supported claim without a source_id', () => {
+    const r = FactCheck.safeParse({ claims: [{ claim: 'x', line_index: 0, source_id: null, verdict: 'supported' }], pass: true });
+    expect(r.success).toBe(false);
+  });
+
+  it('saves pages the fact-checker fetched, so claims can cite them', () => {
+    saveResearch(db, vid, research());
+    saveScript(db, vid, script(), okValidation);
+    const fc = FactCheck.parse({
+      claims: [{ claim: 'The parachute slows the rover', line_index: 0, source_id: 's9', verdict: 'supported' }],
+      pass: true,
+      extra_sources: [{ id: 's9', url: 'https://www.jpl.nasa.gov/press-kit', title: 'Press kit', excerpt: 'The parachute…' }],
+    });
+    saveFactCheck(db, vid, fc);
+    const row = db.prepare('SELECT s.ref, s.url FROM fact_checks f JOIN sources s ON s.id = f.source_id').get();
+    expect(row).toEqual({ ref: 's9', url: 'https://www.jpl.nasa.gov/press-kit' });
+  });
+
+  it('extra sources must be NASA pages', () => {
+    const r = FactCheck.safeParse({
+      claims: [{ claim: 'x', line_index: 0, source_id: 's9', verdict: 'supported' }],
+      pass: true,
+      extra_sources: [{ id: 's9', url: 'https://en.wikipedia.org/wiki/Mars', title: 't', excerpt: 'e' }],
+    });
+    expect(r.success).toBe(false);
+  });
+});

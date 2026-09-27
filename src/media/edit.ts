@@ -23,6 +23,11 @@ export const EditClip = z.object({
   focus: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).optional(),
   /** Stills: how far to zoom over the clip (1 = none). Capped at KENBURNS_MAX_ZOOM (§6). */
   zoom: z.number().min(1).max(KENBURNS_MAX_ZOOM).optional(),
+  /** Use only part of the picture, as fractions (e.g. one camera view of a NASA split screen). */
+  crop: z
+    .object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), w: z.number().min(0.1).max(1), h: z.number().min(0.1).max(1) })
+    .refine((r) => r.x + r.w <= 1.0001 && r.y + r.h <= 1.0001, 'crop must stay inside the picture')
+    .optional(),
   /** Video only: where in the source clip to start. */
   source_in_s: z.number().min(0).default(0),
   why: z.string().default(''),
@@ -104,7 +109,7 @@ export function normalizeEdit(
       warnings.push(`clip ${n}: pano is meant for wide pictures; ${c.nasa_id} is ${a.width}×${a.height}`);
     }
     if ((c.mode === 'pan' || c.mode === 'kenburns') && a.width && a.height) {
-      const upscale = Math.max(W / a.width, H / a.height);
+      const upscale = Math.max(W / (a.width * (c.crop?.w ?? 1)), H / (a.height * (c.crop?.h ?? 1)));
       if (upscale > MAX_FILL_UPSCALE) {
         warnings.push(`clip ${n}: ${c.mode} upscales ${c.nasa_id} (${a.width}×${a.height}) ${upscale.toFixed(1)}× — will look soft; consider blur_bg`);
       }
