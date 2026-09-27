@@ -31,6 +31,7 @@ Then run `npm run script:validate -- --video <id>` and fix anything it reports u
 - **Every line** needs ≥1 `source_id` from research.json. Fold filler ("Let's find out!") into a sourced line rather than giving it its own line. If the hook states a fact, cite it in `hook_source_ids`.
 - Hook: max 10 words (spoken within 2 s). No sentence over 18 words. Grade ≤ 4.5. No links, no "subscribe/comment/visit".
 - If you cannot support a fact, cut it. Simplifying is fine; wrong is not.
+- Everyday comparisons may use common knowledge (walking speed, a basketball hoop, a school bus), but the NASA number behind them needs a source and the comparison must be true.
 - When revising, address every note and say how in a `revision_notes` field.
 
 ## Tools (headless runs enforce this)

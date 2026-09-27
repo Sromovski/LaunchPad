@@ -67,3 +67,13 @@ Short log of design choices. Newest last.
 
 - **Public name: "Blast of Facts"** (Thomas). On YouTube it's a Brand Account channel under Thomas's Google login, separate from his main channel. Thomas first planned a new channel, then chose to rename the existing Story_Clips one instead. Channel audience is set to Made for Kids, and the name/logo avoid "NASA" (no implied endorsement, §11). Phase 4 OAuth must pick this channel on Google's channel picker. Setup steps are in `NEEDS_FROM_THOMAS.md`.
 - **Channel art:** original vector art (no NASA imagery or logos) in `assets/channel/art.html`, rendered to PNG by `node assets/channel/render.mjs`: banner 2560×1440 (text inside YouTube's 1546×423 safe area) and profile picture 800×800 (reads as a circle).
+
+## 2026-09-27 — Phase 3 (reliability)
+
+- **Headless runs** use Thomas's subscription login (no API key: $0 rule), `--permission-mode dontAsk` and a narrow allow list in `.claude/settings.json` (npm run, read project, write runs/ only, `*.nasa.gov` fetches, subagents). Probes confirmed refused actions are logged in `permission_denials` and the run continues. Project subagents and skills load in `-p` mode.
+- **`npm run scheduled`**: lockfile → preflight (queue cap 6, tools, disk; "skip" is not a failure) → `claude -p "/make-video"` with a 60-min process-tree kill → outcome judged from the DB (video reached `in_review`), not from the agent's summary → `automation_runs` row. `claude -p` reports token usage and an API-equivalent cost (not billed on the subscription).
+- **Topics backlog** ordered by rights-clear NASA *video* hits (`topics:check`); `topics:next/mark` so code edits TOPICS.md.
+- **Hardening from run 1:** agents tried shell loops/ffmpeg/sqlite3/rm (refused). Added multi-`--query` search, `media:preview`, frame-dir cleanup, exact step names, and a "only `npm run` works in Bash" rule in every agent prompt. Run 2 had 0 denials.
+- **Hardening from run 2:** a fact was verified against a NASA page never stored as a source. Fact checks now carry `extra_sources` (saved to `sources`), and schema + `qa:check` fail a supported claim without a stored source (§2.5). Added `crop` for split-screen footage; moved the font license out of the libass fonts dir.
+- **Everyday comparisons (Thomas: option b):** common-knowledge reference points (walking speed, a basketball hoop, a school bus) need no source; the NASA number does, and the comparison must be true.
+- **Schedule:** 07:00 and 15:00 daily via Task Scheduler, wake to run, only while logged on (no stored password), 90-min task limit, no overlapping instances.

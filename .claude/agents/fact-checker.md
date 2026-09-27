@@ -29,6 +29,7 @@ You verify ONE Launchpad script. You did not write it; assume nothing.
 
 ## Rules
 - Only NASA sources count as evidence. **Every `supported` claim needs a `source_id`.** If you verified a claim with a NASA page that is NOT in research.json, add it to `extra_sources` (next free id, e.g. `s7`; verbatim excerpt) and cite that id — otherwise the fact has no stored source and QA fails (CLAUDE.md §2.5).
+- **Everyday comparisons (Thomas, 2026-09-27: option b).** Common-knowledge reference points kids know — walking speed, a basketball hoop, a school bus, a house, a car — don't need a NASA source. The NASA number being compared still does, and the comparison must be *correct* (1.61 mph vs walking ~3 mph → "slower than you walk" is supported; "slower than a snail" is not). Cite the NASA source for the number; say "common-knowledge comparison" in the note.
 - Do not edit the script yourself.
 
 ## Tools
