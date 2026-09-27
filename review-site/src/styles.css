@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Fredoka is the caption font kids see in the videos — the desk speaks the video's voice. */
+@font-face {
+  font-family: 'Fredoka';
+  src: url('../../assets/fonts/Fredoka-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fredoka';
+  src: url('../../assets/fonts/Fredoka-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* Light: Martian dust-grey day. Dark (default): twilight after a blue sunset. */
+:root {
+  --bg: #e9ecf2;
+  --panel: #f7f8fb;
+  --line: #cfd5e2;
+  --ink: #161c30;
+  --muted: #56607d;
+  --glow: #2f6fc4;
+  --glow-soft: rgba(47, 111, 196, 0.16);
+  --glow-halo: rgba(47, 111, 196, 0.32);
+  --dust: #9a5f10;
+  --dust-soft: rgba(227, 168, 87, 0.22);
+  --rust: #b8392e;
+  --ok: #2f7d4f;
+}
+.dark {
+  --bg: #141a2e;
+  --panel: #1d2542;
+  --line: #2e3860;
+  --ink: #e8ecf6;
+  --muted: #9ba4c2;
+  --glow: #86b6f2;
+  --glow-soft: rgba(134, 182, 242, 0.18);
+  --glow-halo: rgba(134, 182, 242, 0.42);
+  --dust: #e3a857;
+  --dust-soft: rgba(227, 168, 87, 0.14);
+  --rust: #e0665a;
+  --ok: #7fd1a0;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-glow: var(--glow);
+  --color-glow-soft: var(--glow-soft);
+  --color-dust: var(--dust);
+  --color-dust-soft: var(--dust-soft);
+  --color-rust: var(--rust);
+  --color-ok: var(--ok);
+  --font-display: 'Fredoka', ui-rounded, system-ui, sans-serif;
+  --font-body: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 18px; /* large readable type (§9) */
+  line-height: 1.55;
+}
+
+:focus-visible {
+  outline: 3px solid var(--glow);
+  outline-offset: 2px;
+}
+
+/* The one bold moment: the player sits in a blue sunset glow, like the Sun on Mars. */
+.sunset-glow {
+  background: radial-gradient(closest-side, var(--glow-halo) 55%, var(--glow-soft) 80%, transparent 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

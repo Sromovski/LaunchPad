@@ -42,7 +42,8 @@ await main((db) => {
     case 'show': {
       const id = requireVideoId(a.video);
       const assets = db.prepare('SELECT id, nasa_id, media_type, credit, rights_status FROM assets WHERE video_id = ?').all(id);
-      return { video: getVideo(db, id), assets };
+      const reviews = db.prepare('SELECT decision, notes, created_at FROM reviews WHERE video_id = ? ORDER BY id DESC').all(id);
+      return { video: getVideo(db, id), assets, reviews };
     }
     case 'run-start': {
       const id = requireVideoId(a.video);

@@ -119,6 +119,8 @@ export function createApp({ db, runsRoot }: AppDeps) {
         hashtags: video.hashtags ? JSON.parse(String(video.hashtags)) : (qaReview?.hashtags ?? []),
       },
       reviews: db.prepare('SELECT id, decision, notes, created_at FROM reviews WHERE video_id = ? ORDER BY id DESC').all(id),
+      // TTS segment timings: 0 = hook, 1..n = lines, last = end question. Lets the transcript follow the player.
+      segments: ((readJson(runFile(id, 'voice.json')) as { segments?: unknown[] } | null)?.segments ?? []) as unknown[],
       has_video: existsSync(runFile(id, 'final.mp4')),
     });
   });

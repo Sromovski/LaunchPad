@@ -10,7 +10,7 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p review-site/src",
     "lint": "eslint .",
     "doctor": "tsx src/cli/doctor.ts",
     "nasa:search": "tsx src/cli/nasa-search.ts",
@@ -29,7 +29,9 @@
     "media:render": "tsx src/cli/media-render.ts",
     "qa:check": "tsx src/cli/qa.ts check",
     "qa:frames": "tsx src/cli/qa.ts frames",
-    "media:test-clip": "tsx src/cli/media-test-clip.ts"
+    "media:test-clip": "tsx src/cli/media-test-clip.ts",
+    "review": "vite --config review-site/vite.config.ts --open",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",

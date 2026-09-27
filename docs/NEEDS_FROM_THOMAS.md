@@ -8,4 +8,5 @@ Running list of things only Thomas can do (accounts, credentials, installs, mone
 - **Channel name:** still TBD.
 
 ## Done
+- 2026-09-27 — Approved Playwright Chromium install (headless shell, ~115 MB, in %LOCALAPPDATA%\ms-playwright).
 - 2026-09-26 — Approved installs: ffmpeg (already present via winget), whisper.cpp b5130 + `ggml-base.en` into `tools/whisper/`, Kokoro q8 model (auto-downloaded to the Hugging Face cache).

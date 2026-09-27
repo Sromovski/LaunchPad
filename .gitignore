@@ -5,3 +5,6 @@ tools/
 .env
 *.log
 .DS_Store
+test-results/
+playwright-report/
+tests/e2e/.tmp/

@@ -50,3 +50,15 @@ Short log of design choices. Newest last.
 - **Backlog fix 2 — `pano` mode:** panoramas show as a tall band (≤ 1100 px, ≤ 1.2× upscale, so sharp) over the blurred copy, sliding ≤ 80 px/s around `focus.x`, instead of a 2× soft fill (`pan`) or a thin strip (`blur_bg`).
 - **`media:test-clip`:** renders one asset/mode into `runs/_test/` with a silent track and a credit line, so media changes can be checked without touching a video's status.
 - **Bug found by the test clip:** a zero-length ASS drawing event (`\p1`) makes libass render *nothing* for the whole file. `buildAss` now never emits zero-length events. (Real videos never hit this — their end card always lasts ≥ 3 s — but the test clip did.)
+
+## 2026-09-27 — Phase 2 (review site)
+
+- **One process:** `npm run review` runs Vite with the Hono API inside it (`@hono/vite-dev-server`), bound to 127.0.0.1:5173. Only `/api/*` and `/media/*` reach Hono.
+- **The approval gate lives on the server** (`src/review/decide.ts`), not just the UI: approve without "rights checked" → 400; changes without notes → 400; wrong status / revision cap → 409; everything in one transaction. There is no publish route.
+- **Rights on approve (Thomas: yes):** ticking "I checked the rights" + Approve sets those assets to `clear` with `cleared by Thomas on <date> (video N review M)`. `nasa:fetch` reuses that clearance for the same nasa_id **and** identical credit on later videos; it never overrides `rejected`.
+- **Keyboard safety:** A and R open a confirm step (Enter confirms, Esc cancels); C opens the notes box (Ctrl+Enter sends). Keys are ignored while typing in text fields but NOT on the rights checkbox (e2e caught that bug: tick box → A did nothing).
+- **Transcript follows the player** using TTS segment timings; click a line to jump there.
+- **Design:** Martian twilight dark theme (dusk navy, sunset-glow blue for approve, dust amber for rights, rust for reject), cool dust-grey light theme; Fredoka (the caption font) for headings, Atkinson Hyperlegible Next for body at 18 px. One bold element: the blue sunset halo behind the phone-frame player.
+- **Publishing text in the DB:** `videos.description`, `videos.hashtags` (qa-review saves the draft; the site edits it; the AI-voice line stays mandatory).
+- **e2e isolation:** Playwright seeds `tests/e2e/.tmp` (DB + generated MP4s) and serves on port 5199, never touching real data.
+- **/revise-video** added (§8): restarts from the scriptwriter (word/fact notes) or the producer (visual-only notes); both count as a revision.

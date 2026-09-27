@@ -13,5 +13,5 @@
     "jsx": "react-jsx",
     "lib": ["ES2023", "DOM", "DOM.Iterable"]
   },
-  "include": ["src", "tests", "review-site", "*.config.ts"]
+  "include": ["src", "tests", "review-site/server", "review-site/vite.config.ts", "*.config.ts"]
 }
