@@ -21,7 +21,9 @@
     "run:start": "tsx src/cli/video.ts run-start",
     "run:finish": "tsx src/cli/video.ts run-finish",
     "script:validate": "tsx src/cli/script-validate.ts",
-    "agent:validate": "tsx src/cli/agent-validate.ts"
+    "agent:validate": "tsx src/cli/agent-validate.ts",
+    "media:tts": "tsx src/cli/media-tts.ts",
+    "media:voices": "tsx src/cli/voice-samples.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
