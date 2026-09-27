@@ -80,6 +80,14 @@ export function createApp({ db, runsRoot }: AppDeps) {
     return c.json({ videos: rows });
   });
 
+  // ---- Automation health (Phase 3) ---------------------------------------------------
+  app.get('/api/automation', (c) => {
+    const runs = db
+      .prepare('SELECT id, trigger, started_at, finished_at, topic, video_id, outcome, duration_s, error FROM automation_runs ORDER BY id DESC LIMIT 5')
+      .all();
+    return c.json({ runs });
+  });
+
   // ---- Detail ---------------------------------------------------------------------
   app.get('/api/videos/:id', (c) => {
     const id = videoId(c.req.param('id'));

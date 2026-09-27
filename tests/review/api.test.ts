@@ -150,3 +150,13 @@ describe('parseRange', () => {
   ])('%s', (h, r) => expect(parseRange(h, 1000)).toEqual(r));
   it.each(['bytes=1000-', 'bytes=5-2', 'items=0-1', 'bytes=-'])('%s is unsatisfiable', (h) => expect(parseRange(h, 1000)).toBeNull());
 });
+
+describe('automation health', () => {
+  it('returns the latest automatic runs, newest first', async () => {
+    db.prepare("INSERT INTO automation_runs (trigger, outcome, topic) VALUES ('scheduled', 'in_review', 'A')").run();
+    db.prepare("INSERT INTO automation_runs (trigger, outcome, topic, error) VALUES ('scheduled', 'timeout', 'B', 'killed after 60 min')").run();
+    const { runs } = await (await app.request('/api/automation')).json();
+    expect(runs.map((r: { topic: string }) => r.topic)).toEqual(['B', 'A']);
+    expect(runs[0].error).toBe('killed after 60 min');
+  });
+});

@@ -1,4 +1,5 @@
 import { seconds, type VideoSummary } from './api';
+import { RunHealth } from './RunHealth';
 
 export function Queue({ videos, error }: { videos: VideoSummary[] | null; error: string | null }) {
   if (error) return <p className="text-rust">Couldn't load the queue: {error}. Is the database at data/launchpad.db?</p>;
@@ -8,6 +9,7 @@ export function Queue({ videos, error }: { videos: VideoSummary[] | null; error:
       <section className="py-16 text-center">
         <h1 className="font-display text-3xl font-bold">Nothing to review</h1>
         <p className="mt-2 text-muted">New videos land here after QA. Make one with /make-video in Claude Code.</p>
+        <RunHealth />
       </section>
     );
   }
@@ -17,6 +19,7 @@ export function Queue({ videos, error }: { videos: VideoSummary[] | null; error:
         {videos.length} {videos.length === 1 ? 'video' : 'videos'} to review
       </h1>
       <p className="mt-1 text-muted">Newest first. Open one, then use A, C and R to decide, J and K to move.</p>
+      <RunHealth />
       <ul className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-6" data-testid="queue">
         {videos.map((v) => (
           <li key={v.id}>
