@@ -8,8 +8,8 @@ Format: `- [ ] Question kids would ask | query: NASA library search words`.
 - [x] How did a helicopter fly on Mars? | query: ingenuity helicopter flight — video 3 in review
 - [x] What does landing on Mars look like? | query: perseverance landing — video 4 in review
 - [x] How does a rover drive on Mars? | query: perseverance rover driving — video 5 in review
-- [ ] Why is Mars red? | query: mars red surface
-- [ ] What does Mars sound like? | query: sounds of mars perseverance microphone
+- [x] Why is Mars red? | query: mars red surface — video 6 in review
+- [x] What does Mars sound like? | query: sounds of mars perseverance microphone — video 7 in review (clip audio not played yet)
 - [ ] Why is Perseverance collecting rock samples? | query: perseverance sample tube
 - [ ] How long is a day on Mars? | query: mars sol day
 - [ ] How cold is Mars? | query: mars temperature
