@@ -91,7 +91,7 @@ await main((db) => {
     usedAssets: assets,
     scriptValidated: scriptNote.startsWith('validated'),
     scriptValidationNote: scriptNote,
-    factChecks: db.prepare('SELECT verdict FROM fact_checks WHERE script_id = ?').all(scriptId) as { verdict: string }[],
+    factChecks: db.prepare('SELECT verdict, source_id FROM fact_checks WHERE script_id = ?').all(scriptId) as QaFacts['factChecks'],
   };
 
   const result = evaluate(facts);
