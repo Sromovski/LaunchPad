@@ -6,11 +6,13 @@
  *   run:start    -- --video <id> --step <step> [--agent <name>]
  *   run:finish   -- --video <id> --step <step> --ok true|false
  *   video:reset  -- --video <id> --reason "..." (Thomas only; denied to agents in .claude/settings.json)
+ *   video:mark-posted -- --video <id> --url <youtube link>   (Thomas hand-posted it; denied to agents)
  */
 import { relative } from 'node:path';
 import { PROJECT_ROOT } from '../db/index.js';
 import { STATUSES, manualReset, transitionVideo, type Status, type VideoState } from '../db/status.js';
 import { args, getVideo, logger, main, requireVideoId, runDir } from './_lib.js';
+import { recordPost } from '../publish/posts.js';
 
 const command = process.argv[2];
 process.argv.splice(2, 1);
@@ -23,6 +25,7 @@ const a = args({
   agent: { type: 'string' },
   ok: { type: 'string' },
   reason: { type: 'string' },
+  url: { type: 'string' },
 });
 
 await main((db) => {
@@ -79,7 +82,12 @@ await main((db) => {
       logger(id, 'manual-reset')(`reset ${before.status} -> ${after.status}. Previous error: ${before.error ?? '(none)'}. Reason: ${a.reason.trim()}`);
       return { video_id: id, from: 'failed', to: after.status, reason: a.reason.trim() };
     }
+    case 'mark-posted': {
+      const id = requireVideoId(a.video);
+      if (!a.url) throw new Error('--url <youtube link> is required');
+      return { post: recordPost(db, id, 'youtube', a.url, 'manual'), status: getVideo(db, id).status };
+    }
     default:
-      throw new Error(`unknown command "${command}" (new|status|show|run-start|run-finish|reset)`);
+      throw new Error(`unknown command "${command}" (new|status|show|run-start|run-finish|reset|mark-posted)`);
   }
 });

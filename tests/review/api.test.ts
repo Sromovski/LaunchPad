@@ -160,3 +160,12 @@ describe('automation health', () => {
     expect(runs[0].error).toBe('killed after 60 min');
   });
 });
+
+describe('posts on the detail page', () => {
+  it('returns recorded posts', async () => {
+    const id = seedVideo('published');
+    db.prepare("INSERT INTO posts (video_id, platform, external_id, url, method) VALUES (?, 'youtube', '6qJq2lvEuV0', 'https://www.youtube.com/shorts/6qJq2lvEuV0', 'manual')").run(id);
+    const d = await (await app.request(`/api/videos/${id}`)).json();
+    expect(d.posts).toEqual([expect.objectContaining({ platform: 'youtube', url: 'https://www.youtube.com/shorts/6qJq2lvEuV0' })]);
+  });
+});

@@ -43,7 +43,8 @@
     "media:preview": "tsx src/cli/media-preview.ts",
     "video:reset": "tsx src/cli/video.ts reset",
     "media:timeline": "tsx src/cli/media-timeline.ts",
-    "export": "tsx src/cli/export.ts"
+    "export": "tsx src/cli/export.ts",
+    "video:mark-posted": "tsx src/cli/video.ts mark-posted"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",

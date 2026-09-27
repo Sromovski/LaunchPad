@@ -11,7 +11,7 @@ Format: `- [ ] Question kids would ask | query: NASA library search words`.
 - [x] Why is Mars red? | query: mars red surface — video 6 in review
 - [x] What does Mars sound like? | query: sounds of mars perseverance microphone — video 7 in review (clip audio not played yet)
 - [x] Why is Perseverance collecting rock samples? | query: perseverance sample tube — video 8 in review
-- [ ] How long is a day on Mars? | query: mars sol day
+- [x] How long is a day on Mars? | query: mars sol day — video 10 in review
 - [ ] How cold is Mars? | query: mars temperature
 - [ ] How high could you jump on Mars? | query: mars gravity
 - [ ] Is there frost on Mars? | query: mars frost

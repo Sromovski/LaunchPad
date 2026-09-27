@@ -38,6 +38,7 @@ export interface Detail {
   draft: Draft;
   reviews: { id: number; decision: string; notes: string | null; created_at: string }[];
   has_video: boolean;
+  posts: { platform: string; url: string; method: string; posted_at: string }[];
   segments: { index: number; text: string; start_s: number; end_s: number }[];
 }
 

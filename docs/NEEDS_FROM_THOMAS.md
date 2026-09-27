@@ -54,6 +54,7 @@ Google locks uploads from new, unaudited API projects to **private**, even when 
 - **Facebook:** on hold until YouTube posting is fully proven (Thomas, 2026-09-27). Nothing needed yet.
 
 ## Done
+- 2026-09-27 — Hand-posted video 2 to Blast of Facts: https://www.youtube.com/shorts/6qJq2lvEuV0 (recorded with `npm run video:mark-posted`; status `published`).
 - 2026-09-27 — Renamed the Story_Clips YouTube channel to **Blast of Facts**: handle, description, profile picture + banner from `assets/channel/`, audience set to made for kids.
 - 2026-09-27 — Approved Playwright Chromium install (headless shell, ~115 MB, in %LOCALAPPDATA%\ms-playwright).
 - 2026-09-26 — Approved installs: ffmpeg (already present via winget), whisper.cpp b5130 + `ggml-base.en` into `tools/whisper/`, Kokoro q8 model (auto-downloaded to the Hugging Face cache).

@@ -114,6 +114,14 @@ export function Detail({ id, queue, onDecided }: { id: number; queue: VideoSumma
         {!reviewable && (
           <p className="mt-3 inline-block rounded-lg bg-panel px-3 py-1 font-semibold">{STATUS_LABEL[video.status] ?? video.status}</p>
         )}
+        {data.posts.map((p) => (
+          <p key={p.platform} className="mt-2" data-testid="post-link">
+            Live on {p.platform === 'youtube' ? 'YouTube' : p.platform}:{' '}
+            <a href={p.url} target="_blank" rel="noreferrer" className="font-semibold text-glow">
+              {p.url.replace('https://www.', '')}
+            </a>
+          </p>
+        ))}
 
         {data.rights_needed.length > 0 && (
           <section className="mt-6 rounded-xl border-2 border-dust bg-dust-soft p-4" data-testid="rights-warning">

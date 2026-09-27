@@ -112,3 +112,16 @@ CREATE TABLE IF NOT EXISTS automation_runs (
   log_path           TEXT,
   error              TEXT
 );
+
+-- Phase 4 (started early for hand-posting): one row per platform post; prevents double posting.
+CREATE TABLE IF NOT EXISTS posts (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  video_id    INTEGER NOT NULL REFERENCES videos(id),
+  platform    TEXT NOT NULL CHECK (platform IN ('youtube','facebook')),
+  external_id TEXT NOT NULL,
+  url         TEXT NOT NULL,
+  method      TEXT NOT NULL CHECK (method IN ('manual','api')),
+  posted_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (video_id, platform),
+  UNIQUE (platform, external_id)
+);

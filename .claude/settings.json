@@ -17,7 +17,10 @@
       "Bash(npm run video:reset)",
       "Bash(npm run video:reset *)",
       "Bash(npm run schedule:*)",
-      "Bash(npm run -s video:reset *)"
+      "Bash(npm run -s video:reset *)",
+      "Bash(npm run video:mark-posted)",
+      "Bash(npm run video:mark-posted *)",
+      "Bash(npm run -s video:mark-posted *)"
     ]
   }
 }
