@@ -16,6 +16,7 @@ describe('normalizeCredit', () => {
     ['NASA Marshall Space Flight Center', 'NASA/MSFC'],
     ['National Aeronautics and Space Administration', 'NASA'],
     ['nasa/jpl-caltech', 'NASA/JPL-Caltech'],
+    ['NASA/JPL-Caltech//ASU/MSSS', 'NASA/JPL-Caltech/ASU/MSSS'], // real double slash in NASA data (video 5)
   ])('%s → %s', (input, expected) => {
     expect(normalizeCredit(input)).toBe(expected);
   });

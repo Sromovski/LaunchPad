@@ -47,7 +47,7 @@ const DESCRIPTION_FLAGS = /courtesy of|©|used with permission|\bcopyright\b/i;
 export function normalizeCredit(raw: string): string {
   const s = raw
     .replace(/[’‘]/g, "'")
-    .replace(/\s*\/\s*/g, '/')
+    .replace(/\s*\/+\s*/g, '/') // also collapses NASA's occasional "//"
     .replace(/\s+/g, ' ')
     .trim()
     .replace(/\.$/, '');

@@ -7,7 +7,7 @@ Format: `- [ ] Question kids would ask | query: NASA library search words`.
 - [x] Why are sunsets on Mars blue? | query: mars sunset — videos 1 and 2 (approved)
 - [x] How did a helicopter fly on Mars? | query: ingenuity helicopter flight — video 3 in review
 - [x] What does landing on Mars look like? | query: perseverance landing — video 4 in review
-- [ ] How does a rover drive on Mars? | query: perseverance rover driving
+- [x] How does a rover drive on Mars? | query: perseverance rover driving — video 5 in review
 - [ ] Why is Mars red? | query: mars red surface
 - [ ] What does Mars sound like? | query: sounds of mars perseverance microphone
 - [ ] Why is Perseverance collecting rock samples? | query: perseverance sample tube
