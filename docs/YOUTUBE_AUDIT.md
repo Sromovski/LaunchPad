@@ -1,84 +1,77 @@
-# YouTube API audit: draft answers
+# YouTube API audit: step by step
 
-For the **YouTube API Services: Audit and Quota Extension Form**. Google changes the form's wording from time to time. Match each answer below to the closest question, and fill in the `[BRACKETS]`.
+**Why:** a new Google Cloud project can upload videos, but YouTube forces every one of them to **private**, even when we ask for public. The audit lifts that. It's free. It is **not** a request for more quota: our one upload a day uses about 1,650 of the free 10,000 units.
 
-**Why we're submitting:** API projects that haven't been audited can only upload **private** videos. The audit lifts that. We are **not** asking for more quota: the free 10,000 units/day covers about 6 uploads, and we do one a day.
+**The form:** https://support.google.com/youtube/contact/yt_api_form ("YouTube API Services – Audit and Quota Extension Form"). It's long, and it asks for **screenshots as file uploads**, so do these first:
 
----
+## Before you open the form (in this order)
 
-## You / your organization
+1. **Pick a public contact email** (e.g. a new free `blastoffacts@gmail.com`) and tell Claude. It goes into the three web pages below.
+2. **Switch on GitHub Pages:** github.com/Sromovski/LaunchPad → **Settings → Pages** → Source: *Deploy from a branch* → **main** / **/docs** → Save. After about a minute these are live:
+   - Homepage: `https://sromovski.github.io/LaunchPad/`
+   - Privacy policy: `https://sromovski.github.io/LaunchPad/privacy/`
+   - Terms of service: `https://sromovski.github.io/LaunchPad/terms/`
+3. **Do the Google Cloud setup** (steps A–C in `NEEDS_FROM_THOMAS.md`).
+4. **Run `npm run youtube:auth`** and take screenshots of each Google screen as you go (**Win + Shift + S**, then paste into Paint and save as PNG): the account/channel picker, the "unverified app" warning, and the permission screen. These are the **OAuth flow screenshots**.
+5. **Run `npm run publish` once.** The video will land as private, which is expected. Screenshot the terminal output and the video in YouTube Studio (Made for Kids on, in the playlist). These are the **upload screenshots**.
+6. Tell Claude when Pages is live. Claude will take the **privacy policy, homepage and terms screenshots** and put all screenshots in `exports/audit/`.
 
-- **Individual or organization:** Individual (channel owner).
-- **Name:** [YOUR FULL NAME]
-- **Email:** [CONTACT EMAIL] (the same one as in the privacy policy)
-- **Country:** [COUNTRY]
-- **Website / privacy policy URL:** `https://sromovski.github.io/LaunchPad/privacy/` (after GitHub Pages is switched on; see the end of this file)
+## The form, section by section
 
-## Your API client
+### 1. Request type
+- **Select the reason for your request:** *Complete a compliance audit to request for additional quota.* This is the option for a first audit, even though we don't want more quota.
 
-- **Google Cloud project ID / number:** [from console.cloud.google.com → project picker, e.g. `launchpad-uploader`]
-- **OAuth client ID:** [from APIs & Services → Credentials, "launchpad-desktop"]. Only the ID, **never** the client secret.
-- **App name:** Launchpad uploader
-- **Type:** Desktop application, used only by me on my own computer.
-- **YouTube channel(s) it acts for:** Blast of Facts, [CHANNEL URL, e.g. https://www.youtube.com/@BlastOfFacts]. It checks the signed-in channel before every upload and refuses to post anywhere else.
-- **Number of users:** 1 (me). It is not offered to anyone else.
-- **API services used:** YouTube Data API v3.
+### 2. Organization and contact
+- **Are you applying:** *As an individual user*
+- **Your full legal name:** [your name]
+- **Your organization's legal name:** your own name again (individuals are asked this too), or "Blast of Facts" if you prefer
+- **Primary website:** `https://sromovski.github.io/LaunchPad/`
+- **Legal address:** your address (required; Google doesn't publish it)
+- **Category:** *Education and E-Learning*
+- **Organization size/type:** *Independent Developer/Sole Proprietor*
+- **Primary contact:** your name and the contact email. Tick "Same as primary contact" for the technical and business contacts.
 
-## What it does (use case)
+### 3. Business model
+- **Describe your organization's work as it relates to YouTube** (paste this):
+  > I run Blast of Facts, a YouTube channel of short science videos for kids ages 6–10 (currently about Mars), made from public NASA imagery with a kid-level explanation, narration, captions and full credits. I review and approve every video by hand. Launchpad uploader is my own private tool that uploads one approved video per day to my channel, sets "Made for Kids", and adds it to the channel's playlist. It has one user (me), is not offered to anyone else, and never reads data about viewers.
+- **Target audience:** *Internal Users*. The tool is only for me. The channel's audience is kids, but the form asks who uses the API client.
+- **How does it monetize:** *Free service (we do not charge users)*
+- **Google/YouTube Partner Manager:** *No*
+- **How did you learn about the API:** *Google Developer Documentation*
+- **Content Owner ID / Ads Customer ID:** leave empty. If there's a "YouTube channel URL" box, add the Blast of Facts channel URL.
 
-> Launchpad uploader is a private, single-user tool that posts my own videos to my own YouTube channel, "Blast of Facts", a channel of short science videos for kids ages 6–10.
->
-> I review every video myself on a local review page and approve it by hand. Once a day, the tool uploads **one** approved video to my channel with the title, description and tags I approved. It sets `selfDeclaredMadeForKids: true` on every upload and adds the video to my channel's "Mars Facts for Kids" playlist.
->
-> The videos are original edits of public NASA imagery, with an explanation for kids, narration (AI-generated voice, disclosed in every description), captions and credits. They are never re-uploads of raw clips.
+### 4. API client
+- **API client name:** `Launchpad uploader`
+- **Name contains "YouTube":** *No*
+- **Primary access URL:** `https://sromovski.github.io/LaunchPad/`
+- **Privacy policy URL:** `https://sromovski.github.io/LaunchPad/privacy/`
+- **Terms of service URL:** `https://sromovski.github.io/LaunchPad/terms/`
+- **Is your API client publicly accessible:** *No*
+- **Demo account:** leave empty. It's a private desktop tool, and the screenshots show it working.
 
-## Which API calls and why
+### 5. Use case and quota (for your one project)
+- **How many project numbers:** *1*
+- **Google Cloud project number:** the **numeric** one. In console.cloud.google.com, select the project, open the dashboard ("Project info" card), and copy the *Project number*, not the project ID.
+- **Use case category:** *Video Uploading & Account Management*
+- **Requires Google sign-in (OAuth 2.0):** *Yes*
+- **Derived metrics / data storage:** leave unticked (we store none)
+- **Expected usage volume:** *Fewer than 1,000 requests per day*
+- **Required screenshots:**
+  - *Privacy policy screenshots* → `exports/audit/privacy-*.png` (Claude makes these)
+  - *Homepage screenshot* → `exports/audit/homepage.png` (Claude)
+  - *Terms of service documentation* → `exports/audit/terms.png` (Claude)
+  - *OAuth flow screenshots* → yours from step 4
+  - *Upload interface screenshots* → yours from step 5, plus `exports/audit/review-approve.png` (Claude: the approve screen)
+- **Endpoints you plan to use:** tick exactly these five:
+  - `youtube.channels.list`
+  - `youtube.playlists.list`
+  - `youtube.playlists.insert`
+  - `youtube.playlistItems.insert`
+  - `youtube.videos.insert`
+- **Total quota requested:** *No change / Default quota (10k quota points)*
+- **If it asks separately about `videos.insert` quota:** keep the default. Justification: "One upload per day (1,600 units); the default 10,000 units/day is enough. We only need the private-upload restriction lifted."
 
-| Method | Why | Units/day |
-|---|---|---|
-| `channels.list` (`mine=true`, `part=snippet`) | Check it's signed in to Blast of Facts before uploading | 1 |
-| `playlists.list` (`mine=true`) / `playlists.insert` (once) | Find or create the "Mars Facts for Kids" playlist | 1 |
-| `videos.insert` | Upload one approved video | 1,600 |
-| `playlistItems.insert` | Add that video to the playlist | 50 |
-| **Total** | | **≈ 1,652 of 10,000** |
+### Submit
+Google says someone from the YouTube API team "will contact you as soon as possible". Replies often take days to a few weeks, sometimes with follow-up questions: forward them to Claude to draft answers. Until approval, the daily job keeps posting, but videos land as **private** and the review site flags them so you can make them public in Studio.
 
-- **OAuth scope:** `https://www.googleapis.com/auth/youtube`. It's needed because `youtube.upload` alone can't add videos to playlists. The tool never deletes, edits or reads anything else on the channel.
-- **Quota extension requested:** No.
-
-## Data handling
-
-- **Does the client show YouTube data to other users?** No. There are no other users and no public interface.
-- **What YouTube data is stored?** Only what's needed to avoid double posting: for each upload, the video ID, its link, visibility and date, plus the playlist ID. It's stored in a local database on my computer.
-- **Tokens:** the OAuth refresh token is stored in a local file on my computer, outside the code repository. It is never shared.
-- **Data about viewers:** none. No comments, analytics, subscribers or watch data are accessed.
-- **Sharing or selling data:** none.
-- **Deletion:** I can revoke access at myaccount.google.com/permissions, or delete the local token file. The privacy policy explains this.
-- **Made for Kids:** every upload sets `selfDeclaredMadeForKids: true`, and the channel's audience is set to "made for kids". No personal information is collected from anyone, including children.
-
-## Compliance
-
-- **Terms and privacy links:** the privacy policy links to the YouTube Terms of Service and the Google Privacy Policy, explains what data is used and stored, and explains how to revoke access (YouTube API Developer Policies, section III.A).
-- **Content:** original, educational, human-approved before posting, with credits to NASA sources. No NASA logos are added and no NASA endorsement is claimed.
-
-## Screencast (if they ask)
-
-Record 1–2 minutes of the screen (Windows: **Win + Alt + R** starts and stops recording with the Xbox Game Bar):
-
-1. `npm run review`: show a video on http://launchpad.localhost and click **Approve**.
-2. `npm run youtube:auth`: show Google's consent screen with the scope and picking **Blast of Facts**. You can stop before finishing if already connected.
-3. `npm run publish`: show the terminal output with the uploaded video link.
-4. Open the video in YouTube Studio: Made for Kids is on, and the video is in the playlist.
-
-Upload the recording to **your own YouTube channel as Unlisted** and paste its link into the form.
-
----
-
-## Publishing the privacy policy (free, about 2 minutes)
-
-The repo is public, so GitHub can host the page:
-
-1. github.com/Sromovski/LaunchPad → **Settings → Pages**.
-2. **Source: Deploy from a branch** → Branch **main**, folder **/docs** → **Save**.
-3. Wait about a minute, then open **https://sromovski.github.io/LaunchPad/privacy/**.
-
-Note: this also publishes the other files in `docs/` as web pages (decision log, topic list). They're already public in the repo, so nothing new is exposed.
+Sources: [Quota and Compliance Audits (Google)](https://developers.google.com/youtube/v3/guides/quota_and_compliance_audits); [the form](https://support.google.com/youtube/contact/yt_api_form), checked 2026-09-27.
