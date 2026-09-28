@@ -7,7 +7,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type Database from 'better-sqlite3';
 import { descriptionText } from '../export/package.js';
-import { CATEGORY_ID, CHANNEL_TITLE, PLAYLIST_DESCRIPTION, PLAYLIST_TITLE } from './config.js';
+import { CATEGORY_ID, CHANNEL_ID, CHANNEL_TITLE, PLAYLIST_DESCRIPTION, PLAYLIST_TITLE, isOurChannel } from './config.js';
 import { postsMissingPlaylist, recordPost, setPlaylist } from './posts.js';
 import { nextToPost, type QueuedVideo } from './queue.js';
 import type { VideoMetadata, YouTube } from './youtube-api.js';
@@ -51,7 +51,7 @@ export type PublishOutcome =
   | { outcome: 'nothing_to_post'; playlist_retries: number }
   | { outcome: 'dry_run'; video_id: number; metadata: VideoMetadata };
 
-export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expectedChannel?: string } = {}): Promise<PublishOutcome> {
+export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expectedChannelId?: string } = {}): Promise<PublishOutcome> {
   const next = nextToPost(d.db);
   if (opts.dryRun) {
     if (!next) return { outcome: 'nothing_to_post', playlist_retries: 0 };
@@ -60,8 +60,10 @@ export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expe
 
   // Never post to the wrong channel (Thomas has other channels under the same Google login).
   const channel = await d.yt.channel();
-  const expected = opts.expectedChannel ?? CHANNEL_TITLE;
-  if (channel.title !== expected) throw new Error(`signed in to "${channel.title}", expected "${expected}" — run npm run youtube:auth and pick ${expected}`);
+  const expectedId = opts.expectedChannelId ?? CHANNEL_ID;
+  if (!isOurChannel(channel, expectedId)) {
+    throw new Error(`signed in to "${channel.title}" (${channel.id}), expected "${CHANNEL_TITLE}" (${expectedId}): run npm run youtube:auth and pick ${CHANNEL_TITLE}`);
+  }
 
   const playlistId = await d.yt.findOrCreatePlaylist(PLAYLIST_TITLE, PLAYLIST_DESCRIPTION);
   let retries = 0;

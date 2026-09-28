@@ -45,7 +45,7 @@ await main(async (db) => {
     const secret = parseClientSecret(JSON.parse(readFileSync(CLIENT_SECRET_PATH, 'utf8')));
     const token = JSON.parse(readFileSync(TOKEN_PATH, 'utf8')) as StoredToken;
     const yt = new YouTube(fetch, accessTokenProvider(fetch, secret, token.refresh_token));
-    const r = await publishNext({ db, yt, runsRoot: RUNS_ROOT, pendingDir: LOG_DIR, log }, { expectedChannel: token.channel_title });
+    const r = await publishNext({ db, yt, runsRoot: RUNS_ROOT, pendingDir: LOG_DIR, log }, { expectedChannelId: token.channel_id });
     log(`result: ${JSON.stringify(r)}`);
     return r;
   } catch (e) {

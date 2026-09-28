@@ -1,6 +1,7 @@
 /** A tiny in-memory YouTube + Google token endpoint for tests. Records every call. */
 export interface FakeOptions {
   channelTitle?: string;
+  channelId?: string;
   privacyAfterUpload?: 'public' | 'private';
   failPlaylistAdd?: boolean;
   existingPlaylist?: boolean;
@@ -29,7 +30,7 @@ export function fakeGoogle(o: FakeOptions = {}) {
       return json(200, { access_token: 'ACCESS', refresh_token: 'REFRESH', scope: 'https://www.googleapis.com/auth/youtube' });
     }
     if (headers.authorization !== 'Bearer ACCESS') return json(401, { error: { message: 'no auth' } });
-    if (url.includes('/channels?')) return json(200, { items: [{ id: 'UC123', snippet: { title: o.channelTitle ?? 'Blast of Facts' } }] });
+    if (url.includes('/channels?')) return json(200, { items: [{ id: o.channelId ?? 'UCHhHYjq4K0sERPPR2od5kRw', snippet: { title: o.channelTitle ?? 'Blast of Facts' } }] });
     if (url.includes('/playlists?') && method === 'GET') {
       return json(200, { items: o.existingPlaylist || playlistCreated ? [{ id: 'PLmars', snippet: { title: 'Mars Facts for Kids' } }] : [] });
     }

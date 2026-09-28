@@ -6,6 +6,7 @@ import type Database from 'better-sqlite3';
 import { openDb } from '../../src/db/index.js';
 import { accessTokenProvider, buildAuthUrl, parseClientSecret, pkce } from '../../src/publish/google-auth.js';
 import { buildMetadata, publishNext } from '../../src/publish/publisher.js';
+import { isOurChannel } from '../../src/publish/config.js';
 import { holdVideo } from '../../src/publish/queue.js';
 import { YouTube } from '../../src/publish/youtube-api.js';
 import { fakeGoogle, type FakeOptions } from './fake-youtube.js';
@@ -65,6 +66,13 @@ describe('auth helpers', () => {
   });
 });
 
+describe('isOurChannel', () => {
+  it('matches by ID, whatever the name looks like', () => {
+    expect(isOurChannel({ id: 'UCHhHYjq4K0sERPPR2od5kRw', title: 'Blast Of Facts' })).toBe(true);
+    expect(isOurChannel({ id: 'UCother', title: 'Blast of Facts' })).toBe(false);
+  });
+});
+
 describe('buildMetadata', () => {
   it('made for kids, public, Education, hashtags as tags, no < or >', () => {
     const m = buildMetadata({ id: 1, title: 'Why <Mars> Red?', topic: 't', description: 'Hi\nNarration voice is AI-generated.', hashtags: '["#Mars","#Space"]', approved_at: null });
@@ -90,10 +98,10 @@ describe('publishNext', () => {
     expect(readdirSync(pendingDir)).toEqual([]); // marker cleared
   });
 
-  it('never posts to the wrong channel', async () => {
+  it('never posts to the wrong channel (checked by permanent channel ID)', async () => {
     approved('A', '2026-09-27 10:00:00');
-    const { g, deps } = setup({ channelTitle: "Thomas's main channel" });
-    await expect(publishNext(deps)).rejects.toThrow(/expected "Blast of Facts"/);
+    const { g, deps } = setup({ channelTitle: 'Blast of Facts', channelId: 'UCsomeoneelse000000000' });
+    await expect(publishNext(deps)).rejects.toThrow(/expected "Blast of Facts" \(UCHhHYjq4K0sERPPR2od5kRw\)/);
     expect(g.uploads()).toBe(0);
   });
 

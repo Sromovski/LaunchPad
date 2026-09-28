@@ -8,7 +8,7 @@ import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { CHANNEL_TITLE, CLIENT_SECRET_PATH, GOOGLE_DIR, SCOPES, TOKEN_PATH } from '../publish/config.js';
+import { CHANNEL_ID, CHANNEL_TITLE, CLIENT_SECRET_PATH, GOOGLE_DIR, SCOPES, TOKEN_PATH, isOurChannel } from '../publish/config.js';
 import { accessTokenProvider, buildAuthUrl, exchangeCode, parseClientSecret, pkce, type StoredToken } from '../publish/google-auth.js';
 import { YouTube } from '../publish/youtube-api.js';
 
@@ -52,8 +52,8 @@ server.close();
 const tokens = await exchangeCode(fetch, secret, code, verifier, redirectUri);
 const yt = new YouTube(fetch, accessTokenProvider(fetch, secret, tokens.refresh_token));
 const channel = await yt.channel();
-if (channel.title !== CHANNEL_TITLE) {
-  console.error(`\nYou picked the channel "${channel.title}". Nothing was saved. Run npm run youtube:auth again and pick "${CHANNEL_TITLE}".`);
+if (!isOurChannel(channel)) {
+  console.error(`\nYou picked the channel "${channel.title}" (${channel.id}). Nothing was saved. Run npm run youtube:auth again and pick "${CHANNEL_TITLE}" (${CHANNEL_ID}).`);
   process.exit(1);
 }
 mkdirSync(GOOGLE_DIR, { recursive: true });
