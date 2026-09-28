@@ -8,7 +8,7 @@ import { resolve } from 'node:path';
 import type Database from 'better-sqlite3';
 import { descriptionText } from '../export/package.js';
 import { CATEGORY_ID, CHANNEL_ID, CHANNEL_TITLE, PLAYLIST_DESCRIPTION, PLAYLIST_TITLE, isOurChannel } from './config.js';
-import { postsMissingPlaylist, recordPost, setPlaylist } from './posts.js';
+import { postsMissingPlaylist, recentApiPosts, recordPost, setPlaylist, setVisibility } from './posts.js';
 import { nextToPost, type QueuedVideo } from './queue.js';
 import type { VideoMetadata, YouTube } from './youtube-api.js';
 
@@ -76,6 +76,21 @@ export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expe
     } catch (e) {
       d.log(`playlist retry failed for video ${p.video_id}: ${(e as Error).message}`);
     }
+  }
+
+  // YouTube can lock unaudited uploads to private after processing: record what it really shows now.
+  const recent = recentApiPosts(d.db);
+  try {
+    const now = await d.yt.visibility(recent.map((p) => p.external_id));
+    for (const p of recent) {
+      const v = now.get(p.external_id);
+      if (v && v !== p.visibility) {
+        setVisibility(d.db, p.video_id, v);
+        d.log(`video ${p.video_id} is now ${v} on YouTube (was recorded as ${p.visibility})`);
+      }
+    }
+  } catch (e) {
+    d.log(`visibility check failed: ${(e as Error).message}`);
   }
 
   if (!next) return { outcome: 'nothing_to_post', playlist_retries: retries };

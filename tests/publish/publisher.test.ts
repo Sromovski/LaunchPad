@@ -131,6 +131,15 @@ describe('publishNext', () => {
     expect(db.prepare('SELECT playlist_id FROM posts WHERE video_id = ?').get(a)).toEqual({ playlist_id: 'PLmars' });
   });
 
+  it('re-checks visibility: an upload reported public but locked private later is updated', async () => {
+    const a = approved('A', '2026-09-27 10:00:00');
+    await publishNext(setup().deps); // posted as public
+    const later = setup({ laterPrivacy: 'private' });
+    expect(await publishNext(later.deps)).toMatchObject({ outcome: 'nothing_to_post' });
+    expect(db.prepare('SELECT visibility FROM posts WHERE video_id = ?').get(a)).toEqual({ visibility: 'private' });
+    expect(later.logs.join()).toMatch(/now private/);
+  });
+
   it('refuses to re-upload after a crash between upload and record', async () => {
     const a = approved('A', '2026-09-27 10:00:00');
     writeFileSync(join(pendingDir, `pending-video-${a}.json`), '{}');

@@ -82,6 +82,14 @@ export class YouTube {
     );
   }
 
+  /** Current privacy of our uploads (YouTube may lock unaudited uploads to private after processing). */
+  async visibility(ids: string[]): Promise<Map<string, UploadResult['privacyStatus']>> {
+    if (ids.length === 0) return new Map();
+    const b = await check(await this.fetchFn(`${API}/videos?part=status&id=${ids.slice(0, 50).join(',')}`, { headers: await this.auth() }), 'videos.list');
+    const items = (b.items as { id: string; status: { privacyStatus: UploadResult['privacyStatus'] } }[] | undefined) ?? [];
+    return new Map(items.map((i) => [i.id, i.status.privacyStatus]));
+  }
+
   /** Resumable upload in one PUT (our files are a few MB). */
   async upload(bytes: Uint8Array, meta: VideoMetadata): Promise<UploadResult> {
     const init = await this.fetchFn(`${UPLOAD}?uploadType=resumable&part=snippet,status`, {

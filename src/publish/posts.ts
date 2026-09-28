@@ -60,3 +60,15 @@ export function postsMissingPlaylist(db: Database.Database): { video_id: number;
     external_id: string;
   }[];
 }
+
+
+/** Our recent API posts, to re-check their real visibility on YouTube. */
+export function recentApiPosts(db: Database.Database, limit = 20): { video_id: number; external_id: string; visibility: Visibility }[] {
+  return db
+    .prepare("SELECT video_id, external_id, visibility FROM posts WHERE platform = 'youtube' AND method = 'api' ORDER BY id DESC LIMIT ?")
+    .all(limit) as { video_id: number; external_id: string; visibility: Visibility }[];
+}
+
+export function setVisibility(db: Database.Database, videoId: number, visibility: Visibility): void {
+  db.prepare("UPDATE posts SET visibility = ? WHERE video_id = ? AND platform = 'youtube'").run(visibility, videoId);
+}

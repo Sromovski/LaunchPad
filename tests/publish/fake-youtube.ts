@@ -5,6 +5,8 @@ export interface FakeOptions {
   privacyAfterUpload?: 'public' | 'private';
   failPlaylistAdd?: boolean;
   existingPlaylist?: boolean;
+  /** What videos.list reports later (e.g. locked to private after processing). */
+  laterPrivacy?: 'public' | 'private';
 }
 
 export function fakeGoogle(o: FakeOptions = {}) {
@@ -30,6 +32,10 @@ export function fakeGoogle(o: FakeOptions = {}) {
       return json(200, { access_token: 'ACCESS', refresh_token: 'REFRESH', scope: 'https://www.googleapis.com/auth/youtube' });
     }
     if (headers.authorization !== 'Bearer ACCESS') return json(401, { error: { message: 'no auth' } });
+    if (url.includes('/videos?part=status')) {
+      const ids = new URL(url).searchParams.get('id')!.split(',');
+      return json(200, { items: ids.map((id) => ({ id, status: { privacyStatus: o.laterPrivacy ?? 'public' } })) });
+    }
     if (url.includes('/channels?')) return json(200, { items: [{ id: o.channelId ?? 'UCHhHYjq4K0sERPPR2od5kRw', snippet: { title: o.channelTitle ?? 'Blast of Facts' } }] });
     if (url.includes('/playlists?') && method === 'GET') {
       return json(200, { items: o.existingPlaylist || playlistCreated ? [{ id: 'PLmars', snippet: { title: 'Mars Facts for Kids' } }] : [] });
