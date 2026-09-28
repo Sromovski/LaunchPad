@@ -7,7 +7,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type Database from 'better-sqlite3';
 import { descriptionText } from '../export/package.js';
-import { CATEGORY_ID, CHANNEL_ID, CHANNEL_TITLE, PLAYLIST_DESCRIPTION, PLAYLIST_TITLE, isOurChannel } from './config.js';
+import { CATEGORY_ID, CHANNEL_ID, CHANNEL_TITLE, PLAYLIST_TITLE, isOurChannel, playlistDescription } from './config.js';
 import { postsMissingPlaylist, recentApiPosts, recordPost, setPlaylist, setVisibility } from './posts.js';
 import { nextToPost, type QueuedVideo } from './queue.js';
 import type { VideoMetadata, YouTube } from './youtube-api.js';
@@ -65,10 +65,17 @@ export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expe
     throw new Error(`signed in to "${channel.title}" (${channel.id}), expected "${CHANNEL_TITLE}" (${expectedId}): run npm run youtube:auth and pick ${CHANNEL_TITLE}`);
   }
 
-  const playlistId = await d.yt.findOrCreatePlaylist(PLAYLIST_TITLE, PLAYLIST_DESCRIPTION);
+  // One playlist per world (docs/TOPICS.md sections); looked up or created once per run.
+  const playlistIds = new Map<string, string>();
+  const playlistFor = async (title: string | null) => {
+    const t = title ?? PLAYLIST_TITLE;
+    if (!playlistIds.has(t)) playlistIds.set(t, await d.yt.findOrCreatePlaylist(t, playlistDescription(t)));
+    return playlistIds.get(t)!;
+  };
   let retries = 0;
   for (const p of postsMissingPlaylist(d.db)) {
     try {
+      const playlistId = await playlistFor(p.playlist);
       await d.yt.addToPlaylist(playlistId, p.external_id);
       setPlaylist(d.db, p.video_id, 'youtube', playlistId);
       retries++;
@@ -114,6 +121,7 @@ export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expe
 
   let playlist: 'added' | 'failed' = 'added';
   try {
+    const playlistId = await playlistFor(next.playlist);
     await d.yt.addToPlaylist(playlistId, res.id);
     setPlaylist(d.db, next.id, 'youtube', playlistId);
   } catch (e) {

@@ -54,11 +54,12 @@ export function setPlaylist(db: Database.Database, videoId: number, platform: Pl
 }
 
 /** Posts that are live but not yet in the playlist (a failed add is retried on the next run). */
-export function postsMissingPlaylist(db: Database.Database): { video_id: number; external_id: string }[] {
-  return db.prepare("SELECT video_id, external_id FROM posts WHERE platform = 'youtube' AND method = 'api' AND playlist_id IS NULL").all() as {
-    video_id: number;
-    external_id: string;
-  }[];
+export function postsMissingPlaylist(db: Database.Database): { video_id: number; external_id: string; playlist: string | null }[] {
+  return db
+    .prepare(
+      "SELECT p.video_id, p.external_id, v.playlist FROM posts p JOIN videos v ON v.id = p.video_id WHERE p.platform = 'youtube' AND p.method = 'api' AND p.playlist_id IS NULL",
+    )
+    .all() as { video_id: number; external_id: string; playlist: string | null }[];
 }
 
 

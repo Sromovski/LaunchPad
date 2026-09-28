@@ -13,7 +13,7 @@ export function fakeGoogle(o: FakeOptions = {}) {
   const calls: { method: string; url: string; body?: unknown; headers: Record<string, string> }[] = [];
   let uploads = 0;
   const playlistItems: { playlistId: string; videoId: string }[] = [];
-  let playlistCreated = false;
+  const playlists = new Map<string, string>(o.existingPlaylist ? [['Mars Facts for Kids', 'PL-Mars-Facts-for-Kids']] : []);
 
   const json = (status: number, body: unknown, headers: Record<string, string> = {}) =>
     new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...headers } });
@@ -38,11 +38,13 @@ export function fakeGoogle(o: FakeOptions = {}) {
     }
     if (url.includes('/channels?')) return json(200, { items: [{ id: o.channelId ?? 'UCHhHYjq4K0sERPPR2od5kRw', snippet: { title: o.channelTitle ?? 'Blast of Facts' } }] });
     if (url.includes('/playlists?') && method === 'GET') {
-      return json(200, { items: o.existingPlaylist || playlistCreated ? [{ id: 'PLmars', snippet: { title: 'Mars Facts for Kids' } }] : [] });
+      return json(200, { items: [...playlists].map(([title, id]) => ({ id, snippet: { title } })) });
     }
     if (url.includes('/playlists?') && method === 'POST') {
-      playlistCreated = true;
-      return json(200, { id: 'PLmars' });
+      const title = (body as { snippet: { title: string } }).snippet.title;
+      const id = `PL-${title.replace(/\s+/g, '-')}`;
+      playlists.set(title, id);
+      return json(200, { id });
     }
     if (url.includes('/playlistItems?')) {
       if (o.failPlaylistAdd) return json(403, { error: { message: 'nope', errors: [{ reason: 'forbidden' }] } });

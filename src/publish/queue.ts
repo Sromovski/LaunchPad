@@ -7,13 +7,14 @@ export interface QueuedVideo {
   topic: string;
   description: string | null;
   hashtags: string | null;
+  playlist: string | null;
   approved_at: string | null;
 }
 
 export function postingQueue(db: Database.Database): QueuedVideo[] {
   return db
     .prepare(
-      `SELECT v.id, v.title, v.topic, v.description, v.hashtags,
+      `SELECT v.id, v.title, v.topic, v.description, v.hashtags, v.playlist,
               (SELECT MIN(r.created_at) FROM reviews r WHERE r.video_id = v.id AND r.decision = 'approved') AS approved_at
        FROM videos v
        WHERE v.status = 'approved' AND v.do_not_post = 0

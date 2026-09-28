@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS videos (
   -- Thomas can hold an approved video back from automatic posting (e.g. superseded by a remake)
   do_not_post        INTEGER NOT NULL DEFAULT 0 CHECK (do_not_post IN (0,1)),
   do_not_post_reason TEXT,
+  -- YouTube playlist for this video (from its TOPICS.md world section); NULL = the Mars default
+  playlist           TEXT,
   -- State-machine bookkeeping (see src/db/status.ts, docs/DECISIONS.md)
   revision_count     INTEGER NOT NULL DEFAULT 0,
   retry_count        INTEGER NOT NULL DEFAULT 0,

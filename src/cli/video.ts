@@ -9,7 +9,9 @@
  *   video:mark-posted -- --video <id> --url <youtube link>   (Thomas hand-posted it; denied to agents)
  *   video:hold   -- --video <id> --reason "..."   (keep an approved video off the channel; denied to agents)
  */
-import { relative } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { relative, resolve } from 'node:path';
+import { playlistForTopic } from '../automation/topics.js';
 import { PROJECT_ROOT } from '../db/index.js';
 import { STATUSES, manualReset, transitionVideo, type Status, type VideoState } from '../db/status.js';
 import { args, getVideo, logger, main, requireVideoId, runDir } from './_lib.js';
@@ -34,10 +36,13 @@ await main((db) => {
   switch (command) {
     case 'new': {
       if (!a.topic?.trim()) throw new Error('--topic is required');
-      const id = Number(db.prepare('INSERT INTO videos (topic) VALUES (?)').run(a.topic.trim()).lastInsertRowid);
+      // The topic's world section in docs/TOPICS.md decides its YouTube playlist.
+      const topicsFile = resolve(PROJECT_ROOT, 'docs/TOPICS.md');
+      const playlist = existsSync(topicsFile) ? playlistForTopic(readFileSync(topicsFile, 'utf8'), a.topic) : null;
+      const id = Number(db.prepare('INSERT INTO videos (topic, playlist) VALUES (?, ?)').run(a.topic.trim(), playlist).lastInsertRowid);
       const dir = relative(PROJECT_ROOT, runDir(id)).replace(/\\/g, '/');
       db.prepare('UPDATE videos SET run_dir = ? WHERE id = ?').run(dir, id);
-      return { video_id: id, run_dir: dir, status: 'idea' };
+      return { video_id: id, run_dir: dir, status: 'idea', playlist };
     }
     case 'status': {
       const id = requireVideoId(a.video);

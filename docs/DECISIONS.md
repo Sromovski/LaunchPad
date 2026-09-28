@@ -107,3 +107,9 @@ Short log of design choices. Newest last.
 - **Channel is identified by ID** (UCHhHYjq4K0sERPPR2od5kRw), not name: Google's account picker still showed the old Brand Account name "Story_Clips", and the BlastofFacts04 Gmail is also named "Blast of Facts" but owns no channel.
 - **First API upload stayed public (Thomas checked in Studio, 2026-09-28):** the unaudited-project private lock didn't apply to this project, so the YouTube audit is optional for now (still recommended as insurance). The per-run visibility re-check will flag it if YouTube starts locking uploads.
 
+
+## 2026-09-28 — Beyond Mars
+
+- **Worlds after Mars (Thomas: go):** Moon → Life in Space → Sun and Earth → Jupiter → Asteroids, Comets and Pluto → Saturn → Telescopes and Deep Space; 35 topics, most rights-clear NASA footage first within each world (`scripts/footage-scan.ts`). Rockets are folded into the Moon/Artemis topics. Mars finishes first.
+- **Playlists per world:** `## World | playlist: Name` headings in `docs/TOPICS.md`; `video:new` stores the topic's playlist on the video; the publisher finds or creates it on first use (NULL = "Mars Facts for Kids").
+- **Review site starts at Windows logon** (`\Launchpad\review-site`, hidden via wscript) after it went down when its terminal closed.

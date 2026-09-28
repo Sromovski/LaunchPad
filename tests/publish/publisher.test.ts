@@ -75,7 +75,7 @@ describe('isOurChannel', () => {
 
 describe('buildMetadata', () => {
   it('made for kids, public, Education, hashtags as tags, no < or >', () => {
-    const m = buildMetadata({ id: 1, title: 'Why <Mars> Red?', topic: 't', description: 'Hi\nNarration voice is AI-generated.', hashtags: '["#Mars","#Space"]', approved_at: null });
+    const m = buildMetadata({ id: 1, title: 'Why <Mars> Red?', topic: 't', description: 'Hi\nNarration voice is AI-generated.', hashtags: '["#Mars","#Space"]', playlist: null, approved_at: null });
     expect(m.status).toEqual({ privacyStatus: 'public', selfDeclaredMadeForKids: true, embeddable: true });
     expect(m.snippet).toMatchObject({ title: 'Why Mars Red?', categoryId: '27', tags: ['Mars', 'Space'] });
     expect(m.snippet.description).toBe('Hi\nNarration voice is AI-generated.\n\n#Mars #Space\n');
@@ -90,12 +90,26 @@ describe('publishNext', () => {
     const r = await publishNext(deps);
     expect(r).toMatchObject({ outcome: 'posted', video_id: first, visibility: 'public', playlist: 'added' });
     expect(g.uploads()).toBe(1); // one video per run, never more
-    expect(g.playlistItems).toEqual([{ playlistId: 'PLmars', videoId: 'VIDEO000001' }]);
+    expect(g.playlistItems).toEqual([{ playlistId: 'PL-Mars-Facts-for-Kids', videoId: 'VIDEO000001' }]);
     expect(db.prepare('SELECT status FROM videos WHERE id = ?').get(first)).toEqual({ status: 'published' });
-    expect(db.prepare('SELECT method, visibility, playlist_id FROM posts').get()).toEqual({ method: 'api', visibility: 'public', playlist_id: 'PLmars' });
+    expect(db.prepare('SELECT method, visibility, playlist_id FROM posts').get()).toEqual({ method: 'api', visibility: 'public', playlist_id: 'PL-Mars-Facts-for-Kids' });
     const upload = g.calls.find((c) => c.url.includes('uploadType=resumable'))!;
     expect((upload.body as { status: { selfDeclaredMadeForKids: boolean } }).status.selfDeclaredMadeForKids).toBe(true);
     expect(readdirSync(pendingDir)).toEqual([]); // marker cleared
+  });
+
+  it('puts each video in its world’s playlist (created on first use), Mars videos in the default', async () => {
+    const mars = approved('Mars one', '2026-09-27 10:00:00');
+    const moon = approved('Moon one', '2026-09-27 11:00:00');
+    db.prepare("UPDATE videos SET playlist = 'Moon Facts for Kids' WHERE id = ?").run(moon);
+    const s = setup();
+    await publishNext(s.deps);
+    await publishNext(s.deps);
+    expect(s.g.playlistItems.map((p) => p.playlistId)).toEqual(['PL-Mars-Facts-for-Kids', 'PL-Moon-Facts-for-Kids']);
+    expect(db.prepare('SELECT video_id, playlist_id FROM posts ORDER BY video_id').all()).toEqual([
+      { video_id: mars, playlist_id: 'PL-Mars-Facts-for-Kids' },
+      { video_id: moon, playlist_id: 'PL-Moon-Facts-for-Kids' },
+    ]);
   });
 
   it('never posts to the wrong channel (checked by permanent channel ID)', async () => {
@@ -128,7 +142,7 @@ describe('publishNext', () => {
     const second = setup({ existingPlaylist: true });
     expect(await publishNext(second.deps)).toMatchObject({ outcome: 'nothing_to_post', playlist_retries: 1 });
     expect(second.g.uploads()).toBe(0);
-    expect(db.prepare('SELECT playlist_id FROM posts WHERE video_id = ?').get(a)).toEqual({ playlist_id: 'PLmars' });
+    expect(db.prepare('SELECT playlist_id FROM posts WHERE video_id = ?').get(a)).toEqual({ playlist_id: 'PL-Mars-Facts-for-Kids' });
   });
 
   it('re-checks visibility: an upload reported public but locked private later is updated', async () => {
