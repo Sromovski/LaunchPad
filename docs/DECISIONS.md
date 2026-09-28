@@ -113,3 +113,5 @@ Short log of design choices. Newest last.
 - **Worlds after Mars (Thomas: go):** Moon → Life in Space → Sun and Earth → Jupiter → Asteroids, Comets and Pluto → Saturn → Telescopes and Deep Space; 35 topics, most rights-clear NASA footage first within each world (`scripts/footage-scan.ts`). Rockets are folded into the Moon/Artemis topics. Mars finishes first.
 - **Playlists per world:** `## World | playlist: Name` headings in `docs/TOPICS.md`; `video:new` stores the topic's playlist on the video; the publisher finds or creates it on first use (NULL = "Mars Facts for Kids").
 - **Review site starts at Windows logon** (`\Launchpad\review-site`, hidden via wscript) after it went down when its terminal closed.
+- **YouTube API costs corrected (Google's quota page, checked 2026-09-28):** `videos.insert` now has its own allowance of 100 calls/day at 1 unit each (it was ~1,600 units until Dec 2025 and moved to its own bucket on 1 Jun 2026). Everything else shares 10,000 units/day; a post uses ~53. The binding limits are the channel's own daily upload cap (unpublished; ~10–20/day reported for newer channels) and YouTube's spam/repetitive-content policies, not cost.
+

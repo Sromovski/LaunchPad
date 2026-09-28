@@ -1,6 +1,6 @@
 # YouTube API audit: step by step
 
-**Why:** a new Google Cloud project can upload videos, but YouTube forces every one of them to **private**, even when we ask for public. The audit lifts that. It's free. It is **not** a request for more quota: our one upload a day uses about 1,650 of the free 10,000 units.
+**Why:** a new Google Cloud project can upload videos, but YouTube forces every one of them to **private**, even when we ask for public. The audit lifts that. It's free. It is **not** a request for more quota: uploads have their own free allowance of 100 a day (we use 1–2), and everything else uses about 53 of the free 10,000 units a day.
 
 **The form:** https://support.google.com/youtube/contact/yt_api_form ("YouTube API Services – Audit and Quota Extension Form"). It's long, and it asks for **screenshots as file uploads**, so do these first:
 
@@ -69,7 +69,7 @@
   - `youtube.playlistItems.insert`
   - `youtube.videos.insert`
 - **Total quota requested:** *No change / Default quota (10k quota points)*
-- **If it asks separately about `videos.insert` quota:** keep the default. Justification: "One upload per day (1,600 units); the default 10,000 units/day is enough. We only need the private-upload restriction lifted."
+- **If it asks separately about `videos.insert` quota:** keep the default (100/day). Justification: "One or two uploads per day; the default allowance is enough. We only need the private-upload restriction lifted."
 
 ### Submit
 Google says someone from the YouTube API team "will contact you as soon as possible". Replies often take days to a few weeks, sometimes with follow-up questions: forward them to Claude to draft answers. Until approval, the daily job keeps posting, but videos land as **private** and the review site flags them so you can make them public in Studio.
