@@ -105,3 +105,5 @@ Short log of design choices. Newest last.
 - **Phase 4 DoD met (2026-09-28):** `npm run publish` posted video 5 ("How Does a Rover Drive on Mars?") from the queue: https://www.youtube.com/shorts/J_C8LG6ga0o, Made for Kids, added to "Mars Facts for Kids", link shown on the review site. YouTube reported it public at upload.
 - **Visibility is re-checked every run** (`videos.list?part=status`, 1 unit) because YouTube may lock unaudited uploads to private after processing; the site shows what YouTube really says.
 - **Channel is identified by ID** (UCHhHYjq4K0sERPPR2od5kRw), not name: Google's account picker still showed the old Brand Account name "Story_Clips", and the BlastofFacts04 Gmail is also named "Blast of Facts" but owns no channel.
+- **First API upload stayed public (Thomas checked in Studio, 2026-09-28):** the unaudited-project private lock didn't apply to this project, so the YouTube audit is optional for now (still recommended as insurance). The per-run visibility re-check will flag it if YouTube starts locking uploads.
+
