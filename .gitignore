@@ -9,3 +9,6 @@ test-results/
 playwright-report/
 tests/e2e/.tmp/
 exports/
+# Thomas's screen captures dropped in the project root
+/[Ss]creenshot*
+/*.docx
