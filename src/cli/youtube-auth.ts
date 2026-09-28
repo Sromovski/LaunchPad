@@ -51,7 +51,14 @@ server.close();
 
 const tokens = await exchangeCode(fetch, secret, code, verifier, redirectUri);
 const yt = new YouTube(fetch, accessTokenProvider(fetch, secret, tokens.refresh_token));
-const channel = await yt.channel();
+let channel: { id: string; title: string };
+try {
+  channel = await yt.channel();
+} catch (e) {
+  // Common mistake: picking a Google *account* named like the channel instead of the Brand Account channel itself.
+  console.error(`\n${(e as Error).message}. Nothing was saved.\nPick the Google account that OWNS the channel (sromovski@gmail.com), then pick "${CHANNEL_TITLE}" from the brand accounts / channels list, and run npm run youtube:auth again.`);
+  process.exit(1);
+}
 if (!isOurChannel(channel)) {
   console.error(`\nYou picked the channel "${channel.title}" (${channel.id}). Nothing was saved. Run npm run youtube:auth again and pick "${CHANNEL_TITLE}" (${CHANNEL_ID}).`);
   process.exit(1);
