@@ -54,6 +54,7 @@ Google locks uploads from new, unaudited API projects to **private**, even when 
 - **Facebook:** on hold until YouTube posting is fully proven (Thomas, 2026-09-27). Nothing needed yet.
 
 ## Done
+- 2026-09-28 — Google Cloud project `launchpad-uploader` set up, app **In production**, `sromovski.github.io` verified in Search Console, and `npm run youtube:auth` connected to **Blast of Facts** (UCHhHYjq4K0sERPPR2od5kRw). Tip: in Google's picker the channel still showed its old name **Story_Clips**, under sromovski@gmail.com; the account named "Blast of Facts" is the BlastofFacts04 Gmail, which has no channel.
 - 2026-09-27 — Hand-posted video 2 to Blast of Facts: https://www.youtube.com/shorts/6qJq2lvEuV0 (recorded with `npm run video:mark-posted`; status `published`).
 - 2026-09-27 — Renamed the Story_Clips YouTube channel to **Blast of Facts**: handle, description, profile picture + banner from `assets/channel/`, audience set to made for kids.
 - 2026-09-27 — Approved Playwright Chromium install (headless shell, ~115 MB, in %LOCALAPPDATA%\ms-playwright).
