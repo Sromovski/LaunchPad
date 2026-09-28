@@ -16,6 +16,7 @@ export const PUBLISH_TIME = '16:00';
 const FOLDER = '\\Launchpad\\';
 const taskName = (t: string) => `make-video-${t.replace(':', '')}`;
 const PUBLISH_TASK = `publish-${PUBLISH_TIME.replace(':', '')}`;
+const REVIEW_TASK = 'review-site';
 
 function ps(script: string): string {
   const r = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { encoding: 'utf8' });
@@ -58,11 +59,24 @@ await main(() => {
           ].join('; '),
         );
       }
-      return { installed: [...TIMES.map((t) => `${FOLDER}${taskName(t)}`), `${FOLDER}${PUBLISH_TASK}`], log };
+      {
+        // Review site at logon, hidden (wscript + .vbs avoids a console window), running until logoff.
+        const vbs = resolve(PROJECT_ROOT, 'scripts', 'start-review-hidden.vbs');
+        ps(
+          [
+            `$a = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument '"${vbs}"' -WorkingDirectory '${PROJECT_ROOT}'`,
+            `$t = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\\$env:USERNAME"`,
+            `$s = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries`,
+            `$p = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\\$env:USERNAME" -LogonType Interactive -RunLevel Limited`,
+            `Register-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${REVIEW_TASK}' -Action $a -Trigger $t -Settings $s -Principal $p -Description 'Launchpad: review site at http://launchpad.localhost' -Force | Out-Null`,
+          ].join('; '),
+        );
+      }
+      return { installed: [...TIMES.map((t) => `${FOLDER}${taskName(t)}`), `${FOLDER}${PUBLISH_TASK}`, `${FOLDER}${REVIEW_TASK}`], log };
     }
     case 'uninstall': {
-      for (const name of [...TIMES.map(taskName), PUBLISH_TASK]) ps(`Unregister-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${name}' -Confirm:$false -ErrorAction SilentlyContinue`);
-      return { removed: [...TIMES.map(taskName), PUBLISH_TASK].map((n) => `${FOLDER}${n}`) };
+      for (const name of [...TIMES.map(taskName), PUBLISH_TASK, REVIEW_TASK]) ps(`Unregister-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${name}' -Confirm:$false -ErrorAction SilentlyContinue`);
+      return { removed: [...TIMES.map(taskName), PUBLISH_TASK, REVIEW_TASK].map((n) => `${FOLDER}${n}`) };
     }
     case 'status': {
       const out = ps(
