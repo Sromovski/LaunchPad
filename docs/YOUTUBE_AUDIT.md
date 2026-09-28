@@ -38,7 +38,7 @@
 - **How does it monetize:** *Free service (we do not charge users)*
 - **Google/YouTube Partner Manager:** *No*
 - **How did you learn about the API:** *Google Developer Documentation*
-- **Content Owner ID / Ads Customer ID:** leave empty. If there's a "YouTube channel URL" box, add the Blast of Facts channel URL.
+- **Content Owner ID / Ads Customer ID:** leave empty. If there's a "YouTube channel URL" box, add https://www.youtube.com/channel/UCHhHYjq4K0sERPPR2od5kRw
 
 ### 4. API client
 - **API client name:** `Launchpad uploader`
