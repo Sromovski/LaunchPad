@@ -22,7 +22,8 @@ export function playlistDescription(title: string): string {
 export const CATEGORY_ID = '27';
 /** Upload + playlists. youtube.upload alone can't add to playlists (Thomas chose full automation). */
 export const SCOPES = ['https://www.googleapis.com/auth/youtube'];
-export const POST_TIME = '16:00';
+/** Posting times (the schedule lives in src/cli/schedule.ts). */
+export const POST_TIMES = ['08:00', '16:00'];
 
 export const GOOGLE_DIR = resolve(PROJECT_ROOT, 'data/google'); // gitignored; agents can't write data/
 export const CLIENT_SECRET_PATH = resolve(GOOGLE_DIR, 'client_secret.json');

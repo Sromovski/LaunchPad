@@ -115,3 +115,5 @@ Short log of design choices. Newest last.
 - **Review site starts at Windows logon** (`\Launchpad\review-site`, hidden via wscript) after it went down when its terminal closed.
 - **YouTube API costs corrected (Google's quota page, checked 2026-09-28):** `videos.insert` now has its own allowance of 100 calls/day at 1 unit each (it was ~1,600 units until Dec 2025 and moved to its own bucket on 1 Jun 2026). Everything else shares 10,000 units/day; a post uses ~53. The binding limits are the channel's own daily upload cap (unpublished; ~10–20/day reported for newer channels) and YouTube's spam/repetitive-content policies, not cost.
 
+- **Two posts a day (Thomas, 2026-09-28):** one `\Launchpad\publish` task with triggers at 08:00 and 16:00 (each run posts at most one video); the old `publish-1600` task is removed on install. Matches production (07:00 and 15:00), well under YouTube's 100 uploads/day API allowance and the channel's daily upload cap.
+

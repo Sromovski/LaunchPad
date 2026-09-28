@@ -6,7 +6,7 @@ interface Data {
   held: { id: number; title: string; reason: string }[];
 }
 
-/** What the 16:00 job posts next, what's live, and what Thomas held back. */
+/** What the 8:00/16:00 jobs post next, what's live, and what Thomas held back. */
 export function Publishing() {
   const [d, setD] = useState<Data | null>(null);
   useEffect(() => {
@@ -20,7 +20,7 @@ export function Publishing() {
     <section className="mt-12 grid gap-8 md:grid-cols-2" data-testid="publishing">
       <div>
         <h2 className="font-display text-2xl font-semibold">Posting next</h2>
-        <p className="text-muted">One video a day at 16:00, oldest approval first.</p>
+        <p className="text-muted">Two videos a day, at 8:00 and 16:00, oldest approval first.</p>
         {d.next.length === 0 ? (
           <p className="mt-3 text-muted">Nothing approved is waiting. Approve a video and it joins this list.</p>
         ) : (

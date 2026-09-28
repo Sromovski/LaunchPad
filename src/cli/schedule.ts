@@ -12,10 +12,13 @@ import { main } from './_lib.js';
 
 export const TIMES = ['07:00', '15:00'];
 /** Phase 4: one post a day (Thomas, 2026-09-27). */
-export const PUBLISH_TIME = '16:00';
+/** Phase 4: two posts a day, matching production (Thomas, 2026-09-28). One task, two daily triggers. */
+export const PUBLISH_TIMES = ['08:00', '16:00'];
+/** Earlier single-time task name, removed on install. */
+const LEGACY_PUBLISH_TASKS = ['publish-1600'];
 const FOLDER = '\\Launchpad\\';
 const taskName = (t: string) => `make-video-${t.replace(':', '')}`;
-const PUBLISH_TASK = `publish-${PUBLISH_TIME.replace(':', '')}`;
+const PUBLISH_TASK = 'publish';
 const REVIEW_TASK = 'review-site';
 
 function ps(script: string): string {
@@ -52,10 +55,11 @@ await main(() => {
         ps(
           [
             `$a = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument '${arg.replace(/'/g, "''")}' -WorkingDirectory '${PROJECT_ROOT}'`,
-            `$t = New-ScheduledTaskTrigger -Daily -At '${PUBLISH_TIME}'`,
+            `$t = @(${PUBLISH_TIMES.map((t) => `(New-ScheduledTaskTrigger -Daily -At '${t}')`).join(', ')})`,
             `$s = New-ScheduledTaskSettingsSet -WakeToRun -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries`,
             `$p = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\\$env:USERNAME" -LogonType Interactive -RunLevel Limited`,
-            `Register-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${PUBLISH_TASK}' -Action $a -Trigger $t -Settings $s -Principal $p -Description 'Launchpad: post one approved video to Blast of Facts' -Force | Out-Null`,
+            `Register-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${PUBLISH_TASK}' -Action $a -Trigger $t -Settings $s -Principal $p -Description 'Launchpad: post one approved video to Blast of Facts (each run)' -Force | Out-Null`,
+            ...LEGACY_PUBLISH_TASKS.map((n) => `Unregister-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${n}' -Confirm:$false -ErrorAction SilentlyContinue`),
           ].join('; '),
         );
       }
@@ -75,8 +79,8 @@ await main(() => {
       return { installed: [...TIMES.map((t) => `${FOLDER}${taskName(t)}`), `${FOLDER}${PUBLISH_TASK}`, `${FOLDER}${REVIEW_TASK}`], log };
     }
     case 'uninstall': {
-      for (const name of [...TIMES.map(taskName), PUBLISH_TASK, REVIEW_TASK]) ps(`Unregister-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${name}' -Confirm:$false -ErrorAction SilentlyContinue`);
-      return { removed: [...TIMES.map(taskName), PUBLISH_TASK, REVIEW_TASK].map((n) => `${FOLDER}${n}`) };
+      for (const name of [...TIMES.map(taskName), PUBLISH_TASK, ...LEGACY_PUBLISH_TASKS, REVIEW_TASK]) ps(`Unregister-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${name}' -Confirm:$false -ErrorAction SilentlyContinue`);
+      return { removed: [...TIMES.map(taskName), PUBLISH_TASK, ...LEGACY_PUBLISH_TASKS, REVIEW_TASK].map((n) => `${FOLDER}${n}`) };
     }
     case 'status': {
       const out = ps(
