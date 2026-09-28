@@ -6,7 +6,7 @@
 
 ## Before you open the form (in this order)
 
-1. **Pick a public contact email** (e.g. a new free `blastoffacts@gmail.com`) and tell Claude. It goes into the three web pages below.
+1. ~~Pick a public contact email~~ Done: **BlastofFacts04@gmail.com** is in the privacy and terms pages.
 2. **Switch on GitHub Pages:** github.com/Sromovski/LaunchPad → **Settings → Pages** → Source: *Deploy from a branch* → **main** / **/docs** → Save. After about a minute these are live:
    - Homepage: `https://sromovski.github.io/LaunchPad/`
    - Privacy policy: `https://sromovski.github.io/LaunchPad/privacy/`
