@@ -7,14 +7,14 @@
 ## Before you open the form (in this order)
 
 1. ~~Pick a public contact email~~ Done: **BlastofFacts04@gmail.com** is in the privacy and terms pages.
-2. **Switch on GitHub Pages:** github.com/Sromovski/LaunchPad → **Settings → Pages** → Source: *Deploy from a branch* → **main** / **/docs** → Save. After about a minute these are live:
+2. ~~Switch on GitHub Pages~~ Done (live 2026-09-27): github.com/Sromovski/LaunchPad → **Settings → Pages** → Source: *Deploy from a branch* → **main** / **/docs** → Save. After about a minute these are live:
    - Homepage: `https://sromovski.github.io/LaunchPad/`
    - Privacy policy: `https://sromovski.github.io/LaunchPad/privacy/`
    - Terms of service: `https://sromovski.github.io/LaunchPad/terms/`
 3. **Do the Google Cloud setup** (steps A–C in `NEEDS_FROM_THOMAS.md`).
 4. **Run `npm run youtube:auth`** and take screenshots of each Google screen as you go (**Win + Shift + S**, then paste into Paint and save as PNG): the account/channel picker, the "unverified app" warning, and the permission screen. These are the **OAuth flow screenshots**.
 5. **Run `npm run publish` once.** The video will land as private, which is expected. Screenshot the terminal output and the video in YouTube Studio (Made for Kids on, in the playlist). These are the **upload screenshots**.
-6. Tell Claude when Pages is live. Claude will take the **privacy policy, homepage and terms screenshots** and put all screenshots in `exports/audit/`.
+6. ~~Pages live~~ Done. Claude's screenshots are in `C:\Projects\LaunchPad\exports\audit\`; put yours from steps 4–5 in the same folder.
 
 ## The form, section by section
 
@@ -57,11 +57,11 @@
 - **Derived metrics / data storage:** leave unticked (we store none)
 - **Expected usage volume:** *Fewer than 1,000 requests per day*
 - **Required screenshots:**
-  - *Privacy policy screenshots* → `exports/audit/privacy-*.png` (Claude makes these)
-  - *Homepage screenshot* → `exports/audit/homepage.png` (Claude)
-  - *Terms of service documentation* → `exports/audit/terms.png` (Claude)
+  - *Privacy policy screenshots* → `exports/audit/privacy-policy.png` ✓ ready
+  - *Homepage screenshot* → `exports/audit/homepage.png` ✓ ready
+  - *Terms of service documentation* → `exports/audit/terms-of-service.png` ✓ ready
   - *OAuth flow screenshots* → yours from step 4
-  - *Upload interface screenshots* → yours from step 5, plus `exports/audit/review-approve.png` (Claude: the approve screen)
+  - *Upload interface screenshots* → yours from step 5, plus `exports/audit/review-approved-video.png` and `review-queue-and-posting.png` ✓ ready (the human approval step and the posting queue)
 - **Endpoints you plan to use:** tick exactly these five:
   - `youtube.channels.list`
   - `youtube.playlists.list`
