@@ -12,3 +12,4 @@ exports/
 # Thomas's screen captures dropped in the project root
 /[Ss]creenshot*
 /*.docx
+prototypes/**/out/
