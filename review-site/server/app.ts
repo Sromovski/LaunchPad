@@ -94,7 +94,7 @@ export function createApp({ db, runsRoot }: AppDeps) {
     const next = postingQueue(db).map(({ id, title, topic, approved_at }) => ({ id, title: title ?? topic, approved_at }));
     const posted = db
       .prepare(
-        `SELECT p.video_id, v.title, p.url, p.visibility, p.playlist_id IS NOT NULL AS in_playlist, p.method, p.posted_at
+        `SELECT p.video_id, v.title, p.url, p.visibility, p.playlist_id IS NOT NULL AS in_playlist, p.method, p.posted_at, p.thumbnail
          FROM posts p JOIN videos v ON v.id = p.video_id ORDER BY p.id DESC LIMIT 10`,
       )
       .all();

@@ -8,7 +8,7 @@ import { resolve } from 'node:path';
 import type Database from 'better-sqlite3';
 import { descriptionText } from '../export/package.js';
 import { CATEGORY_ID, CHANNEL_ID, CHANNEL_TITLE, PLAYLIST_TITLE, isOurChannel, playlistDescription } from './config.js';
-import { postsMissingPlaylist, recentApiPosts, recordPost, setPlaylist, setVisibility } from './posts.js';
+import { THUMBNAIL_RETRY_DAYS, postsMissingPlaylist, postsNeedingThumbnail, recentApiPosts, recordPost, setPlaylist, setThumbnailStatus, setVisibility } from './posts.js';
 import { nextToPost, type QueuedVideo } from './queue.js';
 import type { VideoMetadata, YouTube } from './youtube-api.js';
 
@@ -44,17 +44,41 @@ export interface PublishDeps {
   pendingDir: string;
   log: (msg: string) => void;
   readFile?: (path: string) => Uint8Array;
+  /** Builds the title thumbnail (JPEG) for a video. Omitted = no custom thumbnails. */
+  thumbnail?: (videoId: number, title: string) => Uint8Array;
+}
+
+type ThumbResult = 'set' | 'failed' | 'skipped';
+
+/**
+ * Best effort: a missing thumbnail must never fail or repeat a post. YouTube refuses
+ * custom Shorts thumbnails for channels that aren't eligible yet; refusals are retried
+ * after THUMBNAIL_RETRY_DAYS, so they start working on their own once it's allowed.
+ */
+async function tryThumbnail(d: PublishDeps, videoId: number, externalId: string, title: string): Promise<ThumbResult> {
+  if (!d.thumbnail) return 'skipped';
+  try {
+    await d.yt.setThumbnail(externalId, d.thumbnail(videoId, title));
+    setThumbnailStatus(d.db, videoId, 'set');
+    d.log(`thumbnail set for video ${videoId}`);
+    return 'set';
+  } catch (e) {
+    const msg = (e as Error).message;
+    setThumbnailStatus(d.db, videoId, 'failed', msg.slice(0, 300));
+    d.log(`thumbnail not set for video ${videoId} (retry in ${THUMBNAIL_RETRY_DAYS} days): ${msg}`);
+    return 'failed';
+  }
 }
 
 export type PublishOutcome =
-  | { outcome: 'posted'; video_id: number; url: string; visibility: string; playlist: 'added' | 'failed'; note?: string }
-  | { outcome: 'nothing_to_post'; playlist_retries: number }
+  | { outcome: 'posted'; video_id: number; url: string; visibility: string; playlist: 'added' | 'failed'; thumbnail: ThumbResult; thumbnails_backfilled: number; note?: string }
+  | { outcome: 'nothing_to_post'; playlist_retries: number; thumbnails_backfilled: number }
   | { outcome: 'dry_run'; video_id: number; metadata: VideoMetadata };
 
 export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expectedChannelId?: string } = {}): Promise<PublishOutcome> {
   const next = nextToPost(d.db);
   if (opts.dryRun) {
-    if (!next) return { outcome: 'nothing_to_post', playlist_retries: 0 };
+    if (!next) return { outcome: 'nothing_to_post', playlist_retries: 0, thumbnails_backfilled: 0 };
     return { outcome: 'dry_run', video_id: next.id, metadata: buildMetadata(next) };
   }
 
@@ -100,7 +124,18 @@ export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expe
     d.log(`visibility check failed: ${(e as Error).message}`);
   }
 
-  if (!next) return { outcome: 'nothing_to_post', playlist_retries: retries };
+  // Thumbnails for earlier posts (posted before this existed, or refused a while ago).
+  // Stop at the first refusal: if YouTube says no to one, it says no to all this run.
+  let backfilled = 0;
+  if (d.thumbnail) {
+    for (const p of postsNeedingThumbnail(d.db)) {
+      const r = await tryThumbnail(d, p.video_id, p.external_id, p.title);
+      if (r !== 'set') break;
+      backfilled++;
+    }
+  }
+
+  if (!next) return { outcome: 'nothing_to_post', playlist_retries: retries, thumbnails_backfilled: backfilled };
 
   const pending = resolve(d.pendingDir, `pending-video-${next.id}.json`);
   if (existsSync(pending)) {
@@ -128,9 +163,10 @@ export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expe
     playlist = 'failed'; // retried at the start of the next run
     d.log(`playlist add failed (will retry): ${(e as Error).message}`);
   }
+  const thumbnail = await tryThumbnail(d, next.id, res.id, meta.snippet.title);
   const note =
     res.privacyStatus !== 'public'
       ? "YouTube kept it private: uploads from an unaudited API project are locked to private until Google's free audit is approved. Make it public in Studio for now."
       : undefined;
-  return { outcome: 'posted', video_id: next.id, url: post.url, visibility: res.privacyStatus, playlist, note };
+  return { outcome: 'posted', video_id: next.id, url: post.url, visibility: res.privacyStatus, playlist, thumbnail, thumbnails_backfilled: backfilled, note };
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 interface Data {
   next: { id: number; title: string; approved_at: string | null }[];
-  posted: { video_id: number; title: string; url: string; visibility: string; in_playlist: number; method: string; posted_at: string }[];
+  posted: { video_id: number; title: string; url: string; visibility: string; in_playlist: number; method: string; posted_at: string; thumbnail: 'set' | 'failed' | null }[];
   held: { id: number; title: string; reason: string }[];
 }
 
@@ -55,6 +55,13 @@ export function Publishing() {
                   {p.posted_at.slice(0, 16)}
                   {p.visibility !== 'public' && <span className="ml-2 font-semibold text-dust">{p.visibility}: make it public in Studio</span>}
                   {p.method === 'api' && !p.in_playlist && <span className="ml-2 text-dust">not in playlist yet</span>}
+                  {p.thumbnail === 'set' ? (
+                    <span className="ml-2">thumbnail set</span>
+                  ) : (
+                    <span className="ml-2" title="YouTube only allows custom Shorts thumbnails for some channels so far; retried weekly">
+                      {p.thumbnail === 'failed' ? 'YouTube picked the thumbnail (retrying weekly)' : 'thumbnail on next posting run'}
+                    </span>
+                  )}
                 </span>
               </li>
             ))}

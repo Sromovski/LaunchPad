@@ -7,12 +7,15 @@ export interface FakeOptions {
   existingPlaylist?: boolean;
   /** What videos.list reports later (e.g. locked to private after processing). */
   laterPrivacy?: 'public' | 'private';
+  /** thumbnails.set refused, as for channels not yet allowed custom Shorts thumbnails. */
+  thumbnailRefused?: boolean;
 }
 
 export function fakeGoogle(o: FakeOptions = {}) {
   const calls: { method: string; url: string; body?: unknown; headers: Record<string, string> }[] = [];
   let uploads = 0;
   const playlistItems: { playlistId: string; videoId: string }[] = [];
+  const thumbnails: string[] = [];
   const playlists = new Map<string, string>(o.existingPlaylist ? [['Mars Facts for Kids', 'PL-Mars-Facts-for-Kids']] : []);
 
   const json = (status: number, body: unknown, headers: Record<string, string> = {}) =>
@@ -52,6 +55,11 @@ export function fakeGoogle(o: FakeOptions = {}) {
       playlistItems.push({ playlistId: b.snippet.playlistId, videoId: b.snippet.resourceId.videoId });
       return json(200, { id: 'PI1' });
     }
+    if (url.startsWith('https://www.googleapis.com/upload/youtube/v3/thumbnails/set?') && method === 'POST') {
+      if (o.thumbnailRefused) return json(403, { error: { message: "The authenticated user doesn't have permissions to upload and set custom video thumbnails.", errors: [{ reason: 'forbidden' }] } });
+      thumbnails.push(new URL(url).searchParams.get('videoId')!);
+      return json(200, { items: [{ default: { url: 'https://i.ytimg.com/x.jpg' } }] });
+    }
     if (url.startsWith('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable')) {
       return new Response(null, { status: 200, headers: { Location: 'https://upload.example/session-1' } });
     }
@@ -63,5 +71,5 @@ export function fakeGoogle(o: FakeOptions = {}) {
     return json(404, { error: { message: `unexpected ${method} ${url}` } });
   }) as typeof fetch;
 
-  return { fetchFn, calls, playlistItems, uploads: () => uploads };
+  return { fetchFn, calls, playlistItems, thumbnails, uploads: () => uploads };
 }

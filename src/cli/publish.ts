@@ -11,7 +11,8 @@ import { CLIENT_SECRET_PATH, TOKEN_PATH } from '../publish/config.js';
 import { accessTokenProvider, parseClientSecret, type StoredToken } from '../publish/google-auth.js';
 import { publishNext } from '../publish/publisher.js';
 import { YouTube } from '../publish/youtube-api.js';
-import { RUNS_ROOT, args, main } from './_lib.js';
+import { THUMB_VERTICAL, makeThumbnails } from '../export/thumbnail.js';
+import { RUNS_ROOT, args, main, runDir } from './_lib.js';
 
 const a = args({ 'dry-run': { type: 'boolean', default: false }, trigger: { type: 'string', default: 'manual' } });
 const LOG_DIR = resolve(RUNS_ROOT, '_publish');
@@ -45,7 +46,14 @@ await main(async (db) => {
     const secret = parseClientSecret(JSON.parse(readFileSync(CLIENT_SECRET_PATH, 'utf8')));
     const token = JSON.parse(readFileSync(TOKEN_PATH, 'utf8')) as StoredToken;
     const yt = new YouTube(fetch, accessTokenProvider(fetch, secret, token.refresh_token));
-    const r = await publishNext({ db, yt, runsRoot: RUNS_ROOT, pendingDir: LOG_DIR, log }, { expectedChannelId: token.channel_id });
+    // The same 9:16 title thumbnail as the hand-posting export, kept in runs/<id>/thumbnail/.
+    const thumbnail = (videoId: number, title: string) => {
+      const outDir = resolve(runDir(videoId), 'thumbnail');
+      mkdirSync(outDir, { recursive: true });
+      const [file] = makeThumbnails(db, { videoId, title, runDir: runDir(videoId), outDir, variants: [THUMB_VERTICAL] });
+      return readFileSync(file!);
+    };
+    const r = await publishNext({ db, yt, runsRoot: RUNS_ROOT, pendingDir: LOG_DIR, log, thumbnail }, { expectedChannelId: token.channel_id });
     log(`result: ${JSON.stringify(r)}`);
     return r;
   } catch (e) {

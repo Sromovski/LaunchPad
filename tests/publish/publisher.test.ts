@@ -8,6 +8,7 @@ import { accessTokenProvider, buildAuthUrl, parseClientSecret, pkce } from '../.
 import { buildMetadata, publishNext } from '../../src/publish/publisher.js';
 import { isOurChannel } from '../../src/publish/config.js';
 import { holdVideo } from '../../src/publish/queue.js';
+import { recordPost } from '../../src/publish/posts.js';
 import { YouTube } from '../../src/publish/youtube-api.js';
 import { fakeGoogle, type FakeOptions } from './fake-youtube.js';
 
@@ -161,6 +162,66 @@ describe('publishNext', () => {
     await expect(publishNext(deps)).rejects.toThrow(/unfinished upload/);
     expect(g.uploads()).toBe(0);
     expect(existsSync(join(pendingDir, `pending-video-${a}.json`))).toBe(true);
+  });
+
+  describe('thumbnails', () => {
+    const thumb = () => new Uint8Array([0xff, 0xd8, 0xff]);
+    const withThumbs = (o: FakeOptions = {}) => {
+      const s = setup(o);
+      return { ...s, deps: { ...s.deps, thumbnail: thumb } };
+    };
+    const thumbRow = (id: number) =>
+      db.prepare("SELECT thumbnail, thumbnail_note FROM posts WHERE video_id = ? AND platform = 'youtube'").get(id) as { thumbnail: string | null; thumbnail_note: string | null };
+
+    it('sets our title thumbnail right after the upload', async () => {
+      const a = approved('A', '2026-09-27 10:00:00');
+      const { g, deps } = withThumbs();
+      const r = await publishNext(deps);
+      expect(r).toMatchObject({ outcome: 'posted', thumbnail: 'set' });
+      expect(g.thumbnails).toEqual(['VIDEO000001']);
+      expect(thumbRow(a).thumbnail).toBe('set');
+    });
+
+    it('a refused thumbnail never fails the post, and is not retried for a week', async () => {
+      const a = approved('A', '2026-09-27 10:00:00');
+      const refused = withThumbs({ thumbnailRefused: true });
+      expect(await publishNext(refused.deps)).toMatchObject({ outcome: 'posted', thumbnail: 'failed' });
+      expect(thumbRow(a)).toMatchObject({ thumbnail: 'failed', thumbnail_note: expect.stringMatching(/thumbnails\.set failed: 403/) });
+
+      const nextRun = withThumbs();
+      expect(await publishNext(nextRun.deps)).toMatchObject({ outcome: 'nothing_to_post', thumbnails_backfilled: 0 });
+      expect(nextRun.g.thumbnails).toEqual([]);
+
+      db.prepare("UPDATE posts SET thumbnail_at = datetime('now', '-8 days')").run();
+      const weekLater = withThumbs();
+      expect(await publishNext(weekLater.deps)).toMatchObject({ outcome: 'nothing_to_post', thumbnails_backfilled: 1 });
+      expect(thumbRow(a).thumbnail).toBe('set');
+    });
+
+    it('backfills videos posted before thumbnails existed (hand-posted too), stopping at the first refusal', async () => {
+      const a = approved('A', '2026-09-27 10:00:00');
+      const b = approved('B', '2026-09-27 11:00:00');
+      await publishNext(setup().deps); // no thumbnail support yet
+      recordPost(db, b, 'youtube', 'https://youtube.com/shorts/6qJq2lvEuV0', 'manual');
+      expect(thumbRow(a).thumbnail).toBeNull();
+
+      const refused = withThumbs({ thumbnailRefused: true });
+      await publishNext(refused.deps);
+      expect(refused.g.calls.filter((c) => c.url.includes('/thumbnails/set')).length).toBe(1); // stopped after one refusal
+
+      db.prepare("UPDATE posts SET thumbnail_at = datetime('now', '-8 days')").run();
+      const ok = withThumbs();
+      expect(await publishNext(ok.deps)).toMatchObject({ thumbnails_backfilled: 2 });
+      expect(ok.g.thumbnails.sort()).toEqual(['6qJq2lvEuV0', 'VIDEO000001']);
+    });
+
+    it('a thumbnail that fails to build is recorded, and the post still succeeds', async () => {
+      const a = approved('A', '2026-09-27 10:00:00');
+      const s = setup();
+      const r = await publishNext({ ...s.deps, thumbnail: () => { throw new Error('asset missing'); } });
+      expect(r).toMatchObject({ outcome: 'posted', thumbnail: 'failed' });
+      expect(thumbRow(a).thumbnail_note).toBe('asset missing');
+    });
   });
 
   it('dry run touches nothing', async () => {

@@ -78,6 +78,12 @@ Signed in with the login that owns the channel, at https://console.cloud.google.
 20. **`npm run publish`** posts one approved video now. Check it on YouTube: visibility **Public**, Made for Kids, in the right playlist.
 21. Scheduled posting: `npm run schedule:install` adds Task Scheduler jobs. Videos are made at 07:00 and 15:00 and posted at 08:00 and 16:00. Only videos you've **approved** in the review site are ever posted.
 
+## Part 6b — Thumbnails
+
+- The poster uploads our 9:16 title thumbnail (clean NASA frame + title) after each post, and backfills older posts.
+- YouTube only accepts custom thumbnails on Shorts for eligible channels (Partner Program first, rolling out since July 2026), and only on **phone-verified** channels: verify at https://www.youtube.com/verify when you create the channel.
+- Until the channel is eligible, YouTube picks a frame itself; Launchpad retries weekly, so thumbnails appear on their own later. The review site's **Publishing** tab shows each post's thumbnail status.
+
 ## Part 7 — The API audit (turned out optional)
 
 Google says uploads from new, unaudited API projects are locked to **private**. Ours came out **public** from the first automatic post, so we haven't needed the audit.

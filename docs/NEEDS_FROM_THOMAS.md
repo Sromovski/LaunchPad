@@ -51,6 +51,10 @@ Google locks uploads from new, unaudited API projects to **private**, even when 
 
 ### Other
 - **ffmpeg on PATH (optional):** ffmpeg 9.0.2 is installed via winget but isn't on PATH in all shells. Launchpad finds it anyway (winget folder fallback). To use it from your own terminal, open a new one or run `winget install Gyan.FFmpeg --force`.
+- **Custom thumbnails (optional, 2 minutes):** the poster now tries to set our title thumbnail on every Short, but YouTube only accepts it once the channel is allowed:
+  1. Make sure the channel is phone-verified: https://www.youtube.com/verify (signed in, Blast of Facts selected). It's free.
+  2. Check YouTube Studio → **Content** → a Short → **Details**: if there's an **Upload thumbnail** button, custom Shorts thumbnails are on for the channel and the poster's weekly retry will fill them in. If you only see frame choices, YouTube hasn't opened it to the channel yet (it started with Partner Program channels in July 2026).
+  3. Meanwhile you can pick a better frame by hand in the YouTube app (Short → Edit → Thumbnail). Our title thumbnails are in `exports/<id>-…/thumbnail-vertical.jpg` after `npm run export -- --video <id>`.
 - **Facebook:** on hold until YouTube posting is fully proven (Thomas, 2026-09-27). Nothing needed yet.
 
 ## Done

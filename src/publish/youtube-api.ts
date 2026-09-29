@@ -7,6 +7,7 @@ import type { FetchFn } from './google-auth.js';
 
 const API = 'https://www.googleapis.com/youtube/v3';
 const UPLOAD = 'https://www.googleapis.com/upload/youtube/v3/videos';
+const THUMBNAIL = 'https://www.googleapis.com/upload/youtube/v3/thumbnails/set';
 
 export interface VideoMetadata {
   snippet: { title: string; description: string; tags: string[]; categoryId: string; defaultLanguage: string; defaultAudioLanguage: string };
@@ -88,6 +89,22 @@ export class YouTube {
     const b = await check(await this.fetchFn(`${API}/videos?part=status&id=${ids.slice(0, 50).join(',')}`, { headers: await this.auth() }), 'videos.list');
     const items = (b.items as { id: string; status: { privacyStatus: UploadResult['privacyStatus'] } }[] | undefined) ?? [];
     return new Map(items.map((i) => [i.id, i.status.privacyStatus]));
+  }
+
+  /**
+   * Custom thumbnail (~50 quota units). YouTube only accepts these on Shorts for some
+   * channels (Partner Program first, rolling out since July 2026), so callers treat a
+   * refusal as "not yet", not as a failed post.
+   */
+  async setThumbnail(videoId: string, jpeg: Uint8Array): Promise<void> {
+    await check(
+      await this.fetchFn(`${THUMBNAIL}?videoId=${encodeURIComponent(videoId)}&uploadType=media`, {
+        method: 'POST',
+        headers: await this.auth({ 'Content-Type': 'image/jpeg', 'Content-Length': String(jpeg.byteLength) }),
+        body: new Blob([new Uint8Array(jpeg)], { type: 'image/jpeg' }),
+      }),
+      'thumbnails.set',
+    );
   }
 
   /** Resumable upload in one PUT (our files are a few MB). */

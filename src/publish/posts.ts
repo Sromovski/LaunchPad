@@ -73,3 +73,25 @@ export function recentApiPosts(db: Database.Database, limit = 20): { video_id: n
 export function setVisibility(db: Database.Database, videoId: number, visibility: Visibility): void {
   db.prepare("UPDATE posts SET visibility = ? WHERE video_id = ? AND platform = 'youtube'").run(visibility, videoId);
 }
+
+/** Days to wait before retrying a refused thumbnail (the channel may become eligible later). */
+export const THUMBNAIL_RETRY_DAYS = 7;
+
+/**
+ * YouTube posts still without our thumbnail: never tried (new, or posted before this
+ * existed), or refused more than THUMBNAIL_RETRY_DAYS ago. Oldest first, a few per run.
+ */
+export function postsNeedingThumbnail(db: Database.Database, limit = 5): { video_id: number; external_id: string; title: string }[] {
+  return db
+    .prepare(
+      `SELECT p.video_id, p.external_id, COALESCE(v.title, v.topic) AS title FROM posts p JOIN videos v ON v.id = p.video_id
+       WHERE p.platform = 'youtube'
+         AND (p.thumbnail IS NULL OR (p.thumbnail = 'failed' AND p.thumbnail_at < datetime('now', ?)))
+       ORDER BY p.id LIMIT ?`,
+    )
+    .all(`-${THUMBNAIL_RETRY_DAYS} days`, limit) as { video_id: number; external_id: string; title: string }[];
+}
+
+export function setThumbnailStatus(db: Database.Database, videoId: number, status: 'set' | 'failed', note: string | null = null): void {
+  db.prepare("UPDATE posts SET thumbnail = ?, thumbnail_note = ?, thumbnail_at = datetime('now') WHERE video_id = ? AND platform = 'youtube'").run(status, note, videoId);
+}

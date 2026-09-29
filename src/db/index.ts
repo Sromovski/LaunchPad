@@ -36,5 +36,9 @@ function migrate(db: Database.Database) {
   addColumn('videos', 'playlist', 'TEXT');
   addColumn('posts', 'visibility', "TEXT NOT NULL DEFAULT 'public'");
   addColumn('posts', 'playlist_id', 'TEXT');
+  // Custom thumbnail: 'set' or 'failed' (with a note); NULL = not tried yet.
+  addColumn('posts', 'thumbnail', 'TEXT');
+  addColumn('posts', 'thumbnail_note', 'TEXT');
+  addColumn('posts', 'thumbnail_at', 'TEXT');
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_sources_ref ON sources(video_id, ref)');
 }
