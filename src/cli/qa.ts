@@ -2,6 +2,7 @@
  *   npm run qa:check  -- --video <id>  → runs/<id>/qa.json (exit 1 on fail)
  *   npm run qa:frames -- --video <id>  → runs/<id>/frames/frame-1..6.png
  */
+import { parseBonus } from '../bonus/meta.js';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { latestScriptId } from '../agents/persist.js';
 import { coveredWordCount } from '../media/captions.js';
@@ -19,6 +20,9 @@ interface RenderConfig {
   end_card_start_s: number;
   clips: { nasa_id: string; start_s: number; end_s: number }[];
   credits: { text: string }[];
+  /** Present when the bonus-picture outro was appended (starts at duration_s). */
+  bonus?: { asset_id: string; start_s: number; end_s: number } | null;
+  bonus_skipped?: string | null;
 }
 
 function readJson<T>(path: string): T | null {
@@ -44,7 +48,10 @@ await main((db) => {
     mkdirSync(dir, { recursive: true });
     // Start clean: leftovers from an earlier render must not be mistaken for this one.
     for (const old of readdirSync(dir).filter((n) => /^frame-\d+\.png$/.test(n))) rmSync(`${dir}/${old}`);
-    const frames = frameTimes(cfg.duration_s, cfg.end_card_start_s, cfg.clips).map((t, i) => {
+    // Plus one frame in the middle of the bonus outro, if there is one.
+    const times = frameTimes(cfg.duration_s, cfg.end_card_start_s, cfg.clips);
+    if (cfg.bonus) times.push(Math.round(((cfg.bonus.start_s + cfg.bonus.end_s) / 2) * 100) / 100);
+    const frames = times.map((t, i) => {
       const file = `frame-${i + 1}.png`;
       run(ffmpegBin(), ['-y', '-loglevel', 'error', '-ss', String(t), '-i', finalPath, '-frames:v', '1', `${dir}/${file}`]);
       return { file: `frames/${file}`, t };
@@ -70,7 +77,8 @@ await main((db) => {
 
   const { words } = loadWords(videoId);
   const voice = readJson<{ segments: { start_s: number }[] }>(runPath(videoId, 'voice.json'));
-  const used = [...new Set(cfg.clips.map((c) => c.nasa_id))];
+  const used = [...new Set([...cfg.clips.map((c) => c.nasa_id), ...(cfg.bonus ? [cfg.bonus.asset_id] : [])])];
+  const bonusFile = readJson<unknown>(runPath(videoId, 'bonus.json'));
   const assets = db
     .prepare(`SELECT nasa_id, credit, rights_status FROM assets WHERE video_id = ? AND nasa_id IN (${used.map(() => '?').join(',')})`)
     .all(videoId, ...used) as QaFacts['usedAssets'];
@@ -91,6 +99,7 @@ await main((db) => {
     usedAssets: assets,
     scriptValidated: scriptNote.startsWith('validated'),
     scriptValidationNote: scriptNote,
+    bonus: { chosen: parseBonus(bonusFile)?.asset_id ?? null, rendered: cfg.bonus?.asset_id ?? null, skipped: cfg.bonus_skipped },
     factChecks: db.prepare('SELECT verdict, source_id FROM fact_checks WHERE script_id = ?').all(scriptId) as QaFacts['factChecks'],
   };
 

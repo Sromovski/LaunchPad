@@ -226,6 +226,37 @@ export function Detail({ id, queue, onDecided }: { id: number; queue: VideoSumma
           </table>
         </Section>
 
+        {data.bonus && (
+          <Section title="Bonus picture" aside={'start_s' in data.bonus ? `from ${data.bonus.start_s.toFixed(1)}s` : 'left off'}>
+            {'start_s' in data.bonus ? (
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  disabled={!data.has_video}
+                  onClick={() => {
+                    const b = data.bonus;
+                    if (b && 'start_s' in b && player.current) {
+                      player.current.currentTime = b.start_s;
+                      void player.current.play().catch(() => undefined);
+                    }
+                  }}
+                  className="rounded-lg px-3 py-2 text-left font-semibold hover:bg-panel"
+                >
+                  “Here's a bonus space picture! {data.bonus.title}.”
+                </button>
+                <div className="px-3 text-muted">
+                  Image: {data.bonus.credit ?? 'no credit found'} ·{' '}
+                  <a href={data.bonus.page} target="_blank" rel="noreferrer" className="text-glow">
+                    NASA Image of the Day, {data.bonus.date_text}
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <p className="text-muted">Not added: {data.bonus.skipped}</p>
+            )}
+          </Section>
+        )}
+
         <Section title="Images and credits">
           <ul className="space-y-3">
             {data.assets.map((a) => (

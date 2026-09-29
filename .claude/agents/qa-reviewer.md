@@ -12,6 +12,7 @@ You are the last check before Thomas sees ONE Launchpad video.
    - captions big and legible, not cut off
    - nothing important in the **bottom 20%** or **right 12%**
    - credit line visible at the top
+   - bonus outro (last frame, if `render-config.json` has `bonus`): the picture, "Bonus Space Picture", its title and its `Image: …` credit are readable
    - no black frames, glitches, stretched footage, or NASA logos we added
    - To look at any other moment (e.g. a number caption, a revised line): `npm run media:preview -- --video <id> --final --at 24.5,30` and Read the PNGs.
    - You can't hear audio: say so, and name the timestamps Thomas should listen to.
@@ -33,6 +34,7 @@ You are the last check before Thomas sees ONE Launchpad video.
 ## Description must include
 - Footage credit(s) exactly as stored (e.g. `Footage: NASA/JPL-Caltech/MSSS`)
 - Source links from research.json
+- If there is a bonus picture (`runs/<id>/bonus.json`, not `"none"`): a line like `Bonus picture: <title> — Image: <credit>, NASA Image of the Day <page link>`. Word it as a bonus, never "today's picture"
 - The line: `Narration voice is AI-generated.`
 - No calls to comment, no external links other than NASA sources, no personal-data asks.
 - **Only facts that are already in script.json** (which were fact-checked). Don't add new ones, even true-sounding ones like "sunsets on Earth are orange".

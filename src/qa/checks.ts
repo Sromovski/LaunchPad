@@ -6,7 +6,8 @@ import type { ProbeStream } from '../media/probe.js';
 
 export const LIMITS = {
   minDuration: 30,
-  maxDuration: 55,
+  /** Whole video incl. the bonus-picture outro (Thomas, 2026-09-28: raised from 55). */
+  maxDuration: 60,
   lufsTarget: -14,
   lufsTolerance: 2,
   /** Peak above this means clipping risk (loudnorm targets −1.5 dBTP). */
@@ -30,6 +31,8 @@ export interface QaFacts {
   scriptValidated: boolean;
   scriptValidationNote: string;
   factChecks: { verdict: string; source_id: number | null }[];
+  /** Bonus space picture: chosen by media:bonus (bonus.json) vs. what render-config.json says was rendered. */
+  bonus?: { chosen: string | null; rendered: string | null; skipped?: string | null };
 }
 
 export interface QaCheck {
@@ -48,7 +51,7 @@ export function evaluate(f: QaFacts): { pass: boolean; checks: QaCheck[] } {
   const checks: QaCheck[] = [];
   const add = (name: string, ok: boolean, detail: string) => checks.push({ name, ok, detail });
 
-  add('duration', f.duration >= LIMITS.minDuration && f.duration <= LIMITS.maxDuration, `${f.duration.toFixed(2)} s (30–55)`);
+  add('duration', f.duration >= LIMITS.minDuration && f.duration <= LIMITS.maxDuration, `${f.duration.toFixed(2)} s (${LIMITS.minDuration}–${LIMITS.maxDuration})`);
 
   const v = f.video;
   add('resolution', v?.width === 1080 && v?.height === 1920, v ? `${v.width}×${v.height}` : 'no video stream');
@@ -90,6 +93,16 @@ export function evaluate(f: QaFacts): { pass: boolean; checks: QaCheck[] } {
         ? `${unsourced.length} supported claim(s) have no stored source`
         : `${f.factChecks.length - bad.length}/${f.factChecks.length} supported`,
   );
+
+  if (f.bonus?.skipped && !f.bonus.rendered) {
+    add('bonus picture rendered', true, `left off: ${f.bonus.skipped}`);
+  } else if (f.bonus && (f.bonus.chosen || f.bonus.rendered)) {
+    add(
+      'bonus picture rendered',
+      f.bonus.chosen === f.bonus.rendered,
+      f.bonus.chosen === f.bonus.rendered ? f.bonus.chosen! : `bonus.json has ${f.bonus.chosen ?? 'none'}, render has ${f.bonus.rendered ?? 'none'} — re-run media:render`,
+    );
+  }
 
   return { pass: checks.every((c) => c.ok), checks };
 }

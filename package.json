@@ -27,6 +27,7 @@
     "media:align": "tsx src/cli/media-align.ts",
     "media:captions": "tsx src/cli/media-captions.ts",
     "media:render": "tsx src/cli/media-render.ts",
+    "media:bonus": "tsx src/cli/media-bonus.ts",
     "qa:check": "tsx src/cli/qa.ts check",
     "qa:frames": "tsx src/cli/qa.ts frames",
     "media:test-clip": "tsx src/cli/media-test-clip.ts",

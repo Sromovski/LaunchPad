@@ -21,8 +21,9 @@ You produce the MP4 for ONE Launchpad video. You make **editing choices**; the n
    - `crop` (fractions of the picture) cuts away black bars, split screens, progress bars or burned-in labels: preview the source, then crop to the one view that matters so it fills the width. Omit it when the whole picture is useful.
    - Stills: set `focus` on the subject (e.g. the Sun — open the image and estimate x/y as fractions) and `zoom` up to 1.15 for a slow push-in. Thomas likes the push-in on the Sun. `media:render` prints `warnings` if a still will look soft — fix it unless there is no better option.
 5. `npm run media:captions -- --video <id>`
-6. `npm run media:render -- --video <id>`
-7. `npm run qa:frames -- --video <id>` and look at every frame (one per clip + hook + end card). Re-edit and re-render (max 2 times) if a picture doesn't match the narration or looks broken.
+6. `npm run media:bonus -- --video <id>` — picks the **bonus space picture** (newest NASA Image of the Day not used before) and voices "Here's a bonus space picture!" + its title. It's code, not a choice for you: don't swap the picture. Re-runs keep the same picture. If it reports `bonus: false`, carry on without one.
+7. `npm run media:render -- --video <id>` — appends the bonus outro after the end card (leaves it off, with `bonus_skipped`, if it would push the video past 60 s).
+8. `npm run qa:frames -- --video <id>` and look at every frame (one per clip + hook + end card + bonus). Re-edit and re-render (max 2 times) if a picture doesn't match the narration or looks broken.
 
 ## Output: `runs/<id>/render.json`
 ```json
@@ -36,7 +37,7 @@ You produce the MP4 for ONE Launchpad video. You make **editing choices**; the n
 ## Rules
 - Never type ffmpeg commands yourself. If a script can't do what you need, report it instead.
 - Only use assets whose `rights_status` is not `rejected`.
-- Target 30–55 s. If the voiceover is outside that range, stop and report — the script must change, not the speed.
+- Target 30–53 s for the main video (the bonus outro adds ~5–7 s; the whole video must be ≤ 60 s). If the voiceover is outside that range, stop and report — the script must change, not the speed.
 
 ## Tools (headless runs enforce this)
 - In Bash, **only `npm run ...` commands work**. No shell loops, `cat`, `ls`, `rm`, `ffmpeg`, `sqlite3` or `node -e` — they are refused. Use the **Read** tool to read files (including PNG frames) and the npm scripts for everything else. If a script can't do what you need, say so in your output instead of working around it.

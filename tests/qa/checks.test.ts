@@ -29,9 +29,19 @@ describe('evaluate', () => {
     expect(r.pass).toBe(true);
   });
 
+  it('bonus left off because the video was too long passes', () => {
+    expect(failing({ ...good(), bonus: { chosen: 'iotd:a', rendered: null, skipped: 'main video 56.0 s + bonus 6.0 s > 60 s' } })).toEqual([]);
+  });
+
+  it('60 s with a bonus picture passes', () => {
+    expect(failing({ ...good(), duration: 59.9, bonus: { chosen: 'iotd:a', rendered: 'iotd:a' } })).toEqual([]);
+  });
+
   it.each<[string, (f: QaFacts) => void, string]>([
     ['too short', (f) => (f.duration = 29.9), 'duration'],
-    ['too long', (f) => (f.duration = 55.1), 'duration'],
+    ['too long', (f) => (f.duration = 60.1), 'duration'],
+    ['stale bonus render', (f) => (f.bonus = { chosen: 'iotd:b', rendered: 'iotd:a' }), 'bonus picture rendered'],
+    ['bonus chosen, not rendered', (f) => (f.bonus = { chosen: 'iotd:b', rendered: null }), 'bonus picture rendered'],
     ['landscape', (f) => (f.video!.width = 1920), 'resolution'],
     ['wrong codec', (f) => (f.video!.codec_name = 'hevc'), 'video codec'],
     ['wrong pixel format', (f) => (f.video!.pix_fmt = 'yuv444p'), 'video codec'],

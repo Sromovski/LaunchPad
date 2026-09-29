@@ -95,6 +95,14 @@ test('request changes needs notes, then updates the DB', async ({ page, request 
   expect(await statusOf(request, 3)).toBe('changes_requested');
 });
 
+test('video page shows the bonus space picture and its credit', async ({ page }) => {
+  await page.goto('/#/v/4');
+  await expect(page.getByRole('heading', { name: 'Bonus picture' })).toBeVisible();
+  await expect(page.getByText("Here's a bonus space picture! Space Station View of Earth at Night.")).toBeVisible();
+  await expect(page.getByText('Image: NASA/Jessica Meir')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'NASA Image of the Day, September 28, 2026' })).toHaveAttribute('href', /earth-at-night/);
+});
+
 test('history shows decided videos and filters them', async ({ page }) => {
   await page.goto('/#/history');
   await expect(page.getByRole('row')).toHaveCount(5); // header + 4 decided

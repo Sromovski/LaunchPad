@@ -40,6 +40,10 @@ export interface Detail {
   has_video: boolean;
   posts: { platform: string; url: string; method: string; posted_at: string }[];
   segments: { index: number; text: string; start_s: number; end_s: number }[];
+  bonus:
+    | { title: string; credit: string | null; date_text: string; page: string; asset_id: string; start_s: number; skipped: null }
+    | { skipped: string }
+    | null;
 }
 
 export interface Draft {

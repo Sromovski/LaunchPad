@@ -6,7 +6,7 @@
  *   4: approved                          → shows in History
  * Each gets a 3 s test MP4 (with audio) and a thumbnail.
  */
-import { mkdirSync, rmSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { openDb } from '../../src/db/index.js';
@@ -64,6 +64,14 @@ function seed(status: string, title: string, rights: string) {
 seed('in_review', 'Rights gate video', 'needs_review');
 seed('in_review', 'Reject me', 'clear');
 seed('in_review', 'Needs changes', 'clear');
-seed('approved', 'Already approved', 'clear');
+const approved = seed('approved', 'Already approved', 'clear');
+// A bonus space picture after the end card (media:render records it in render-config.json).
+writeFileSync(
+  resolve(TMP, 'runs', String(approved), 'render-config.json'),
+  JSON.stringify({
+    duration_s: 2,
+    bonus: { asset_id: 'iotd:earth-at-night', title: 'Space Station View of Earth at Night', credit: 'NASA/Jessica Meir', date_text: 'September 28, 2026', page: 'https://www.nasa.gov/image-detail/earth-at-night/', start_s: 2, end_s: 3 },
+  }),
+);
 db.close();
 console.log(`seeded ${TMP}`);

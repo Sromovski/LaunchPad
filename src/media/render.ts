@@ -39,6 +39,8 @@ export interface RenderPlanInput {
   captionsFile: string;
   fontsDir: string;
   output: string;
+  /** Where the caller writes `filter` (relative to the run dir). Separate names let two plans coexist. */
+  filterFile?: string;
 }
 
 export interface RenderPlan {
@@ -173,7 +175,7 @@ export function buildRenderPlan(p: RenderPlanInput): RenderPlan {
 
   const filter = chains.join(';\n');
   args.push(
-    '-/filter_complex', 'filter.txt',
+    '-/filter_complex', p.filterFile ?? 'filter.txt',
     '-map', '[vout]', '-map', '[aout]',
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-color_range', 'tv', '-r', String(FPS),
     '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2',

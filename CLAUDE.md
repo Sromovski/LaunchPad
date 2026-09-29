@@ -109,12 +109,13 @@ Each is `npm run <name> -- --video <id> [...]`, idempotent, logs to `runs/<id>/l
 
 ### Video output spec
 - 1080×1920, 30 fps, H.264 (yuv420p), AAC 48 kHz, loudness normalized to about −14 LUFS.
-- Length **30–55 s**. Hook on screen and spoken within the first 2 s.
+- Length **30–60 s** including the bonus outro. Hook on screen and spoken within the first 2 s.
 - Captions burned in, inside safe zones: nothing important in the bottom 20% or right 12% (platform UI overlaps).
 - Landscape NASA footage: scale to fill height with a gentle pan, OR blurred-background letterbox — pick per clip, default to blurred background.
 - Still images: slow Ken Burns zoom (max 1.15×).
 - On-screen credit line, small, top area, whole video: e.g. `Footage: NASA/JPL-Caltech`.
-- End card (last 3 s): the closing question in large text.
+- End card (3 s): the closing question in large text.
+- Bonus outro after the end card (`media:bonus`): "Here's a bonus space picture!" + the newest NASA Image of the Day not used before, with its credit. Chosen when the video is made and reviewed with it; it's an asset like any other (credit checker, rights gate). Left off if it would push the video past 60 s or nothing usable is in the feed.
 - No NASA logos/insignia added by us. No music in v1.
 
 ### Automated QA checks (`qa:check`)

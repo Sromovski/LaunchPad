@@ -78,7 +78,7 @@ export type FactCheck = z.infer<typeof FactCheck>;
 
 export const Render = z.object({
   final_path: nonEmpty,
-  duration_s: z.number().min(30).max(55),
+  duration_s: z.number().min(30).max(60),
   edit_decisions: z
     .array(
       z.object({

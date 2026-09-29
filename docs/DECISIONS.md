@@ -117,3 +117,5 @@ Short log of design choices. Newest last.
 
 - **Two posts a day (Thomas, 2026-09-28):** one `\Launchpad\publish` task with triggers at 08:00 and 16:00 (each run posts at most one video); the old `publish-1600` task is removed on install. Matches production (07:00 and 15:00), well under YouTube's 100 uploads/day API allowance and the channel's daily upload cap.
 
+
+- **Bonus space picture outro (Thomas, 2026-09-28, option B; idea from his daughter):** `media:bonus` picks the newest NASA Image of the Day (`nasa.gov/feeds/iotd-feed/`) not used by another video and not rights-rejected; the credit comes from the picture's page ("Image Credit: …"). It is chosen when the video is made, stored as an asset + source, and reviewed with the video, so the approval gate covers it. Worded "Here's a bonus space picture!" (never "today": the post goes up hours or days later). Not APOD, which often features privately copyrighted photos. Video limit raised from 55 to 60 s; the outro (~5–7 s) is left off if it would go past 60.

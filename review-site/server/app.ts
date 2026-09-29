@@ -145,6 +145,13 @@ export function createApp({ db, runsRoot }: AppDeps) {
       // TTS segment timings: 0 = hook, 1..n = lines, last = end question. Lets the transcript follow the player.
       segments: ((readJson(runFile(id, 'voice.json')) as { segments?: unknown[] } | null)?.segments ?? []) as unknown[],
       has_video: existsSync(runFile(id, 'final.mp4')),
+      // Bonus space picture actually rendered after the end card (media:render → render-config.json).
+      bonus: (() => {
+        const cfg = readJson(runFile(id, 'render-config.json')) as { bonus?: Record<string, unknown> | null; bonus_skipped?: string | null } | null;
+        const b = cfg?.bonus;
+        if (b) return { title: b.title, credit: b.credit, date_text: b.date_text, page: b.page, asset_id: b.asset_id, start_s: b.start_s, skipped: null };
+        return cfg?.bonus_skipped ? { skipped: cfg.bonus_skipped } : null;
+      })(),
     });
   });
 
