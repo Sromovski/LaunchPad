@@ -17,7 +17,7 @@ Each `## World | playlist: Name` heading sets the YouTube playlist for the topic
 - [x] How long is a day on Mars? | query: mars sol day — video 10 in review
 - [x] What are the two moons of Mars like? | query: phobos deimos eclipse — video 11 in review
 - [x] How cold is Mars? | query: mars temperature — video 12 in review
-- [ ] How high could you jump on Mars? | query: mars gravity
+- [x] How high could you jump on Mars? | query: mars gravity — video 13 in review
 - [ ] Is there frost on Mars? | query: mars frost
 - [ ] What are dust devils on Mars? | query: mars dust devil
 - [ ] Was there ever water on Mars? | query: jezero crater delta water
