@@ -119,3 +119,5 @@ Short log of design choices. Newest last.
 
 
 - **Bonus space picture outro (Thomas, 2026-09-28, option B; idea from his daughter):** `media:bonus` picks the newest NASA Image of the Day (`nasa.gov/feeds/iotd-feed/`) not used by another video and not rights-rejected; the credit comes from the picture's page ("Image Credit: …"). It is chosen when the video is made, stored as an asset + source, and reviewed with the video, so the approval gate covers it. Worded "Here's a bonus space picture!" (never "today": the post goes up hours or days later). Not APOD, which often features privately copyrighted photos. Video limit raised from 55 to 60 s; the outro (~5–7 s) is left off if it would go past 60.
+
+- **Outro wording changed (Thomas, 2026-09-29):** "And now… [pause] for your space picture of the day!" instead of "Here's a bonus space picture!". It's NASA's Image of the Day and the screen shows NASA's date ("From NASA, September 28, 2026"), so it stays accurate when the post goes up later. Heading "Space Picture of the Day" appears with the words, after the pause.

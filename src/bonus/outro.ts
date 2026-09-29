@@ -7,6 +7,8 @@ export interface BonusAssInput {
   credit: string | null;
   /** e.g. "September 28, 2026" — the day NASA featured it, not "today". */
   dateText: string;
+  /** When "for your space picture of the day" is spoken — the heading appears with it. */
+  headStart: number;
   titleStart: number;
   duration: number;
 }
@@ -31,8 +33,8 @@ export function bonusAss(o: BonusAssInput): string {
     '',
     '[Events]',
     'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
-    `Dialogue: 1,${assTime(0)},${assTime(o.duration)},Head,,0,0,0,,{\\fad(250,0)}Bonus Space\\NPicture`,
-    `Dialogue: 1,${assTime(0.3)},${assTime(o.duration)},Sub,,0,0,0,,{\\fad(250,0)}${assEscape(`NASA Image of the Day, ${o.dateText}`)}`,
+    `Dialogue: 1,${assTime(o.headStart)},${assTime(o.duration)},Head,,0,0,0,,{\\fad(250,0)}Space Picture\\Nof the Day`,
+    `Dialogue: 1,${assTime(o.headStart + 0.3)},${assTime(o.duration)},Sub,,0,0,0,,{\\fad(250,0)}${assEscape(`From NASA, ${o.dateText}`)}`,
     `Dialogue: 1,${assTime(o.titleStart)},${assTime(o.duration)},Title,,0,0,0,,{\\fad(200,0)}${wrap(assEscape(o.title), 20)}`,
     `Dialogue: 1,${assTime(0)},${assTime(o.duration)},Credit,,0,0,0,,${wrap(assEscape(bonusCreditLine(o.credit)), 44)}`,
     '',

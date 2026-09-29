@@ -93,4 +93,10 @@ export async function chooseBonus(
   return { choice: null, skipped };
 }
 
-export const BONUS_INTRO = "Here's a bonus space picture!";
+/**
+ * Spoken outro, one phrase per TTS segment so the gap between them is the dramatic pause
+ * (Thomas, 2026-09-29: "And now [pause] for your space picture of the day"). It's NASA's
+ * Image of the Day, and the screen shows NASA's date, so this stays true when posted later.
+ */
+export const OUTRO_LINES = ['And now...', 'for your space picture of the day!'] as const;
+export const OUTRO_PAUSE_MS = 700;

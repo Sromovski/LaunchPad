@@ -115,7 +115,7 @@ Each is `npm run <name> -- --video <id> [...]`, idempotent, logs to `runs/<id>/l
 - Still images: slow Ken Burns zoom (max 1.15×).
 - On-screen credit line, small, top area, whole video: e.g. `Footage: NASA/JPL-Caltech`.
 - End card (3 s): the closing question in large text.
-- Bonus outro after the end card (`media:bonus`): "Here's a bonus space picture!" + the newest NASA Image of the Day not used before, with its credit. Chosen when the video is made and reviewed with it; it's an asset like any other (credit checker, rights gate). Left off if it would push the video past 60 s or nothing usable is in the feed.
+- Bonus outro after the end card (`media:bonus`): "And now… for your space picture of the day!" + the newest NASA Image of the Day not used before, with its credit. Chosen when the video is made and reviewed with it; it's an asset like any other (credit checker, rights gate). Left off if it would push the video past 60 s or nothing usable is in the feed.
 - No NASA logos/insignia added by us. No music in v1.
 
 ### Automated QA checks (`qa:check`)

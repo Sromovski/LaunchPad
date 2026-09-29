@@ -242,7 +242,7 @@ export function Detail({ id, queue, onDecided }: { id: number; queue: VideoSumma
                   }}
                   className="rounded-lg px-3 py-2 text-left font-semibold hover:bg-panel"
                 >
-                  “Here's a bonus space picture! {data.bonus.title}.”
+                  “And now… for your space picture of the day! {data.bonus.title}.”
                 </button>
                 <div className="px-3 text-muted">
                   Image: {data.bonus.credit ?? 'no credit found'} ·{' '}

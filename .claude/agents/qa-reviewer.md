@@ -12,7 +12,7 @@ You are the last check before Thomas sees ONE Launchpad video.
    - captions big and legible, not cut off
    - nothing important in the **bottom 20%** or **right 12%**
    - credit line visible at the top
-   - bonus outro (last frame, if `render-config.json` has `bonus`): the picture, "Bonus Space Picture", its title and its `Image: …` credit are readable
+   - bonus outro (last frame, if `render-config.json` has `bonus`): the picture, "Space Picture of the Day", its title and its `Image: …` credit are readable
    - no black frames, glitches, stretched footage, or NASA logos we added
    - To look at any other moment (e.g. a number caption, a revised line): `npm run media:preview -- --video <id> --final --at 24.5,30` and Read the PNGs.
    - You can't hear audio: say so, and name the timestamps Thomas should listen to.

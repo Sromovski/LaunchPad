@@ -98,7 +98,7 @@ test('request changes needs notes, then updates the DB', async ({ page, request 
 test('video page shows the bonus space picture and its credit', async ({ page }) => {
   await page.goto('/#/v/4');
   await expect(page.getByRole('heading', { name: 'Bonus picture' })).toBeVisible();
-  await expect(page.getByText("Here's a bonus space picture! Space Station View of Earth at Night.")).toBeVisible();
+  await expect(page.getByText('And now… for your space picture of the day! Space Station View of Earth at Night.')).toBeVisible();
   await expect(page.getByText('Image: NASA/Jessica Meir')).toBeVisible();
   await expect(page.getByRole('link', { name: 'NASA Image of the Day, September 28, 2026' })).toHaveAttribute('href', /earth-at-night/);
 });
