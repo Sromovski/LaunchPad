@@ -18,12 +18,12 @@ Each `## World | playlist: Name` heading sets the YouTube playlist for the topic
 - [x] What are the two moons of Mars like? | query: phobos deimos eclipse — video 11 in review
 - [x] How cold is Mars? | query: mars temperature — video 12 in review
 - [x] How high could you jump on Mars? | query: mars gravity — video 13 in review
-- [ ] Is there frost on Mars? | query: mars frost
-- [ ] What are dust devils on Mars? | query: mars dust devil
-- [ ] Was there ever water on Mars? | query: jezero crater delta water
-- [ ] How does a rover take a selfie? | query: curiosity selfie
-- [ ] Are there clouds on Mars? | query: mars clouds curiosity
-- [ ] How deep is the giant canyon on Mars? | query: valles marineris
+- [x] Is there frost on Mars? | query: mars frost — video 14 in review
+- [x] What are dust devils on Mars? | query: mars dust devil — video 15 in review
+- [x] Was there ever water on Mars? | query: jezero crater delta water — video 16 in review
+- [x] How does a rover take a selfie? | query: curiosity selfie — video 17 in review
+- [x] Are there clouds on Mars? | query: mars clouds curiosity — video 18 in review
+- [x] How deep is the giant canyon on Mars? | query: valles marineris — video 19 in review
 - [ ] How big is the biggest volcano on Mars? | query: olympus mons
 - [ ] What are the ice caps on Mars made of? | query: mars polar ice cap
 - [ ] What are the tiny "blueberries" on Mars? | query: opportunity blueberries hematite
