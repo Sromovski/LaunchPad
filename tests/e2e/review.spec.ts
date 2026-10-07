@@ -14,6 +14,20 @@ test('queue loads with the waiting videos, rights badge and thumbnails', async (
   await expect.poll(() => thumb.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 });
 
+test('channel badges and the channel filter', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('queue-item-3')).toContainText('I Wonder Why');
+  await expect(page.getByTestId('queue-item-2')).toContainText('Blast of Facts');
+  const filter = page.getByTestId('channel-filter');
+  await filter.getByRole('button', { name: 'I Wonder Why' }).click();
+  await expect(page.getByRole('heading', { name: '1 video to review' })).toBeVisible();
+  await expect(page.getByTestId('queue').locator('li')).toHaveCount(1);
+  await expect(page.getByTestId('publishing-blast')).toHaveCount(0);
+  await filter.getByRole('button', { name: 'All channels' }).click();
+  await expect(page.getByRole('heading', { name: '3 videos to review' })).toBeVisible();
+  await expect(page.getByTestId('publishing-wonder')).toBeVisible();
+});
+
 test('video plays and the transcript follows it', async ({ page }) => {
   await page.goto('/#/v/2');
   const player = page.getByTestId('player');

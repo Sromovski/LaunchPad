@@ -17,19 +17,47 @@ export const go = (hash: string) => {
   location.hash = hash;
 };
 
+const CHANNEL_KEY = 'channel-filter';
+function savedChannel(): string {
+  try {
+    return localStorage.getItem(CHANNEL_KEY) ?? '';
+  } catch {
+    return ''; // private mode: start on all channels
+  }
+}
+
 export function App() {
   const [route, setRoute] = useState<Route>(parseHash);
   const [queue, setQueue] = useState<VideoSummary[] | null>(null);
   const [queueError, setQueueError] = useState<string | null>(null);
+  /** '' = every channel. Remembered per browser. */
+  const [channel, setChannel] = useState(savedChannel);
+  const [channels, setChannels] = useState<{ key: string; title: string }[]>([]);
+
+  const pickChannel = (key: string) => {
+    setChannel(key);
+    try {
+      localStorage.setItem(CHANNEL_KEY, key);
+    } catch {
+      /* private mode: filter still works for this visit */
+    }
+  };
 
   const loadQueue = useCallback(() => {
     api
-      .list('in_review')
+      .list('in_review', '', channel)
       .then((r) => {
         setQueue(r.videos);
         setQueueError(null);
       })
       .catch((e: Error) => setQueueError(e.message));
+  }, [channel]);
+
+  useEffect(() => {
+    api
+      .channels()
+      .then((r) => setChannels(r.channels))
+      .catch(() => setChannels([]));
   }, []);
 
   useEffect(() => {
@@ -54,13 +82,27 @@ export function App() {
               History
             </NavLink>
           </nav>
+          {channels.length > 1 && (
+            <div className="flex flex-wrap gap-1" role="group" aria-label="Channel" data-testid="channel-filter">
+              {[{ key: '', title: 'All channels' }, ...channels].map((c) => (
+                <button
+                  key={c.key}
+                  onClick={() => pickChannel(c.key)}
+                  aria-pressed={channel === c.key}
+                  className={`whitespace-nowrap rounded-full border px-3 py-1 text-sm ${channel === c.key ? 'border-glow bg-glow-soft text-ink' : 'border-line text-muted hover:text-ink'}`}
+                >
+                  {c.title}
+                </button>
+              ))}
+            </div>
+          )}
           <ThemeToggle />
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-5 py-6">
-        {route.page === 'queue' && <Queue videos={queue} error={queueError} />}
-        {route.page === 'history' && <History />}
+        {route.page === 'queue' && <Queue videos={queue} error={queueError} channel={channel} />}
+        {route.page === 'history' && <History channel={channel} />}
         {route.page === 'video' && <Detail key={route.id} id={route.id} queue={queue ?? []} onDecided={loadQueue} />}
       </main>
     </div>

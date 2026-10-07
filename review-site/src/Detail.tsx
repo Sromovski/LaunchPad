@@ -3,6 +3,7 @@ import { STATUS_LABEL, api, seconds, type Detail as DetailData, type VideoSummar
 import { go } from './App';
 import { DecisionPanel, type DecisionMode } from './DecisionPanel';
 import { DraftEditor } from './DraftEditor';
+import { ChannelBadge } from './Channel';
 
 /** True only where a keystroke is text. A focused checkbox (the rights box!) must still let A through. */
 const isTyping = (t: EventTarget | null) => {
@@ -101,7 +102,7 @@ export function Detail({ id, queue, onDecided }: { id: number; queue: VideoSumma
       {/* Right: everything needed to judge it, in reading order. */}
       <article className="min-w-0 max-w-3xl">
         <p className="text-muted">
-          Video {video.id} <span aria-hidden>/</span> {seconds(video.duration_s)}
+          <ChannelBadge channel={video.channel} title={video.channel_title} /> <span aria-hidden>/</span> Video {video.id} <span aria-hidden>/</span> {seconds(video.duration_s)}
           {video.revision_count > 0 && (
             <>
               {' '}

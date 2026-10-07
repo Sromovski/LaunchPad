@@ -63,7 +63,9 @@ function seed(status: string, title: string, rights: string) {
 
 seed('in_review', 'Rights gate video', 'needs_review');
 seed('in_review', 'Reject me', 'clear');
-seed('in_review', 'Needs changes', 'clear');
+const wonder = seed('in_review', 'Needs changes', 'clear');
+// One video for the second channel, to exercise the channel badge and filter.
+db.prepare("UPDATE videos SET channel = 'wonder' WHERE id = ?").run(wonder);
 const approved = seed('approved', 'Already approved', 'clear');
 // A bonus space picture after the end card (media:render records it in render-config.json).
 writeFileSync(

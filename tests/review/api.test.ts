@@ -175,9 +175,37 @@ describe('publishing overview', () => {
     const a = seedVideo('approved');
     const b = seedVideo('approved');
     db.prepare("UPDATE videos SET do_not_post = 1, do_not_post_reason = 'superseded' WHERE id = ?").run(b);
-    const d = await (await app.request('/api/publishing')).json();
-    expect(d.next.map((v: { id: number }) => v.id)).toEqual([a]);
-    expect(d.held).toEqual([{ id: b, title: 'Blue Sunsets', reason: 'superseded' }]);
-    expect(d.posted).toEqual([]);
+    const { channels } = await (await app.request('/api/publishing')).json();
+    const blast = channels.find((c: { key: string }) => c.key === 'blast');
+    expect(blast.next.map((v: { id: number }) => v.id)).toEqual([a]);
+    expect(blast.held).toEqual([{ id: b, title: 'Blue Sunsets', reason: 'superseded' }]);
+    expect(blast.posted).toEqual([]);
+    expect(blast.post_times).toEqual(['08:00', '16:00']);
+  });
+
+  it('splits by channel: each channel lists only its own videos', async () => {
+    const a = seedVideo('approved');
+    const w = seedVideo('approved');
+    db.prepare("UPDATE videos SET channel = 'wonder' WHERE id = ?").run(w);
+    const { channels } = await (await app.request('/api/publishing')).json();
+    const byKey = Object.fromEntries(channels.map((c: { key: string; next: { id: number }[] }) => [c.key, c.next.map((v) => v.id)]));
+    expect(byKey).toEqual({ blast: [a], wonder: [w] });
+    expect(channels.map((c: { title: string }) => c.title)).toEqual(['Blast of Facts', 'I Wonder Why']);
+  });
+});
+
+describe('channels in lists', () => {
+  it('every video carries its channel; ?channel= filters', async () => {
+    const a = seedVideo('in_review');
+    const w = seedVideo('in_review');
+    db.prepare("UPDATE videos SET channel = 'wonder' WHERE id = ?").run(w);
+    const all = (await (await app.request('/api/videos?status=in_review')).json()).videos;
+    expect(all.map((v: { id: number; channel: string; channel_title: string }) => [v.id, v.channel, v.channel_title]).sort()).toEqual([
+      [a, 'blast', 'Blast of Facts'],
+      [w, 'wonder', 'I Wonder Why'],
+    ]);
+    const wonder = (await (await app.request('/api/videos?status=in_review&channel=wonder')).json()).videos;
+    expect(wonder.map((v: { id: number }) => v.id)).toEqual([w]);
+    expect((await app.request('/api/videos?channel=nope')).status).toBe(400);
   });
 });

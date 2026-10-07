@@ -10,7 +10,11 @@ import { Hono } from 'hono';
 import { ZodError } from 'zod';
 import { ReviewError, assetsNeedingReview, decide, saveDraft } from '../../src/review/decide.js';
 import { STATUSES } from '../../src/db/status.js';
+import { CHANNELS, isChannelKey } from '../../src/channels.js';
 import { postingQueue } from '../../src/publish/queue.js';
+
+/** Channel key → display name, for badges (src/channels.ts is the source of truth). */
+const channelTitle = (key: string) => (isChannelKey(key) ? CHANNELS[key].title : key);
 
 export interface AppDeps {
   db: Database.Database;
@@ -68,38 +72,49 @@ export function createApp({ db, runsRoot }: AppDeps) {
     const statuses = wanted.includes('history') ? HISTORY : wanted;
     if (statuses.some((s) => !(STATUSES as readonly string[]).includes(s))) throw new ReviewError('unknown status', 400);
     const q = `%${(c.req.query('q') ?? '').trim()}%`;
+    const channel = c.req.query('channel') || null; // empty = every channel
+    if (channel && !isChannelKey(channel)) throw new ReviewError('unknown channel', 400);
     const rows = db
       .prepare(
-        `SELECT v.id, v.topic, v.status, v.title, v.duration_s, v.created_at, v.updated_at, v.revision_count,
+        `SELECT v.id, v.channel, v.topic, v.status, v.title, v.duration_s, v.created_at, v.updated_at, v.revision_count,
                 (SELECT COUNT(*) FROM assets a WHERE a.video_id = v.id AND a.rights_status = 'needs_review') AS rights_warnings,
                 (SELECT decision || '|' || created_at FROM reviews r WHERE r.video_id = v.id ORDER BY r.id DESC LIMIT 1) AS last_review
          FROM videos v
-         WHERE v.status IN (${statuses.map(() => '?').join(',')}) AND (v.title LIKE ? OR v.topic LIKE ?)
+         WHERE v.status IN (${statuses.map(() => '?').join(',')}) AND (v.title LIKE ? OR v.topic LIKE ?) AND (? IS NULL OR v.channel = ?)
          ORDER BY v.updated_at DESC, v.id DESC`,
       )
-      .all(...statuses, q, q);
-    return c.json({ videos: rows });
+      .all(...statuses, q, q, channel, channel) as { channel: string }[];
+    return c.json({ videos: rows.map((r) => ({ ...r, channel_title: channelTitle(r.channel) })) });
   });
+
+  /** The channels, for the site's channel filter. */
+  app.get('/api/channels', (c) => c.json({ channels: Object.values(CHANNELS).map((ch) => ({ key: ch.key, title: ch.title })) }));
 
   // ---- Automation health (Phase 3) ---------------------------------------------------
   app.get('/api/automation', (c) => {
-    const runs = db
-      .prepare('SELECT id, trigger, started_at, finished_at, topic, video_id, outcome, duration_s, error FROM automation_runs ORDER BY id DESC LIMIT 5')
-      .all();
+    const runs = (
+      db
+        .prepare('SELECT id, trigger, channel, started_at, finished_at, topic, video_id, outcome, duration_s, error FROM automation_runs ORDER BY id DESC LIMIT 10')
+        .all() as { channel: string }[]
+    ).map((r) => ({ ...r, channel_title: channelTitle(r.channel) }));
     return c.json({ runs });
   });
 
   // ---- Posting (Phase 4) -------------------------------------------------------------
+  /** Per channel: what its posting job posts next, what's live, what Thomas held back. */
   app.get('/api/publishing', (c) => {
-    const next = postingQueue(db).map(({ id, title, topic, approved_at }) => ({ id, title: title ?? topic, approved_at }));
-    const posted = db
-      .prepare(
-        `SELECT p.video_id, v.title, p.url, p.visibility, p.playlist_id IS NOT NULL AS in_playlist, p.method, p.posted_at, p.thumbnail
-         FROM posts p JOIN videos v ON v.id = p.video_id ORDER BY p.id DESC LIMIT 10`,
-      )
-      .all();
-    const held = db.prepare('SELECT id, title, do_not_post_reason AS reason FROM videos WHERE do_not_post = 1 ORDER BY id').all();
-    return c.json({ next, posted, held });
+    const channels = Object.values(CHANNELS).map((ch) => {
+      const next = postingQueue(db, ch.key).map(({ id, title, topic, approved_at }) => ({ id, title: title ?? topic, approved_at }));
+      const posted = db
+        .prepare(
+          `SELECT p.video_id, v.title, p.url, p.visibility, p.playlist_id IS NOT NULL AS in_playlist, p.method, p.posted_at, p.thumbnail
+           FROM posts p JOIN videos v ON v.id = p.video_id WHERE v.channel = ? ORDER BY p.id DESC LIMIT 10`,
+        )
+        .all(ch.key);
+      const held = db.prepare('SELECT id, title, do_not_post_reason AS reason FROM videos WHERE do_not_post = 1 AND channel = ? ORDER BY id').all(ch.key);
+      return { key: ch.key, title: ch.title, post_times: ch.postTimes, next, posted, held };
+    });
+    return c.json({ channels });
   });
 
   // ---- Detail ---------------------------------------------------------------------
@@ -126,7 +141,7 @@ export function createApp({ db, runsRoot }: AppDeps) {
     const qaReview = readJson(runFile(id, 'qa-review.json')) as { title?: string; description?: string; hashtags?: string[] } | null;
 
     return c.json({
-      video: { ...video, hashtags: video.hashtags ? JSON.parse(String(video.hashtags)) : null },
+      video: { ...video, channel_title: channelTitle(String(video.channel)), hashtags: video.hashtags ? JSON.parse(String(video.hashtags)) : null },
       script: scriptRow ? { ...JSON.parse(scriptRow.body_json), version: scriptRow.version, word_count: scriptRow.word_count, reading_grade: scriptRow.reading_grade } : null,
       sources,
       fact_checks: factChecks,

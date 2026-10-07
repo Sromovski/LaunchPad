@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { STATUS_LABEL, api, seconds, type VideoSummary } from './api';
+import { ChannelBadge } from './Channel';
 
 const FILTERS: { key: string; label: string }[] = [
   { key: 'history', label: 'All' },
@@ -17,7 +18,7 @@ const TONE: Record<string, string> = {
   changes_requested: 'text-dust',
 };
 
-export function History() {
+export function History({ channel }: { channel: string }) {
   const [filter, setFilter] = useState('history');
   const [q, setQ] = useState('');
   const [rows, setRows] = useState<VideoSummary[] | null>(null);
@@ -26,7 +27,7 @@ export function History() {
   useEffect(() => {
     const t = setTimeout(() => {
       api
-        .list(filter, q)
+        .list(filter, q, channel)
         .then((r) => {
           setRows(r.videos);
           setError(null);
@@ -34,7 +35,7 @@ export function History() {
         .catch((e: Error) => setError(e.message));
     }, 150);
     return () => clearTimeout(t);
-  }, [filter, q]);
+  }, [filter, q, channel]);
 
   return (
     <section>
@@ -81,7 +82,10 @@ export function History() {
                   <a href={`#/v/${v.id}`} className="font-semibold text-ink">
                     {v.title ?? v.topic}
                   </a>
-                  <div className="text-sm text-muted">video {v.id}</div>
+                  <div className="flex flex-wrap gap-x-3 text-sm text-muted">
+                    <span>video {v.id}</span>
+                    <ChannelBadge channel={v.channel} title={v.channel_title} />
+                  </div>
                 </td>
                 <td className={`py-3 pr-4 font-semibold ${TONE[v.status] ?? ''}`}>{STATUS_LABEL[v.status] ?? v.status}</td>
                 <td className="py-3 pr-4 text-muted">{seconds(v.duration_s)}</td>

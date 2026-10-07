@@ -1,5 +1,8 @@
 export interface VideoSummary {
   id: number;
+  /** Channel key (blast | wonder) and its display name. */
+  channel: string;
+  channel_title: string;
   topic: string;
   status: string;
   title: string | null;
@@ -62,7 +65,9 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  list: (status: string, q = '') => call<{ videos: VideoSummary[] }>(`/api/videos?status=${encodeURIComponent(status)}&q=${encodeURIComponent(q)}`),
+  list: (status: string, q = '', channel = '') =>
+    call<{ videos: VideoSummary[] }>(`/api/videos?status=${encodeURIComponent(status)}&q=${encodeURIComponent(q)}&channel=${encodeURIComponent(channel)}`),
+  channels: () => call<{ channels: { key: string; title: string }[] }>('/api/channels'),
   detail: (id: number) => call<Detail>(`/api/videos/${id}`),
   saveDraft: (id: number, d: Draft) => call<{ draft: Draft }>(`/api/videos/${id}/draft`, { method: 'PATCH', body: JSON.stringify(d) }),
   review: (id: number, decision: Decision, notes: string, rights_checked: boolean) =>
