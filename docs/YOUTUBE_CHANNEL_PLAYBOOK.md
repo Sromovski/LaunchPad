@@ -1,6 +1,6 @@
 # YouTube channel playbook
 
-How we set up **Blast of Facts** for automatic posting (September 2026), written so it can be repeated for a new channel. Everything here is free.
+How we set up **Blast of Facts** for automatic posting (September 2026), written so it can be repeated for a new channel (done again for **I Wonder Why** in October 2026, channel ID `UCqNwPn4hm_lMSOhHdXcfMig`). Everything here is free.
 
 Google changes these screens often. If a button name doesn't match, look for the nearest equivalent.
 
@@ -124,11 +124,12 @@ If a new project's uploads do come out private:
 - Part 5 (`youtube:auth` for the new channel).
 - Part 6 (test post).
 
-**Code change needed:** Launchpad currently knows **one** channel. `src/publish/config.ts` holds the channel ID, and there's a single `data/google/token.json`. A second channel needs:
-- a channel setting per project or per topic list,
-- a token file per channel,
-- its own playlists.
+**In Launchpad (done for I Wonder Why, 2026-10-07):** each channel is one entry in `src/channels.ts`: key, title, channel ID, topics file, token file, default playlist, make/post times, colours, voice, outro on/off. Commands take `--channel <key>` (no flag = `blast`):
+- `npm run youtube:auth -- --channel wonder` saves `data/google/token-wonder.json` (only if you picked that channel).
+- `npm run schedule:install` adds every channel's make and post jobs.
+- `npm run publish -- --channel wonder [--dry-run]` posts to that channel only.
+- The `## World | playlist: Name` headings in its topics file create its playlists on first use.
 
-This is a small change; ask Claude when you're ready.
+A third channel = a new entry in `src/channels.ts`, its key added to the `videos.channel` CHECK in `src/db/schema.sql` (and the migration in `src/db/index.ts`), a topics file, then the steps above.
 
 **Another platform:** Facebook Reels is **on hold** until Thomas says to start it.

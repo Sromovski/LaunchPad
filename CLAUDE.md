@@ -1,6 +1,13 @@
 # CLAUDE.md — Project "Launchpad"
 
-> Codename **Launchpad**. Public channel name: **Blast of Facts** (YouTube: a Brand Account channel under Thomas's Google login, renamed from Story_Clips). This is a standalone project (not part of Lantern).
+> Codename **Launchpad**. Two YouTube channels, both Brand Accounts under Thomas's Google login, both Made for Kids, running side by side:
+> - **Blast of Facts** (space; renamed from Story_Clips). Key `blast`, topics in `docs/TOPICS.md`.
+> - **I Wonder Why** (@I_Wonder_Why; our planet seen with NASA footage, added 2026-10-07). Key `wonder`, topics in `docs/TOPICS_WONDER.md`.
+>
+> Each video belongs to one channel (`videos.channel`). Per-channel settings (YouTube ID, login file, playlists, schedule, colours, voice, outro) live in `src/channels.ts`; commands take `--channel blast|wonder` (default `blast`).
+> Channel decisions, brand colors, future sources and topics: see `docs/ROADMAP.md`. Read it when relevant; don't build its "Later" items until Phases 1–4 are done and Thomas says go.
+>
+> This is a standalone project (not part of Lantern).
 
 ## 1. Mission
 
@@ -214,7 +221,8 @@ Do phases in order. Don't start the next until the current one's DoD passes and 
 
 ## 11. Kids' content and platform rules
 
-- YouTube channel: **Blast of Facts** (separate Brand Account, never Thomas's main channel). Set the channel audience to Made for Kids. Channel name/logo must not include "NASA".
+- YouTube channels: **Blast of Facts** and **I Wonder Why** (separate Brand Accounts, never Thomas's main channel). Set each channel's audience to Made for Kids. Channel names/logos must not include "NASA".
+- A posting run is signed in to exactly one channel and only ever touches that channel's videos. Topics must not repeat across the two channels (YouTube's repetitive-content rules).
 - YouTube: mark every video **Made for Kids**. Expect comments off and lower ad revenue; that's accepted.
 - Description always includes: footage credit(s), source links, and "Narration voice is AI-generated."
 - No personal data collection, no calls to comment, no links to external sites in the video itself.
