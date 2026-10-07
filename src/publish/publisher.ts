@@ -7,7 +7,8 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type Database from 'better-sqlite3';
 import { descriptionText } from '../export/package.js';
-import { CATEGORY_ID, CHANNEL_ID, CHANNEL_TITLE, PLAYLIST_TITLE, isOurChannel, playlistDescription } from './config.js';
+import type { Channel } from '../channels.js';
+import { CATEGORY_ID, isOurChannel } from './config.js';
 import { THUMBNAIL_RETRY_DAYS, postsMissingPlaylist, postsNeedingThumbnail, recentApiPosts, recordPost, setPlaylist, setThumbnailStatus, setVisibility } from './posts.js';
 import { nextToPost, type QueuedVideo } from './queue.js';
 import type { VideoMetadata, YouTube } from './youtube-api.js';
@@ -37,6 +38,8 @@ export function buildMetadata(v: QueuedVideo): VideoMetadata {
 }
 
 export interface PublishDeps {
+  /** The one channel this run posts to (and the only videos/posts it looks at). */
+  channel: Channel;
   db: Database.Database;
   yt: YouTube;
   runsRoot: string;
@@ -75,29 +78,30 @@ export type PublishOutcome =
   | { outcome: 'nothing_to_post'; playlist_retries: number; thumbnails_backfilled: number }
   | { outcome: 'dry_run'; video_id: number; metadata: VideoMetadata };
 
-export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expectedChannelId?: string } = {}): Promise<PublishOutcome> {
-  const next = nextToPost(d.db);
+export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean } = {}): Promise<PublishOutcome> {
+  const ch = d.channel;
+  const next = nextToPost(d.db, ch.key);
   if (opts.dryRun) {
     if (!next) return { outcome: 'nothing_to_post', playlist_retries: 0, thumbnails_backfilled: 0 };
     return { outcome: 'dry_run', video_id: next.id, metadata: buildMetadata(next) };
   }
 
-  // Never post to the wrong channel (Thomas has other channels under the same Google login).
-  const channel = await d.yt.channel();
-  const expectedId = opts.expectedChannelId ?? CHANNEL_ID;
-  if (!isOurChannel(channel, expectedId)) {
-    throw new Error(`signed in to "${channel.title}" (${channel.id}), expected "${CHANNEL_TITLE}" (${expectedId}): run npm run youtube:auth and pick ${CHANNEL_TITLE}`);
+  // Never post to the wrong channel (Thomas has several channels under the same Google login).
+  const signedIn = await d.yt.channel();
+  if (!isOurChannel(signedIn, ch.youtubeId)) {
+    const auth = `npm run youtube:auth${ch.key === 'blast' ? '' : ` -- --channel ${ch.key}`}`;
+    throw new Error(`signed in to "${signedIn.title}" (${signedIn.id}), expected "${ch.title}" (${ch.youtubeId}): run ${auth} and pick ${ch.title}`);
   }
 
-  // One playlist per world (docs/TOPICS.md sections); looked up or created once per run.
+  // One playlist per world (the channel's TOPICS file sections); looked up or created once per run.
   const playlistIds = new Map<string, string>();
   const playlistFor = async (title: string | null) => {
-    const t = title ?? PLAYLIST_TITLE;
-    if (!playlistIds.has(t)) playlistIds.set(t, await d.yt.findOrCreatePlaylist(t, playlistDescription(t)));
+    const t = title ?? ch.defaultPlaylist;
+    if (!playlistIds.has(t)) playlistIds.set(t, await d.yt.findOrCreatePlaylist(t, ch.playlistDescription(t)));
     return playlistIds.get(t)!;
   };
   let retries = 0;
-  for (const p of postsMissingPlaylist(d.db)) {
+  for (const p of postsMissingPlaylist(d.db, ch.key)) {
     try {
       const playlistId = await playlistFor(p.playlist);
       await d.yt.addToPlaylist(playlistId, p.external_id);
@@ -110,7 +114,7 @@ export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expe
   }
 
   // YouTube can lock unaudited uploads to private after processing: record what it really shows now.
-  const recent = recentApiPosts(d.db);
+  const recent = recentApiPosts(d.db, ch.key);
   try {
     const now = await d.yt.visibility(recent.map((p) => p.external_id));
     for (const p of recent) {
@@ -128,7 +132,7 @@ export async function publishNext(d: PublishDeps, opts: { dryRun?: boolean; expe
   // Stop at the first refusal: if YouTube says no to one, it says no to all this run.
   let backfilled = 0;
   if (d.thumbnail) {
-    for (const p of postsNeedingThumbnail(d.db)) {
+    for (const p of postsNeedingThumbnail(d.db, ch.key)) {
       const r = await tryThumbnail(d, p.video_id, p.external_id, p.title);
       if (r !== 'set') break;
       backfilled++;

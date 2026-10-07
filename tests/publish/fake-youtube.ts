@@ -9,11 +9,14 @@ export interface FakeOptions {
   laterPrivacy?: 'public' | 'private';
   /** thumbnails.set refused, as for channels not yet allowed custom Shorts thumbnails. */
   thumbnailRefused?: boolean;
+  /** Upload IDs start after this many (two fakes in one test must not hand out the same video ID). */
+  uploadOffset?: number;
 }
 
 export function fakeGoogle(o: FakeOptions = {}) {
   const calls: { method: string; url: string; body?: unknown; headers: Record<string, string> }[] = [];
   let uploads = 0;
+  const offset = o.uploadOffset ?? 0;
   const playlistItems: { playlistId: string; videoId: string }[] = [];
   const thumbnails: string[] = [];
   const playlists = new Map<string, string>(o.existingPlaylist ? [['Mars Facts for Kids', 'PL-Mars-Facts-for-Kids']] : []);
@@ -65,7 +68,7 @@ export function fakeGoogle(o: FakeOptions = {}) {
     }
     if (url === 'https://upload.example/session-1' && method === 'PUT') {
       uploads++;
-      const id = `VIDEO${String(uploads).padStart(6, '0')}`; // 11 chars
+      const id = `VIDEO${String(uploads + offset).padStart(6, '0')}`; // 11 chars
       return json(200, { id, status: { privacyStatus: o.privacyAfterUpload ?? 'public', uploadStatus: 'uploaded' } });
     }
     return json(404, { error: { message: `unexpected ${method} ${url}` } });

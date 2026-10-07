@@ -26,7 +26,7 @@ export function evaluatePreflight(f: PreflightFacts, cap = QUEUE_CAP): Preflight
   if (missing.length) fail.push(`missing tools: ${missing.join(', ')} (run npm run doctor)`);
   if (f.freeBytes !== null && f.freeBytes < MIN_FREE_BYTES) fail.push(`low disk space: ${(f.freeBytes / 1024 ** 3).toFixed(1)} GB free`);
   if (f.inReview >= cap) skip.push(`review queue is full (${f.inReview} waiting, cap ${cap})`);
-  if (!f.nextTopic) skip.push('no open topics left in docs/TOPICS.md');
+  if (!f.nextTopic) skip.push("no open topics left in this channel's TOPICS file");
   if (fail.length) return { go: false, outcome: 'fail', reasons: [...fail, ...skip] };
   if (skip.length) return { go: false, outcome: 'skip', reasons: skip };
   return { go: true, outcome: 'go', reasons: [] };

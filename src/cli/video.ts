@@ -1,6 +1,6 @@
 /**
  * Orchestration commands used by /make-video (so agents never touch the DB directly):
- *   video:new    -- --topic "..."
+ *   video:new    -- --topic "..." [--channel blast|wonder]   (no --channel = blast)
  *   video:status -- --video <id> --to <status> [--error "..."]
  *   video:show   -- --video <id>
  *   run:start    -- --video <id> --step <step> [--agent <name>]
@@ -10,8 +10,9 @@
  *   video:hold   -- --video <id> --reason "..."   (keep an approved video off the channel; denied to agents)
  */
 import { existsSync, readFileSync } from 'node:fs';
-import { relative, resolve } from 'node:path';
+import { relative } from 'node:path';
 import { playlistForTopic } from '../automation/topics.js';
+import { channelByKey } from '../channels.js';
 import { PROJECT_ROOT } from '../db/index.js';
 import { STATUSES, manualReset, transitionVideo, type Status, type VideoState } from '../db/status.js';
 import { args, getVideo, logger, main, requireVideoId, runDir } from './_lib.js';
@@ -22,6 +23,7 @@ const command = process.argv[2];
 process.argv.splice(2, 1);
 const a = args({
   topic: { type: 'string' },
+  channel: { type: 'string' },
   video: { type: 'string' },
   to: { type: 'string' },
   error: { type: 'string' },
@@ -36,13 +38,13 @@ await main((db) => {
   switch (command) {
     case 'new': {
       if (!a.topic?.trim()) throw new Error('--topic is required');
-      // The topic's world section in docs/TOPICS.md decides its YouTube playlist.
-      const topicsFile = resolve(PROJECT_ROOT, 'docs/TOPICS.md');
-      const playlist = existsSync(topicsFile) ? playlistForTopic(readFileSync(topicsFile, 'utf8'), a.topic) : null;
-      const id = Number(db.prepare('INSERT INTO videos (topic, playlist) VALUES (?, ?)').run(a.topic.trim(), playlist).lastInsertRowid);
+      const channel = channelByKey(a.channel);
+      // The topic's world section in the channel's TOPICS file decides its YouTube playlist.
+      const playlist = existsSync(channel.topicsFile) ? playlistForTopic(readFileSync(channel.topicsFile, 'utf8'), a.topic) : null;
+      const id = Number(db.prepare('INSERT INTO videos (topic, playlist, channel) VALUES (?, ?, ?)').run(a.topic.trim(), playlist, channel.key).lastInsertRowid);
       const dir = relative(PROJECT_ROOT, runDir(id)).replace(/\\/g, '/');
       db.prepare('UPDATE videos SET run_dir = ? WHERE id = ?').run(dir, id);
-      return { video_id: id, run_dir: dir, status: 'idea', playlist };
+      return { video_id: id, channel: channel.key, run_dir: dir, status: 'idea', playlist };
     }
     case 'status': {
       const id = requireVideoId(a.video);

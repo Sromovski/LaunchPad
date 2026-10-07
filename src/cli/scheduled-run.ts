@@ -1,14 +1,16 @@
 /**
- * npm run scheduled [-- --trigger scheduled|manual] [--topic "..."]
+ * npm run scheduled [-- --trigger scheduled|manual] [--channel blast|wonder] [--topic "..."]
  *
- * One headless /make-video run, safely:
+ * One headless /make-video run for one channel (no --channel = Blast of Facts), safely:
  *   lock → preflight → `claude -p "/make-video" --permission-mode dontAsk` (60 min cap)
  *   → outcome judged from the DB → automation_runs row → unlock.
+ * Both channels share one lock, so two builds never run at once.
  * Scheduled runs only ever fill the review queue (the pipeline ends at in_review).
  */
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, statfsSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { channelByKey } from '../channels.js';
 import { PROJECT_ROOT, openDb } from '../db/index.js';
 import { LockedError, acquireLock } from '../automation/lock.js';
 import { evaluatePreflight } from '../automation/preflight.js';
@@ -17,8 +19,14 @@ import { decideOutcome, parseClaudeJson } from '../automation/claude-result.js';
 import { ffmpegPath, ffprobePath, whisperBinPath, whisperModelPath } from '../media/tools.js';
 import { RUNS_ROOT, args } from './_lib.js';
 
-const a = args({ trigger: { type: 'string', default: 'manual' }, topic: { type: 'string' }, 'timeout-min': { type: 'string', default: '60' } });
+const a = args({
+  trigger: { type: 'string', default: 'manual' },
+  channel: { type: 'string' },
+  topic: { type: 'string' },
+  'timeout-min': { type: 'string', default: '60' },
+});
 const trigger = a.trigger === 'scheduled' ? 'scheduled' : 'manual';
+const channel = channelByKey(a.channel);
 const TIMEOUT_MS = Number(a['timeout-min']) * 60_000;
 const LOCK = resolve(PROJECT_ROOT, 'data/run.lock');
 const LOG_DIR = resolve(RUNS_ROOT, '_scheduled');
@@ -39,11 +47,13 @@ function killTree(pid: number) {
 const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 mkdirSync(LOG_DIR, { recursive: true });
 const db = openDb();
-const runId = Number(db.prepare("INSERT INTO automation_runs (trigger, outcome) VALUES (?, 'running')").run(trigger).lastInsertRowid);
+const runId = Number(
+  db.prepare("INSERT INTO automation_runs (trigger, channel, outcome) VALUES (?, ?, 'running')").run(trigger, channel.key).lastInsertRowid,
+);
 const finish = (fields: Record<string, unknown>) => {
   const keys = Object.keys(fields);
   db.prepare(`UPDATE automation_runs SET finished_at = datetime('now'), ${keys.map((k) => `${k} = @${k}`).join(', ')} WHERE id = @id`).run({ ...fields, id: runId });
-  const summary = { run_id: runId, trigger, ...fields };
+  const summary = { run_id: runId, trigger, channel: channel.key, ...fields };
   console.log(JSON.stringify(summary, null, 2));
   return summary;
 };
@@ -61,10 +71,10 @@ try {
 
 try {
   // ---- Preflight ------------------------------------------------------------------
-  const topicsFile = resolve(PROJECT_ROOT, 'docs/TOPICS.md');
-  const backlogTopic = existsSync(topicsFile) ? nextTopic(readFileSync(topicsFile, 'utf8')) : undefined;
+  const backlogTopic = existsSync(channel.topicsFile) ? nextTopic(readFileSync(channel.topicsFile, 'utf8')) : undefined;
   const topic = a.topic ?? backlogTopic?.topic ?? null;
-  const inReview = (db.prepare("SELECT COUNT(*) n FROM videos WHERE status = 'in_review'").get() as { n: number }).n;
+  // The queue cap is per channel: a full Blast of Facts queue doesn't stop I Wonder Why.
+  const inReview = (db.prepare("SELECT COUNT(*) n FROM videos WHERE status = 'in_review' AND channel = ?").get(channel.key) as { n: number }).n;
   let freeBytes: number | null = null;
   try {
     const s = statfsSync(PROJECT_ROOT);
@@ -76,7 +86,9 @@ try {
   // (It doesn't add to the queue, so the queue cap doesn't apply.)
   const revision = a.topic
     ? undefined
-    : (db.prepare("SELECT id, title FROM videos WHERE status = 'changes_requested' ORDER BY updated_at, id LIMIT 1").get() as { id: number; title: string | null } | undefined);
+    : (db.prepare("SELECT id, title FROM videos WHERE status = 'changes_requested' AND channel = ? ORDER BY updated_at, id LIMIT 1").get(channel.key) as
+        | { id: number; title: string | null }
+        | undefined);
   const label = revision ? `revise video ${revision.id}: ${revision.title ?? ''}`.trim() : topic;
 
   const pre = evaluatePreflight({
@@ -95,7 +107,7 @@ try {
     process.exitCode = pre.outcome === 'skip' ? 0 : 1;
   } else {
     // ---- Headless run -----------------------------------------------------------------
-    const prompt = revision ? `/revise-video ${revision.id}` : a.topic ? `/make-video ${a.topic}` : '/make-video';
+    const prompt = revision ? `/revise-video ${revision.id}` : `/make-video --channel ${channel.key}${a.topic ? ` ${a.topic}` : ''}`;
     const outPath = resolve(LOG_DIR, `${stamp}-run${runId}.json`);
     const errPath = resolve(LOG_DIR, `${stamp}-run${runId}.err.log`);
     const startedAt = (db.prepare('SELECT started_at FROM automation_runs WHERE id = ?').get(runId) as { started_at: string }).started_at;
@@ -125,7 +137,7 @@ try {
     type V = { id: number; status: string; error: string | null } | undefined;
     const video = revision
       ? (db.prepare('SELECT id, status, error FROM videos WHERE id = ?').get(revision.id) as V)
-      : (db.prepare('SELECT id, status, error FROM videos WHERE created_at >= ? ORDER BY id DESC LIMIT 1').get(startedAt) as V);
+      : (db.prepare('SELECT id, status, error FROM videos WHERE created_at >= ? AND channel = ? ORDER BY id DESC LIMIT 1').get(startedAt, channel.key) as V);
     const stats = parseClaudeJson(stdout);
     const outcome = decideOutcome({ timedOut, exitCode, stats, videoStatus: video?.status ?? null });
     finish({

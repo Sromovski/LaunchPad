@@ -1,16 +1,24 @@
 /**
- * npm run youtube:auth — one-time sign-in (Thomas only; denied to agents).
- * Opens Google's consent page; pick the Blast of Facts channel. Saves a refresh
- * token to data/google/token.json (gitignored) only if the chosen channel is right.
+ * npm run youtube:auth [-- --channel blast|wonder] — one-time sign-in per channel (Thomas only; denied to agents).
+ * Opens Google's consent page; pick that channel. Saves a refresh token to the channel's
+ * token file in data/google/ (gitignored) only if the chosen channel is right.
  */
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { CHANNEL_ID, CHANNEL_TITLE, CLIENT_SECRET_PATH, GOOGLE_DIR, SCOPES, TOKEN_PATH, isOurChannel } from '../publish/config.js';
+import { parseArgs } from 'node:util';
+import { channelByKey } from '../channels.js';
+import { CLIENT_SECRET_PATH, GOOGLE_DIR, SCOPES, isOurChannel } from '../publish/config.js';
 import { accessTokenProvider, buildAuthUrl, exchangeCode, parseClientSecret, pkce, type StoredToken } from '../publish/google-auth.js';
 import { YouTube } from '../publish/youtube-api.js';
+
+const target = channelByKey(parseArgs({ options: { channel: { type: 'string' } } }).values.channel);
+const CHANNEL_TITLE = target.title;
+const CHANNEL_ID = target.youtubeId;
+const TOKEN_PATH = target.tokenFile;
+const AUTH_CMD = `npm run youtube:auth${target.key === 'blast' ? '' : ` -- --channel ${target.key}`}`;
 
 if (!existsSync(CLIENT_SECRET_PATH)) {
   console.error(`Missing ${CLIENT_SECRET_PATH}. Download the Desktop app OAuth client JSON from Google Cloud and save it there.`);
@@ -56,11 +64,11 @@ try {
   channel = await yt.channel();
 } catch (e) {
   // Common mistake: picking a Google *account* named like the channel instead of the Brand Account channel itself.
-  console.error(`\n${(e as Error).message}. Nothing was saved.\nPick the Google account that OWNS the channel (sromovski@gmail.com), then pick "${CHANNEL_TITLE}" from the brand accounts / channels list, and run npm run youtube:auth again.`);
+  console.error(`\n${(e as Error).message}. Nothing was saved.\nPick the Google account that OWNS the channel (sromovski@gmail.com), then pick "${CHANNEL_TITLE}" from the brand accounts / channels list, and run ${AUTH_CMD} again.`);
   process.exit(1);
 }
-if (!isOurChannel(channel)) {
-  console.error(`\nYou picked the channel "${channel.title}" (${channel.id}). Nothing was saved. Run npm run youtube:auth again and pick "${CHANNEL_TITLE}" (${CHANNEL_ID}).`);
+if (!isOurChannel(channel, CHANNEL_ID)) {
+  console.error(`\nYou picked the channel "${channel.title}" (${channel.id}). Nothing was saved. Run ${AUTH_CMD} again and pick "${CHANNEL_TITLE}" (${CHANNEL_ID}).`);
   process.exit(1);
 }
 mkdirSync(GOOGLE_DIR, { recursive: true });

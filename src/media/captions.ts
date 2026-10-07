@@ -3,6 +3,7 @@
  * a small per-clip credit line at the top, and the end card. All positioned
  * inside the platform safe zones (see layout.ts).
  */
+import { CHANNELS, assColor, type Channel } from '../channels.js';
 import type { AlignedWord } from './align.js';
 import { FONT_BOLD, FONT_SEMIBOLD, H, SAFE_BOTTOM_Y, SAFE_RIGHT_X, UNSAFE_RIGHT, W } from './layout.js';
 
@@ -20,8 +21,9 @@ export const CAPTION = {
 } as const;
 
 const WHITE = '&H00FFFFFF';
-const HIGHLIGHT = '&H003FD2FF'; // #FFD23F (ASS is AABBGGRR)
 const BLACK = '&H00000000';
+/** End-card tint opacity: alpha 0x60 ≈ 62% opaque (ASS alpha counts transparency). */
+const END_CARD_ALPHA = 0x60;
 
 export interface Chunk {
   words: AlignedWord[];
@@ -100,9 +102,14 @@ export interface CaptionInput {
   endCardStart: number;
   duration: number;
   credits: CreditSpan[];
+  /** The video's channel look (src/channels.ts). Omitted = Blast of Facts. */
+  brand?: Channel['brand'];
 }
 
 export function buildAss(input: CaptionInput): string {
+  const brand = input.brand ?? CHANNELS.blast.brand;
+  const HIGHLIGHT = assColor(brand.highlight);
+  const TINT = assColor(brand.endCardTint, END_CARD_ALPHA);
   const captionMarginV = H - SAFE_BOTTOM_Y + CAPTION.liftAboveSafe;
   const header = [
     '[Script Info]',
@@ -117,7 +124,7 @@ export function buildAss(input: CaptionInput): string {
     `Style: Caption,${FONT_BOLD},${CAPTION.fontSize},${WHITE},${WHITE},${BLACK},&H80000000,-1,0,0,0,100,100,1,0,1,7,3,2,${CAPTION.marginL},${CAPTION.marginR},${captionMarginV},1`,
     `Style: Credit,${FONT_SEMIBOLD},34,&H20FFFFFF,&H20FFFFFF,&H90000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,7,48,${CAPTION.marginR},110,1`,
     `Style: EndCard,${FONT_BOLD},104,${WHITE},${WHITE},${BLACK},&H80000000,-1,0,0,0,100,100,1,0,1,8,4,5,${CAPTION.marginL},${CAPTION.marginR},0,1`,
-    `Style: Dim,${FONT_BOLD},10,&H60000000,&H60000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1`,
+    `Style: Dim,${FONT_BOLD},10,${TINT},${TINT},&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1`,
     '',
     '[Events]',
     'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',

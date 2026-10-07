@@ -9,6 +9,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { OUTRO_LINES, OUTRO_PAUSE_MS, IOTD_FEED, chooseBonus, parseIotdFeed, parsePageCredit } from '../bonus/iotd.js';
 import { bonusAss } from '../bonus/outro.js';
+import { channelOfVideo } from '../channels.js';
 import { BonusMeta } from '../bonus/meta.js';
 import { loadEditContext } from '../media/context.js';
 import { LIMITS } from '../qa/checks.js';
@@ -36,6 +37,14 @@ await main(async (db) => {
     db.prepare("DELETE FROM assets WHERE video_id = ? AND nasa_id LIKE 'iotd:%'").run(videoId);
     db.prepare("DELETE FROM sources WHERE video_id = ? AND ref = 'bonus'").run(videoId);
   };
+  const channel = channelOfVideo(db, videoId);
+  if (!channel.bonusOutro) {
+    // The space-picture outro is Blast of Facts' format; other channels end on the end card.
+    clearRows();
+    writeFileSync(metaPath, JSON.stringify({ none: true, skipped: [], reason: `no bonus outro on ${channel.title}` }, null, 2));
+    log(`${channel.title} has no bonus outro`);
+    return { bonus: false, reason: `no bonus outro on ${channel.title}` };
+  }
   const feed = parseIotdFeed(await (await fetch(IOTD_FEED, { signal: AbortSignal.timeout(30_000) })).text());
   const used = new Set(
     (db.prepare("SELECT nasa_id FROM assets WHERE nasa_id LIKE 'iotd:%' AND video_id != ?").all(videoId) as { nasa_id: string }[]).map((r) => r.nasa_id),

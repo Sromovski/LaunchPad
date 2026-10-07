@@ -12,6 +12,7 @@ You are the **orchestrator** again (same rules as /make-video): run subagents, v
 ## 0. Read the request
 - `npm run video:show -- --video <id>` → status must be `changes_requested`; otherwise stop and say so.
 - The notes are `reviews[0].notes` (newest first). Quote them back in your final report.
+- `video.channel` is the video's channel (`blast` = Blast of Facts, `wonder` = I Wonder Why). Tell every subagent the channel's name.
 - `video.revision_count` is how many revisions already happened. The state machine allows **2**; if this would be a third, it refuses — stop and tell Thomas the video must be approved or rejected.
 
 ## 1. Choose where to restart

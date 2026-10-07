@@ -3,6 +3,7 @@
  * poster). Only approved, not-held videos, never twice.
  */
 import type Database from 'better-sqlite3';
+import type { ChannelKey } from '../channels.js';
 import { transitionVideo } from '../db/status.js';
 import { canonicalShortUrl, youtubeId } from './youtube-url.js';
 
@@ -53,21 +54,25 @@ export function setPlaylist(db: Database.Database, videoId: number, platform: Pl
   db.prepare('UPDATE posts SET playlist_id = ? WHERE video_id = ? AND platform = ?').run(playlistId, videoId, platform);
 }
 
+// Every query below takes the channel: a posting run is signed in to one channel and
+// must never touch another channel's videos (YouTube would refuse, or worse, accept).
+
 /** Posts that are live but not yet in the playlist (a failed add is retried on the next run). */
-export function postsMissingPlaylist(db: Database.Database): { video_id: number; external_id: string; playlist: string | null }[] {
+export function postsMissingPlaylist(db: Database.Database, channel: ChannelKey): { video_id: number; external_id: string; playlist: string | null }[] {
   return db
     .prepare(
-      "SELECT p.video_id, p.external_id, v.playlist FROM posts p JOIN videos v ON v.id = p.video_id WHERE p.platform = 'youtube' AND p.method = 'api' AND p.playlist_id IS NULL",
+      "SELECT p.video_id, p.external_id, v.playlist FROM posts p JOIN videos v ON v.id = p.video_id WHERE p.platform = 'youtube' AND p.method = 'api' AND p.playlist_id IS NULL AND v.channel = ?",
     )
-    .all() as { video_id: number; external_id: string; playlist: string | null }[];
+    .all(channel) as { video_id: number; external_id: string; playlist: string | null }[];
 }
 
-
 /** Our recent API posts, to re-check their real visibility on YouTube. */
-export function recentApiPosts(db: Database.Database, limit = 20): { video_id: number; external_id: string; visibility: Visibility }[] {
+export function recentApiPosts(db: Database.Database, channel: ChannelKey, limit = 20): { video_id: number; external_id: string; visibility: Visibility }[] {
   return db
-    .prepare("SELECT video_id, external_id, visibility FROM posts WHERE platform = 'youtube' AND method = 'api' ORDER BY id DESC LIMIT ?")
-    .all(limit) as { video_id: number; external_id: string; visibility: Visibility }[];
+    .prepare(
+      "SELECT p.video_id, p.external_id, p.visibility FROM posts p JOIN videos v ON v.id = p.video_id WHERE p.platform = 'youtube' AND p.method = 'api' AND v.channel = ? ORDER BY p.id DESC LIMIT ?",
+    )
+    .all(channel, limit) as { video_id: number; external_id: string; visibility: Visibility }[];
 }
 
 export function setVisibility(db: Database.Database, videoId: number, visibility: Visibility): void {
@@ -81,15 +86,15 @@ export const THUMBNAIL_RETRY_DAYS = 7;
  * YouTube posts still without our thumbnail: never tried (new, or posted before this
  * existed), or refused more than THUMBNAIL_RETRY_DAYS ago. Oldest first, a few per run.
  */
-export function postsNeedingThumbnail(db: Database.Database, limit = 5): { video_id: number; external_id: string; title: string }[] {
+export function postsNeedingThumbnail(db: Database.Database, channel: ChannelKey, limit = 5): { video_id: number; external_id: string; title: string }[] {
   return db
     .prepare(
       `SELECT p.video_id, p.external_id, COALESCE(v.title, v.topic) AS title FROM posts p JOIN videos v ON v.id = p.video_id
-       WHERE p.platform = 'youtube'
+       WHERE p.platform = 'youtube' AND v.channel = ?
          AND (p.thumbnail IS NULL OR (p.thumbnail = 'failed' AND p.thumbnail_at < datetime('now', ?)))
        ORDER BY p.id LIMIT ?`,
     )
-    .all(`-${THUMBNAIL_RETRY_DAYS} days`, limit) as { video_id: number; external_id: string; title: string }[];
+    .all(channel, `-${THUMBNAIL_RETRY_DAYS} days`, limit) as { video_id: number; external_id: string; title: string }[];
 }
 
 export function setThumbnailStatus(db: Database.Database, videoId: number, status: 'set' | 'failed', note: string | null = null): void {

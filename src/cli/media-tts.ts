@@ -4,8 +4,9 @@
  * Only speaks a script that script:validate passed (hash must match).
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { channelOfVideo } from '../channels.js';
 import { loadValidatedScript } from '../script/load.js';
-import { synthesize, DEFAULT_GAP_MS, DEFAULT_LEAD_MS, DEFAULT_SPEED, DEFAULT_TAIL_MS, DEFAULT_VOICE, SPEECH_RULES_VERSION } from '../media/tts.js';
+import { synthesize, DEFAULT_GAP_MS, DEFAULT_LEAD_MS, DEFAULT_SPEED, DEFAULT_TAIL_MS, SPEECH_RULES_VERSION } from '../media/tts.js';
 import { encodeWav } from '../media/wav.js';
 import { args, logger, main, requireVideoId, runPath, sha256 } from './_lib.js';
 
@@ -16,12 +17,13 @@ const a = args({
   force: { type: 'boolean', default: false },
 });
 
-await main(async () => {
+await main(async (db) => {
   const videoId = requireVideoId(a.video);
   const log = logger(videoId, 'media-tts');
   const { script, raw } = loadValidatedScript(videoId);
 
-  const voice = a.voice ?? DEFAULT_VOICE;
+  // --voice, then LAUNCHPAD_VOICE (experiments), then the channel's narrator.
+  const voice = a.voice ?? process.env.LAUNCHPAD_VOICE ?? channelOfVideo(db, videoId).voice;
   const speed = a.speed ? Number(a.speed) : DEFAULT_SPEED;
   const texts = [script.hook, ...script.lines.map((l) => l.text), script.end_question].map((t) => t.trim());
   const key = sha256(JSON.stringify({ raw, voice, speed, gap: DEFAULT_GAP_MS, lead: DEFAULT_LEAD_MS, tail: DEFAULT_TAIL_MS, speech: SPEECH_RULES_VERSION }));

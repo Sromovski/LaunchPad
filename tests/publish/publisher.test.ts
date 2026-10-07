@@ -7,6 +7,7 @@ import { openDb } from '../../src/db/index.js';
 import { accessTokenProvider, buildAuthUrl, parseClientSecret, pkce } from '../../src/publish/google-auth.js';
 import { buildMetadata, publishNext } from '../../src/publish/publisher.js';
 import { isOurChannel } from '../../src/publish/config.js';
+import { CHANNELS, type Channel } from '../../src/channels.js';
 import { holdVideo } from '../../src/publish/queue.js';
 import { recordPost } from '../../src/publish/posts.js';
 import { YouTube } from '../../src/publish/youtube-api.js';
@@ -17,11 +18,11 @@ let db: Database.Database;
 let runsRoot: string;
 let pendingDir: string;
 
-function approved(title: string, approvedAt: string) {
+function approved(title: string, approvedAt: string, channel = 'blast') {
   const id = Number(
     db
-      .prepare("INSERT INTO videos (topic, status, title, description, hashtags) VALUES ('t', 'approved', ?, ?, ?)")
-      .run(title, 'Credits: NASA/JPL-Caltech\nNarration voice is AI-generated.', JSON.stringify(['#Mars', '#Space', '#ScienceForKids'])).lastInsertRowid,
+      .prepare("INSERT INTO videos (topic, status, title, description, hashtags, channel) VALUES ('t', 'approved', ?, ?, ?, ?)")
+      .run(title, 'Credits: NASA/JPL-Caltech\nNarration voice is AI-generated.', JSON.stringify(['#Mars', '#Space', '#ScienceForKids']), channel).lastInsertRowid,
   );
   db.prepare("INSERT INTO reviews (video_id, decision, created_at) VALUES (?, 'approved', ?)").run(id, approvedAt);
   mkdirSync(join(runsRoot, String(id)), { recursive: true });
@@ -29,11 +30,11 @@ function approved(title: string, approvedAt: string) {
   return id;
 }
 
-function setup(o: FakeOptions = {}) {
-  const g = fakeGoogle(o);
+function setup(o: FakeOptions = {}, channel: Channel = CHANNELS.blast) {
+  const g = fakeGoogle({ channelId: channel.youtubeId, channelTitle: channel.title, ...o });
   const yt = new YouTube(g.fetchFn, accessTokenProvider(g.fetchFn, SECRET, 'REFRESH'));
   const logs: string[] = [];
-  return { g, deps: { db, yt, runsRoot, pendingDir, log: (m: string) => logs.push(m) }, logs };
+  return { g, deps: { channel, db, yt, runsRoot, pendingDir, log: (m: string) => logs.push(m) }, logs };
 }
 
 beforeEach(() => {
@@ -69,14 +70,14 @@ describe('auth helpers', () => {
 
 describe('isOurChannel', () => {
   it('matches by ID, whatever the name looks like', () => {
-    expect(isOurChannel({ id: 'UCHhHYjq4K0sERPPR2od5kRw', title: 'Blast Of Facts' })).toBe(true);
-    expect(isOurChannel({ id: 'UCother', title: 'Blast of Facts' })).toBe(false);
+    expect(isOurChannel({ id: 'UCHhHYjq4K0sERPPR2od5kRw', title: 'Blast Of Facts' }, CHANNELS.blast.youtubeId)).toBe(true);
+    expect(isOurChannel({ id: 'UCother', title: 'Blast of Facts' }, CHANNELS.blast.youtubeId)).toBe(false);
   });
 });
 
 describe('buildMetadata', () => {
   it('made for kids, public, Education, hashtags as tags, no < or >', () => {
-    const m = buildMetadata({ id: 1, title: 'Why <Mars> Red?', topic: 't', description: 'Hi\nNarration voice is AI-generated.', hashtags: '["#Mars","#Space"]', playlist: null, approved_at: null });
+    const m = buildMetadata({ id: 1, channel: 'blast', title: 'Why <Mars> Red?', topic: 't', description: 'Hi\nNarration voice is AI-generated.', hashtags: '["#Mars","#Space"]', playlist: null, approved_at: null });
     expect(m.status).toEqual({ privacyStatus: 'public', selfDeclaredMadeForKids: true, embeddable: true });
     expect(m.snippet).toMatchObject({ title: 'Why Mars Red?', categoryId: '27', tags: ['Mars', 'Space'] });
     expect(m.snippet.description).toBe('Hi\nNarration voice is AI-generated.\n\n#Mars #Space\n');
@@ -221,6 +222,42 @@ describe('publishNext', () => {
       const r = await publishNext({ ...s.deps, thumbnail: () => { throw new Error('asset missing'); } });
       expect(r).toMatchObject({ outcome: 'posted', thumbnail: 'failed' });
       expect(thumbRow(a).thumbnail_note).toBe('asset missing');
+    });
+  });
+
+  describe('two channels', () => {
+    it("each run posts only its own channel's videos, to its own default playlist", async () => {
+      const blast = approved('Blast one', '2026-09-27 10:00:00');
+      const wonder = approved('Wonder one', '2026-09-27 09:00:00', 'wonder'); // approved first, but not Blast's
+      const b = setup();
+      expect(await publishNext(b.deps)).toMatchObject({ outcome: 'posted', video_id: blast });
+      expect(await publishNext(b.deps)).toMatchObject({ outcome: 'nothing_to_post' });
+      expect(b.g.uploads()).toBe(1);
+
+      const w = setup({ uploadOffset: 1 }, CHANNELS.wonder);
+      expect(await publishNext(w.deps)).toMatchObject({ outcome: 'posted', video_id: wonder });
+      expect(w.g.playlistItems).toEqual([{ playlistId: 'PL-Our-Wild-Planet', videoId: 'VIDEO000002' }]);
+    });
+
+    it('a Wonder run signed in to Blast of Facts refuses to post', async () => {
+      approved('Wonder one', '2026-09-27 09:00:00', 'wonder');
+      const w = setup({ channelId: CHANNELS.blast.youtubeId, channelTitle: 'Blast of Facts' }, CHANNELS.wonder);
+      await expect(publishNext(w.deps)).rejects.toThrow(/expected "I Wonder Why" \(UCqNwPn4hm_lMSOhHdXcfMig\).*--channel wonder/);
+      expect(w.g.uploads()).toBe(0);
+    });
+
+    it("playlist retries, visibility checks and thumbnails never touch the other channel's posts", async () => {
+      const blast = approved('Blast one', '2026-09-27 10:00:00');
+      await publishNext(setup({ failPlaylistAdd: true }).deps); // Blast post: playlist missing, no thumbnail yet
+      const w = setup({ laterPrivacy: 'private' }, CHANNELS.wonder);
+      const r = await publishNext({ ...w.deps, thumbnail: () => new Uint8Array([1]) });
+      expect(r).toMatchObject({ outcome: 'nothing_to_post', playlist_retries: 0, thumbnails_backfilled: 0 });
+      expect(w.g.calls.some((c) => c.url.includes('/videos?part=status') && c.url.includes('VIDEO000001'))).toBe(false);
+      expect(db.prepare('SELECT visibility, playlist_id, thumbnail FROM posts WHERE video_id = ?').get(blast)).toEqual({
+        visibility: 'public',
+        playlist_id: null,
+        thumbnail: null,
+      });
     });
   });
 

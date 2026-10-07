@@ -1,5 +1,6 @@
 /** npm run media:captions -- --video <id> → runs/<id>/captions.ass */
 import { writeFileSync } from 'node:fs';
+import { channelOfVideo } from '../channels.js';
 import { buildAss, coveredWordCount, type CaptionInput } from '../media/captions.js';
 import { loadEditContext, loadWords } from '../media/context.js';
 import { shiftWords } from '../media/timeline.js';
@@ -20,6 +21,7 @@ await main((db) => {
     endCardStart: ctx.end_card_start_s,
     duration: ctx.duration_s,
     credits: ctx.credits,
+    brand: channelOfVideo(db, videoId).brand,
   };
   writeFileSync(runPath(videoId, 'captions.ass'), buildAss(input));
   const coverage = words.length ? coveredWordCount(input) / words.length : 0;

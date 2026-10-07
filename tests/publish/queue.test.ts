@@ -23,7 +23,7 @@ describe('postingQueue', () => {
     video('in_review', null);
     video('rejected', null);
     expect(postingQueue(db).map((v) => v.id)).toEqual([early, late]);
-    expect(nextToPost(db)?.id).toBe(early);
+    expect(nextToPost(db, 'blast')?.id).toBe(early);
   });
 
   it('skips held and already-posted videos', () => {
@@ -35,8 +35,18 @@ describe('postingQueue', () => {
     expect(postingQueue(db).map((v) => v.id)).toEqual([c]);
   });
 
+  it('one queue per channel; no channel = every channel (review site)', () => {
+    const blast = video('approved', '2026-09-27 10:00:00');
+    const wonder = video('approved', '2026-09-27 09:00:00');
+    db.prepare("UPDATE videos SET channel = 'wonder' WHERE id = ?").run(wonder);
+    expect(postingQueue(db, 'blast').map((v) => v.id)).toEqual([blast]);
+    expect(postingQueue(db, 'wonder').map((v) => v.id)).toEqual([wonder]);
+    expect(nextToPost(db, 'wonder')).toMatchObject({ id: wonder, channel: 'wonder' });
+    expect(postingQueue(db).map((v) => v.id)).toEqual([wonder, blast]);
+  });
+
   it('empty queue → undefined', () => {
-    expect(nextToPost(db)).toBeUndefined();
+    expect(nextToPost(db, 'blast')).toBeUndefined();
   });
 });
 

@@ -1,11 +1,12 @@
 /**
  * Title thumbnails: a clean NASA frame (no captions/credit), cover-cropped, gently
- * darkened, with the title in big Fredoka and the last line in brand yellow.
+ * darkened, with the title in big Fredoka and the last line in the channel's highlight colour.
  * Used by `npm run export` (hand-posting) and by the poster (thumbnails.set).
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import type Database from 'better-sqlite3';
+import { assColor, channelOfVideo } from '../channels.js';
 import { PROJECT_ROOT } from '../db/index.js';
 import { assEscape } from '../media/captions.js';
 import { FONTS_DIR, FONT_BOLD } from '../media/layout.js';
@@ -28,7 +29,7 @@ export const THUMB_VERTICAL: ThumbVariant = { name: 'thumbnail-vertical.jpg', w:
 /** 16:9 for non-Short uploads; title in the top third keeps the subject (e.g. the Sun) visible. */
 export const THUMB_WIDE: ThumbVariant = { name: 'thumbnail-wide.jpg', w: 1280, h: 720, chars: 18, size: 100, y: 190 };
 
-function thumbAss(w: number, h: number, lines: string[], size: number, y: number): string {
+function thumbAss(w: number, h: number, lines: string[], size: number, y: number, accent: string): string {
   return [
     '[Script Info]',
     'ScriptType: v4.00+',
@@ -42,8 +43,8 @@ function thumbAss(w: number, h: number, lines: string[], size: number, y: number
     '',
     '[Events]',
     'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
-    // Last line in the brand yellow (#FFD23F), like the highlighted caption word.
-    `Dialogue: 0,0:00:00.00,0:00:05.00,T,,0,0,0,,{\\an5\\pos(${w / 2},${y})}${lines.map((l, i) => (i === lines.length - 1 ? `{\\1c&H003FD2FF&}${assEscape(l)}` : assEscape(l))).join('\\N')}`,
+    // Last line in the channel's highlight colour, like the highlighted caption word.
+    `Dialogue: 0,0:00:00.00,0:00:05.00,T,,0,0,0,,{\\an5\\pos(${w / 2},${y})}${lines.map((l, i) => (i === lines.length - 1 ? `{\\1c${accent}&}${assEscape(l)}` : assEscape(l))).join('\\N')}`,
     '',
   ].join('\n');
 }
@@ -79,9 +80,10 @@ export function makeThumbnails(
   o: { videoId: number; title: string; runDir: string; outDir: string; variants: ThumbVariant[]; override?: { nasaId: string; at: number } },
 ): string[] {
   sourceFrame(db, o.runDir, o.videoId, resolve(o.outDir, 'source.png'), o.override);
+  const accent = assColor(channelOfVideo(db, o.videoId).brand.highlight);
   const fonts = relative(o.outDir, resolve(PROJECT_ROOT, FONTS_DIR)).replace(/\\/g, '/');
   return o.variants.map((t) => {
-    writeFileSync(resolve(o.outDir, 'thumb.ass'), thumbAss(t.w, t.h, thumbLines(o.title, t.chars), t.size, t.y));
+    writeFileSync(resolve(o.outDir, 'thumb.ass'), thumbAss(t.w, t.h, thumbLines(o.title, t.chars), t.size, t.y, accent));
     run(
       ffmpegBin(),
       [

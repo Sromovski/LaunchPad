@@ -34,6 +34,9 @@ function migrate(db: Database.Database) {
   addColumn('videos', 'do_not_post', 'INTEGER NOT NULL DEFAULT 0');
   addColumn('videos', 'do_not_post_reason', 'TEXT');
   addColumn('videos', 'playlist', 'TEXT');
+  // Second channel (2026-10-07): every older video was made for Blast of Facts.
+  addColumn('videos', 'channel', "TEXT NOT NULL DEFAULT 'blast' CHECK (channel IN ('blast','wonder'))");
+  addColumn('automation_runs', 'channel', "TEXT NOT NULL DEFAULT 'blast'");
   addColumn('posts', 'visibility', "TEXT NOT NULL DEFAULT 'public'");
   addColumn('posts', 'playlist_id', 'TEXT');
   // Custom thumbnail: 'set' or 'failed' (with a note); NULL = not tried yet.

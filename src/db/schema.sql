@@ -3,6 +3,8 @@
 CREATE TABLE IF NOT EXISTS videos (
   id                 INTEGER PRIMARY KEY AUTOINCREMENT,
   topic              TEXT NOT NULL,
+  -- Which YouTube channel this video is for (src/channels.ts)
+  channel            TEXT NOT NULL DEFAULT 'blast' CHECK (channel IN ('blast','wonder')),
   status             TEXT NOT NULL DEFAULT 'idea' CHECK (status IN (
                        'idea','researched','scripted','fact_checked','rendered','qa_passed',
                        'in_review','approved','changes_requested','rejected',
@@ -20,7 +22,7 @@ CREATE TABLE IF NOT EXISTS videos (
   -- Thomas can hold an approved video back from automatic posting (e.g. superseded by a remake)
   do_not_post        INTEGER NOT NULL DEFAULT 0 CHECK (do_not_post IN (0,1)),
   do_not_post_reason TEXT,
-  -- YouTube playlist for this video (from its TOPICS.md world section); NULL = the Mars default
+  -- YouTube playlist for this video (from its TOPICS.md world section); NULL = the channel's default playlist
   playlist           TEXT,
   -- State-machine bookkeeping (see src/db/status.ts, docs/DECISIONS.md)
   revision_count     INTEGER NOT NULL DEFAULT 0,
@@ -102,6 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_runs_video ON runs(video_id);
 CREATE TABLE IF NOT EXISTS automation_runs (
   id                 INTEGER PRIMARY KEY AUTOINCREMENT,
   trigger            TEXT NOT NULL CHECK (trigger IN ('scheduled','manual')),
+  channel            TEXT NOT NULL DEFAULT 'blast',
   started_at         TEXT NOT NULL DEFAULT (datetime('now')),
   finished_at        TEXT,
   topic              TEXT,
