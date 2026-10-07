@@ -24,16 +24,16 @@ Each `## World | playlist: Name` heading sets the YouTube playlist for the topic
 - [x] How does a rover take a selfie? | query: curiosity selfie — video 17 in review
 - [x] Are there clouds on Mars? | query: mars clouds curiosity — video 18 in review
 - [x] How deep is the giant canyon on Mars? | query: valles marineris — video 19 in review
-- [ ] How big is the biggest volcano on Mars? | query: olympus mons
-- [ ] What are the ice caps on Mars made of? | query: mars polar ice cap
-- [ ] What are the tiny "blueberries" on Mars? | query: opportunity blueberries hematite
+- [x] How big is the biggest volcano on Mars? | query: olympus mons — video 20 in review
+- [x] What are the ice caps on Mars made of? | query: mars polar ice cap — video 22 in review
+- [x] What are the tiny "blueberries" on Mars? | query: opportunity blueberries hematite — video 24 in review
 
 <!-- Worlds after Mars, in Thomas's approved order (2026-09-28). Order within each world: most rights-clear NASA video first (scripts/footage-scan.ts). -->
 
 ## The Moon | playlist: Moon Facts for Kids
 
-- [ ] Why does the Moon change shape? | query: moon phases
-- [ ] How will Artemis take people back to the Moon? | query: artemis
+- [x] Why does the Moon change shape? | query: moon phases — video 27 in review
+- [x] How will Artemis take people back to the Moon? | query: artemis — video 28 in review
 - [ ] Why do rockets drop pieces on the way up? | query: rocket stage separation
 - [ ] What did astronauts do on the Moon? | query: apollo moonwalk
 - [ ] Why does the Moon have so many craters? | query: moon craters
