@@ -71,7 +71,7 @@ export const CHANNELS: Record<ChannelKey, Channel> = {
     // Two hours after Blast of Facts: its builds have taken up to 40 min (docs/RUN_LOG.md).
     makeTimes: ['09:00', '17:00'],
     postTimes: ['10:00', '18:00'],
-    voice: 'af_bella',
+    voice: 'am_michael', // Thomas picked from the samples (2026-10-07)
     bonusOutro: false,
     // Channel art palette (docs/ROADMAP.md): yellow accent on night-sky indigo.
     brand: { highlight: '#FFC93C', endCardTint: '#2B2766' },

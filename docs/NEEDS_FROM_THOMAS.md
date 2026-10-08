@@ -8,13 +8,12 @@ Running list of things only Thomas can do (accounts, credentials, installs, mone
 
 The code for the second channel is in place. These steps only you can do:
 
-1. **Pick the narrator.** Listen to the samples in `C:\Projects\LaunchPad\runs\_voices\` and tell me which voice I Wonder Why should use (Blast of Facts keeps `af_heart`). It's set to `af_bella` for now.
-2. **Connect the channel.** In a terminal in `C:\Projects\LaunchPad` run **`npm run youtube:auth -- --channel wonder`**. Pick your **main Google login**, then **I Wonder Why** in the channel list. It only saves the login (in `data/google/token-wonder.json`) if you picked I Wonder Why. Blast of Facts' login isn't touched.
-3. **Turn on the schedule.** Run **`npm run schedule:install`**. It keeps Blast's jobs and adds `wonder-make-video-0900`, `wonder-make-video-1700` and `wonder-publish` (10:00 and 18:00). Check with `npm run schedule:status`.
-4. **Phone-verify the channel** (needed for custom thumbnails later): https://www.youtube.com/verify with I Wonder Why selected.
-5. **Rights reviews:** most NASA Earth videos credit Goddard producers by name, so many I Wonder Why videos will show "Check rights". Same gate as Blast: tick the box only once you're happy the footage is NASA's.
+1. **Connect the channel.** In a terminal in `C:\Projects\LaunchPad` run **`npm run youtube:auth -- --channel wonder`**. Pick your **main Google login**, then **I Wonder Why** in the channel list. It only saves the login (in `data/google/token-wonder.json`) if you picked I Wonder Why. Blast of Facts' login isn't touched.
+2. **Turn on the schedule.** Run **`npm run schedule:install`**. It keeps Blast's jobs and adds `wonder-make-video-0900`, `wonder-make-video-1700` and `wonder-publish` (10:00 and 18:00). Check with `npm run schedule:status`.
+3. **Phone-verify the channel** (needed for custom thumbnails later): https://www.youtube.com/verify with I Wonder Why selected.
+4. **Rights reviews:** most NASA Earth videos credit Goddard producers by name, so many I Wonder Why videos will show "Check rights". Same gate as Blast: tick the box only once you're happy the footage is NASA's.
 
-Until step 2 is done, the 10:00/18:00 posting job just logs "not connected" and skips.
+Until step 1 is done, the 10:00/18:00 posting job just logs "not connected" and skips.
 
 ### 1. Hand-post video 2 to Blast of Facts (this week)
 

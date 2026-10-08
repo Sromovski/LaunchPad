@@ -133,6 +133,6 @@ Short log of design choices. Newest last.
 - **Posting is per channel and can't cross over.** `npm run publish -- --channel wonder` signs in with `data/google/token-wonder.json` (`npm run youtube:auth -- --channel wonder` writes it, only if the picked channel is UCqNwPn4hm_lMSOhHdXcfMig). Every posting query (queue, playlist retries, visibility checks, thumbnails) is filtered by channel. Same Google Cloud project and OAuth client; quotas are per project and far from reached at 4 posts a day.
 - **Look:** I Wonder Why uses its channel-art palette: yellow `#FFC93C` for the highlighted caption word and the thumbnail's last line, and an indigo `#2B2766` end-card tint instead of black. Same Fredoka captions and safe zones. Blast of Facts renders exactly as before (tested).
 - **No outro on I Wonder Why.** The "space picture of the day" is Blast's format; I Wonder Why ends on its end card (and may use the full 60 s).
-- **Voice:** `af_bella` as a starting point so the channels don't sound the same; Thomas picks from `runs/_voices/`.
+- **Voice:** `am_michael` (Thomas picked it from the samples), so the channels don't sound the same.
 - **Task Scheduler:** Blast keeps its task names; I Wonder Why's are `wonder-make-video-0900`, `wonder-make-video-1700`, `wonder-publish`. They appear after `npm run schedule:install`.
 - **Nunito not added** (ROADMAP mentions it for body text): video text is all Fredoka on both channels, so it wasn't needed.
