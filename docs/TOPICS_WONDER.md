@@ -12,7 +12,7 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 
 ## Oceans | playlist: Ocean Facts for Kids
 
-- [ ] Why does the ocean swirl? | query: ocean currents
+- [x] Why does the ocean swirl? | query: ocean currents — video 30 in review
 - [ ] Why is the ocean salty? | query: ocean salinity
 - [ ] What makes ocean tides? | query: ocean tides
 - [ ] Why does the sea turn green and blue? | query: phytoplankton bloom
