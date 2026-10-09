@@ -35,9 +35,9 @@ Each `## World | playlist: Name` heading sets the YouTube playlist for the topic
 - [x] Why does the Moon change shape? | query: moon phases — video 27 in review
 - [x] How will Artemis take people back to the Moon? | query: artemis — video 28 in review
 - [x] Why do rockets drop pieces on the way up? | query: rocket stage separation — video 29 in review
-- [ ] What did astronauts do on the Moon? | query: apollo moonwalk
-- [ ] Why does the Moon have so many craters? | query: moon craters
-- [ ] Why do we always see the same side of the Moon? | query: moon far side
+- [x] What did astronauts do on the Moon? | query: apollo moonwalk — video 31 in review
+- [x] Why does the Moon have so many craters? | query: moon craters — video 32 in review
+- [x] Why do we always see the same side of the Moon? | query: moon far side — video 34 in review
 - [ ] Is there water on the Moon? | query: water ice moon south pole
 - [ ] How far away is the Moon? | query: moon distance earth
 
