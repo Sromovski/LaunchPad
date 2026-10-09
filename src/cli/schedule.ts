@@ -23,8 +23,15 @@ const channels = Object.values(CHANNELS);
 const allTasks = () => [...channels.flatMap((c) => [...c.makeTimes.map((t) => taskName(c, t)), publishTask(c)]), ...LEGACY_PUBLISH_TASKS, REVIEW_TASK];
 
 function ps(script: string): string {
-  const r = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { encoding: 'utf8' });
-  if (r.status !== 0) throw new Error((r.stderr || r.stdout).trim().split('\n').slice(-4).join('\n'));
+  // -EncodedCommand (base64 UTF-16LE) instead of -Command: passed as a plain argument, backslashes
+  // inside double quotes ("C:\Projects\...", "DOMAIN\user") were silently dropped on the way to
+  // PowerShell, giving broken paths and "No mapping between account names and security IDs".
+  // Stop on any real error (exit 1 with the message); otherwise exit 0, so an expected miss
+  // silenced with -ErrorAction SilentlyContinue doesn't count as a failure.
+  const full = `$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'; $me = [Security.Principal.WindowsIdentity]::GetCurrent().Name; ${script}; exit 0`;
+  const encoded = Buffer.from(full, 'utf16le').toString('base64');
+  const r = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded], { encoding: 'utf8' });
+  if (r.status !== 0) throw new Error((r.stderr || r.stdout || r.error?.message || `powershell exited ${r.status}`).trim().split('\n').slice(0, 4).join('\n'));
   return r.stdout.trim();
 }
 
@@ -46,7 +53,7 @@ await main(() => {
               `$t = New-ScheduledTaskTrigger -Daily -At '${t}'`,
               // WakeToRun: wake from sleep. StartWhenAvailable: run late if the PC was off. IgnoreNew: never overlap.
               `$s = New-ScheduledTaskSettingsSet -WakeToRun -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 90) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries`,
-              `$p = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\\$env:USERNAME" -LogonType Interactive -RunLevel Limited`,
+              `$p = New-ScheduledTaskPrincipal -UserId $me -LogonType Interactive -RunLevel Limited`,
               `Register-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${taskName(c, t)}' -Action $a -Trigger $t -Settings $s -Principal $p -Description 'Launchpad: one headless /make-video run for ${c.title} (fills the review queue only)' -Force | Out-Null`,
             ].join('; '),
           );
@@ -58,9 +65,9 @@ await main(() => {
             `$a = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument '${arg.replace(/'/g, "''")}' -WorkingDirectory '${PROJECT_ROOT}'`,
             `$t = @(${c.postTimes.map((t) => `(New-ScheduledTaskTrigger -Daily -At '${t}')`).join(', ')})`,
             `$s = New-ScheduledTaskSettingsSet -WakeToRun -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries`,
-            `$p = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\\$env:USERNAME" -LogonType Interactive -RunLevel Limited`,
+            `$p = New-ScheduledTaskPrincipal -UserId $me -LogonType Interactive -RunLevel Limited`,
             `Register-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${publishTask(c)}' -Action $a -Trigger $t -Settings $s -Principal $p -Description 'Launchpad: post one approved video to ${c.title} (each run)' -Force | Out-Null`,
-            ...LEGACY_PUBLISH_TASKS.map((n) => `Unregister-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${n}' -Confirm:$false -ErrorAction SilentlyContinue`),
+            ...LEGACY_PUBLISH_TASKS.map((n) => `Get-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${n}' -ErrorAction SilentlyContinue | Unregister-ScheduledTask -Confirm:$false`),
           ].join('; '),
         );
       }
@@ -70,9 +77,9 @@ await main(() => {
         ps(
           [
             `$a = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument '"${vbs}"' -WorkingDirectory '${PROJECT_ROOT}'`,
-            `$t = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\\$env:USERNAME"`,
+            `$t = New-ScheduledTaskTrigger -AtLogOn -User $me`,
             `$s = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries`,
-            `$p = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\\$env:USERNAME" -LogonType Interactive -RunLevel Limited`,
+            `$p = New-ScheduledTaskPrincipal -UserId $me -LogonType Interactive -RunLevel Limited`,
             `Register-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${REVIEW_TASK}' -Action $a -Trigger $t -Settings $s -Principal $p -Description 'Launchpad: review site at http://launchpad.localhost' -Force | Out-Null`,
           ].join('; '),
         );
@@ -80,7 +87,7 @@ await main(() => {
       return { installed: allTasks().filter((n) => !LEGACY_PUBLISH_TASKS.includes(n)).map((n) => `${FOLDER}${n}`), log };
     }
     case 'uninstall': {
-      for (const name of allTasks()) ps(`Unregister-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${name}' -Confirm:$false -ErrorAction SilentlyContinue`);
+      for (const name of allTasks()) ps(`Get-ScheduledTask -TaskPath '${FOLDER}' -TaskName '${name}' -ErrorAction SilentlyContinue | Unregister-ScheduledTask -Confirm:$false`);
       return { removed: allTasks().map((n) => `${FOLDER}${n}`) };
     }
     case 'status': {
