@@ -15,7 +15,7 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] Why does the ocean swirl? | query: ocean currents — video 30 in review
 - [x] Why is the ocean salty? | query: ocean salinity — video 33 in review
 - [x] What makes ocean tides? | query: ocean tides — video 35 in review
-- [ ] Why does the sea turn green and blue? | query: phytoplankton bloom
+- [x] Why does the sea turn green and blue? | query: phytoplankton bloom — video 36 in review
 - [ ] How do we measure the height of the sea? | query: sea level satellite
 
 ## Volcanoes | playlist: Volcanoes for Kids
