@@ -6,14 +6,10 @@ Running list of things only Thomas can do (accounts, credentials, installs, mone
 
 ### 0. Switch on I Wonder Why (2026-10-07, about 10 minutes)
 
-The code for the second channel is in place. These steps only you can do:
+Connected and scheduled (see Done). Still open:
 
-1. **Connect the channel.** In a terminal in `C:\Projects\LaunchPad` run **`npm run youtube:auth -- --channel wonder`**. Pick your **main Google login**, then **I Wonder Why** in the channel list. It only saves the login (in `data/google/token-wonder.json`) if you picked I Wonder Why. Blast of Facts' login isn't touched.
-2. **Turn on the schedule.** Run **`npm run schedule:install`**. It keeps Blast's jobs and adds `wonder-make-video-0900`, `wonder-make-video-1700` and `wonder-publish` (10:00 and 18:00). Check with `npm run schedule:status`.
-3. **Phone-verify the channel** (needed for custom thumbnails later): https://www.youtube.com/verify with I Wonder Why selected.
-4. **Rights reviews:** most NASA Earth videos credit Goddard producers by name, so many I Wonder Why videos will show "Check rights". Same gate as Blast: tick the box only once you're happy the footage is NASA's.
-
-Until step 1 is done, the 10:00/18:00 posting job just logs "not connected" and skips.
+1. **Phone-verify the channel** (needed for custom thumbnails later): https://www.youtube.com/verify with I Wonder Why selected.
+2. **Rights reviews:** most NASA Earth videos credit Goddard producers by name, so many I Wonder Why videos will show "Check rights". Same gate as Blast: tick the box only once you're happy the footage is NASA's.
 
 ### 1. Hand-post video 2 to Blast of Facts (this week)
 
@@ -69,6 +65,8 @@ Google locks uploads from new, unaudited API projects to **private**, even when 
 - **Facebook:** on hold until YouTube posting is fully proven (Thomas, 2026-09-27). Nothing needed yet.
 
 ## Done
+- 2026-10-10 — `npm run youtube:auth -- --channel wonder` connected **I Wonder Why** (login in `data/google/token-wonder.json`). The 10:00/18:00 `wonder-publish` job now posts one approved I Wonder Why video per run.
+- 2026-10-09 — `npm run schedule:install` added the I Wonder Why jobs (make 09:00/17:00, post 10:00/18:00).
 - 2026-09-28 — Google Cloud project `launchpad-uploader` set up, app **In production**, `sromovski.github.io` verified in Search Console, and `npm run youtube:auth` connected to **Blast of Facts** (UCHhHYjq4K0sERPPR2od5kRw). Tip: in Google's picker the channel still showed its old name **Story_Clips**, under sromovski@gmail.com; the account named "Blast of Facts" is the BlastofFacts04 Gmail, which has no channel.
 - 2026-09-27 — Hand-posted video 2 to Blast of Facts: https://www.youtube.com/shorts/6qJq2lvEuV0 (recorded with `npm run video:mark-posted`; status `published`).
 - 2026-09-27 — Renamed the Story_Clips YouTube channel to **Blast of Facts**: handle, description, profile picture + banner from `assets/channel/`, audience set to made for kids.
