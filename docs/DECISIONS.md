@@ -136,3 +136,7 @@ Short log of design choices. Newest last.
 - **Voice:** `am_michael` (Thomas picked it from the samples), so the channels don't sound the same.
 - **Task Scheduler:** Blast keeps its task names; I Wonder Why's are `wonder-make-video-0900`, `wonder-make-video-1700`, `wonder-publish`. They appear after `npm run schedule:install`.
 - **Nunito not added** (ROADMAP mentions it for body text): video text is all Fredoka on both channels, so it wasn't needed.
+
+## 2026-10-12 — One voice for both channels
+
+- **Voice (Thomas):** I Wonder Why now uses `af_heart`, the same female voice as Blast of Facts, replacing `am_michael`. Applies to videos voiced from now on; videos already rendered or in review keep their voice.
