@@ -140,3 +140,10 @@ Short log of design choices. Newest last.
 ## 2026-10-12 — One voice for both channels
 
 - **Voice (Thomas):** I Wonder Why now uses `af_heart`, the same female voice as Blast of Facts, replacing `am_michael`. Applies to videos voiced from now on; videos already rendered or in review keep their voice.
+
+## 2026-10-19 — Auto-skip backlog topics that keep failing
+
+- **Why:** "What is a spacewalk?" failed 10 scheduled Blast runs in a row (videos 58–76, Oct 15–19): NASA's spacewalk clips have no credit metadata, so QA correctly fails the "credit unknown" placeholder. A failed topic was never marked, so every run picked it again and Blast made no new videos for 5 days. Thomas skipped it by hand.
+- **Rule:** an open topic with 2 or more failed videos on that channel (each already retried once, so 4 attempts) is marked `[~] auto-skipped after N failed videos (ids): <last error>` by `topics:next` and by `npm run scheduled` before preflight. Then the next open topic is used.
+- **The credit rule is unchanged.** Clips with no credit still fail; guessing "NASA" would break rights-first.
+- **Retrying a skipped topic:** reopen it with a reworded question (failures are matched by topic text), or run `/make-video <topic>` by hand, which skips the backlog check.

@@ -3,6 +3,7 @@
 `/make-video` with no topic takes the first open line. Edit freely: reorder, add, delete.
 Format: `- [ ] Question kids would ask | query: NASA library search words`.
 `[x]` = video reached review, `[~]` = skipped (reason after the dash). Code updates this file (`npm run topics:mark`).
+A topic whose videos fail twice is skipped automatically (`[~] auto-skipped…`). To try it again, reopen it with a reworded question, or run `/make-video <topic>` by hand.
 Each `## World | playlist: Name` heading sets the YouTube playlist for the topics below it (created on first use).
 
 ## Mars | playlist: Mars Facts for Kids
@@ -38,15 +39,15 @@ Each `## World | playlist: Name` heading sets the YouTube playlist for the topic
 - [x] What did astronauts do on the Moon? | query: apollo moonwalk — video 31 in review
 - [x] Why does the Moon have so many craters? | query: moon craters — video 32 in review
 - [x] Why do we always see the same side of the Moon? | query: moon far side — video 34 in review
-- [ ] Is there water on the Moon? | query: water ice moon south pole
-- [ ] How far away is the Moon? | query: moon distance earth
+- [x] Is there water on the Moon? | query: water ice moon south pole — video 38 in review
+- [x] How far away is the Moon? | query: moon distance earth — video 46 in review
 
 ## Life in Space | playlist: Life in Space for Kids
 
-- [ ] How do astronauts exercise in space? | query: astronaut exercise
-- [ ] How do astronauts eat in space? | query: astronaut food space station
-- [ ] What happens to water in space? | query: water microgravity
-- [ ] What is a spacewalk? | query: spacewalk
+- [x] How do astronauts exercise in space? | query: astronaut exercise — video 48 in review
+- [x] How do astronauts eat in space? | query: astronaut food space station — video 50 in review
+- [x] What happens to water in space? | query: water microgravity — video 56 in review
+- [~] What is a spacewalk? | query: spacewalk — NASA spacewalk clips have no credit metadata; 10 videos (58-76) failed the QA credit check (2026-10-15 to 10-19)
 - [ ] How do astronauts sleep in space? | query: astronaut sleep space station
 - [ ] How do astronauts go to the bathroom in space? | query: space toilet
 - [ ] How many sunrises do astronauts see each day? | query: space station sunrise orbit

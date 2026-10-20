@@ -14,7 +14,7 @@ import { channelByKey } from '../channels.js';
 import { PROJECT_ROOT, openDb } from '../db/index.js';
 import { LockedError, acquireLock } from '../automation/lock.js';
 import { evaluatePreflight } from '../automation/preflight.js';
-import { nextTopic } from '../automation/topics.js';
+import { nextTopic, skipFailedTopics, topicFailuresFromDb } from '../automation/topics.js';
 import { decideOutcome, parseClaudeJson } from '../automation/claude-result.js';
 import { ffmpegPath, ffprobePath, whisperBinPath, whisperModelPath } from '../media/tools.js';
 import { RUNS_ROOT, args } from './_lib.js';
@@ -71,7 +71,14 @@ try {
 
 try {
   // ---- Preflight ------------------------------------------------------------------
-  const backlogTopic = existsSync(channel.topicsFile) ? nextTopic(readFileSync(channel.topicsFile, 'utf8')) : undefined;
+  // Topics that keep failing are skipped here too, so preflight and /make-video agree on the next topic.
+  let backlogTopic: ReturnType<typeof nextTopic>;
+  if (existsSync(channel.topicsFile)) {
+    const { md, skipped } = skipFailedTopics(readFileSync(channel.topicsFile, 'utf8'), topicFailuresFromDb(db, channel.key));
+    if (skipped.length) writeFileSync(channel.topicsFile, md);
+    for (const s of skipped) console.error(`auto-skipped topic "${s.topic}" — ${s.note}`);
+    backlogTopic = nextTopic(md);
+  }
   const topic = a.topic ?? backlogTopic?.topic ?? null;
   // The queue cap is per channel: a full Blast of Facts queue doesn't stop I Wonder Why.
   const inReview = (db.prepare("SELECT COUNT(*) n FROM videos WHERE status = 'in_review' AND channel = ?").get(channel.key) as { n: number }).n;

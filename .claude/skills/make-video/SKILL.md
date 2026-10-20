@@ -11,7 +11,7 @@ You are the **orchestrator**. You never write scripts, pick footage or render yo
 - **Channel** = the word after `--channel` at the start of the argument (`blast` or `wonder`); without it, `blast`. Strip `--channel <key>` from the argument before reading the topic. Use the same `<channel>` in every command below that takes `--channel`.
   - `blast` = **Blast of Facts** (space: Mars, the Moon, planets…; topics in `docs/TOPICS.md`).
   - `wonder` = **I Wonder Why** (our planet seen by NASA: weather, volcanoes, oceans, ice, auroras…; topics in `docs/TOPICS_WONDER.md`).
-- Topic = the rest of the argument. With no topic: `npm run topics:next -- --channel <channel>` → use its `topic` (and pass its `query` to the researcher as a search hint). Never edit the TOPICS files by hand.
+- Topic = the rest of the argument. With no topic: `npm run topics:next -- --channel <channel>` → use its `topic` (and pass its `query` to the researcher as a search hint). If it lists `auto_skipped` topics (they failed too often), mention them in your final summary. Never edit the TOPICS files by hand.
 - `npm run video:new -- --channel <channel> --topic "<topic>"` → prints `{ "video_id": N, "channel": "...", "run_dir": "runs/N" }`.
 - Tell every subagent the channel's name along with the `video_id` and topic. The look, voice and outro come from the channel automatically (code, not a choice).
 
