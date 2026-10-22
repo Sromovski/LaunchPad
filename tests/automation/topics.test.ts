@@ -107,6 +107,15 @@ describe('auto-skipping topics that keep failing', () => {
     expect(out).toEqual({ md, skipped: [] });
   });
 
+  it('a re-opened topic ("retry after video N") only counts failures after N', () => {
+    const reopened = '- [ ] What is a spacewalk? | query: spacewalk — retry after video 76\n- [ ] Can plants grow in space?\n';
+    expect(nextTopic(reopened)?.query).toBe('spacewalk');
+    const old = skipFailedTopics(reopened, () => ({ ids: [58, 76], lastError: 'old bug' }));
+    expect(old).toEqual({ md: reopened, skipped: [] });
+    const again = skipFailedTopics(reopened, () => ({ ids: [58, 76, 90, 92], lastError: 'new' }));
+    expect(again.skipped[0]!.note).toBe('auto-skipped after 2 failed videos (90, 92): new');
+  });
+
   it('counts failed videos per channel from the DB, ignoring topic case', () => {
     const db = openDb(':memory:');
     const add = (channel: string, topic: string, status: string, error: string | null) =>

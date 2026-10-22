@@ -147,3 +147,9 @@ Short log of design choices. Newest last.
 - **Rule:** an open topic with 2 or more failed videos on that channel (each already retried once, so 4 attempts) is marked `[~] auto-skipped after N failed videos (ids): <last error>` by `topics:next` and by `npm run scheduled` before preflight. Then the next open topic is used.
 - **The credit rule is unchanged.** Clips with no credit still fail; guessing "NASA" would break rights-first.
 - **Retrying a skipped topic:** reopen it with a reworded question (failures are matched by topic text), or run `/make-video <topic>` by hand, which skips the backlog check.
+
+## 2026-10-21 — Credit from NASA's `center` field when there is no credit (Thomas: "yes")
+- **Why:** after the spacewalk skip, Blast kept failing: 14 of 16 runs since Oct 14, all for "no stored credit". Astronaut/ISS topics use JSC, ISS and HQ material, which has no credit field at all, only `center` (JSC, HQ…). Blast had nothing to post from Oct 17 to Oct 21.
+- **Rule:** when the library gives no credit (fields or description), `checkCredit` uses the center: `NASA/<CENTER>` (`HQ` → `NASA`). It is shown on screen and in descriptions like any credit, so QA's "credits in render" passes.
+- **Rights-first still holds:** such assets are always `needs_review` (note: "no credit in NASA metadata; showing … from center field …"), so the review site shows the rights warning and Approve needs "I checked the rights". A real credit, or a credit in the description, always wins over the center.
+- **Re-opening a skipped topic:** `- [ ] <topic> | query: … — retry after video N` makes the auto-skip count only failures after video N. Used for "What is a spacewalk?", "How do astronauts go to the bathroom in space?" (Blast) and "Why is the sky blue?" (I Wonder Why), all skipped because of this.

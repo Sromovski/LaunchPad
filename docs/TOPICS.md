@@ -47,9 +47,9 @@ Each `## World | playlist: Name` heading sets the YouTube playlist for the topic
 - [x] How do astronauts exercise in space? | query: astronaut exercise — video 48 in review
 - [x] How do astronauts eat in space? | query: astronaut food space station — video 50 in review
 - [x] What happens to water in space? | query: water microgravity — video 56 in review
-- [~] What is a spacewalk? | query: spacewalk — NASA spacewalk clips have no credit metadata; 10 videos (58-76) failed the QA credit check (2026-10-15 to 10-19)
-- [ ] How do astronauts sleep in space? | query: astronaut sleep space station
-- [ ] How do astronauts go to the bathroom in space? | query: space toilet
+- [ ] What is a spacewalk? | query: spacewalk — retry after video 85 (credit fix)
+- [x] How do astronauts sleep in space? | query: astronaut sleep space station — video 78 in review
+- [ ] How do astronauts go to the bathroom in space? | query: space toilet — retry after video 85 (credit fix)
 - [ ] How many sunrises do astronauts see each day? | query: space station sunrise orbit
 - [ ] Can plants grow in space? | query: plants space station veggie
 

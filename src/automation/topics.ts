@@ -88,10 +88,13 @@ export function skipFailedTopics(
 ): { md: string; skipped: { topic: string; note: string }[] } {
   const skipped: { topic: string; note: string }[] = [];
   for (let t = nextTopic(md); t; t = nextTopic(md)) {
+    // A topic re-opened after a pipeline fix ("— retry after video N") gets a fresh count.
+    const after = Number(/retry after video (\d+)/i.exec(t.note)?.[1] ?? 0);
     const f = failuresFor(t.topic);
-    if (f.ids.length < MAX_FAILED_VIDEOS_PER_TOPIC) break;
+    const ids = f.ids.filter((id) => id > after);
+    if (ids.length < MAX_FAILED_VIDEOS_PER_TOPIC) break;
     const why = f.lastError ? `: ${f.lastError.replace(/\s+/g, ' ').slice(0, 140)}` : '';
-    const note = `auto-skipped after ${f.ids.length} failed videos (${f.ids.join(', ')})${why}`;
+    const note = `auto-skipped after ${ids.length} failed videos (${ids.join(', ')})${why}`;
     md = markTopic(md, t.topic, 'skipped', note);
     skipped.push({ topic: t.topic, note });
   }

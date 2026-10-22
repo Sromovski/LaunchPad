@@ -94,7 +94,12 @@ export interface CreditCheck {
  * `credits` = the library's credit fields (secondary_creator, photographer…).
  * Credits named in the description are checked too; the strictest verdict wins.
  */
-export function checkCredit(input: { credits: (string | undefined | null)[]; description?: string }): CreditCheck {
+export function checkCredit(input: {
+  credits: (string | undefined | null)[];
+  description?: string;
+  /** The library's `center` field (JSC, HQ…): a display credit when no real credit exists. */
+  center?: string | null;
+}): CreditCheck {
   const description = input.description ?? '';
   const fromDescription = extractDescriptionCredits(description);
   const all = [...input.credits, ...fromDescription]
@@ -103,6 +108,14 @@ export function checkCredit(input: { credits: (string | undefined | null)[]; des
   const unique = [...new Set(all)];
 
   if (unique.length === 0) {
+    // Much JSC/ISS/HQ material has no credit field at all, only the center
+    // that produced it. Show that on screen, but never call it clear: Thomas
+    // still confirms the rights in the review site.
+    const center = input.center?.trim().toUpperCase();
+    if (center) {
+      const credit = center === 'HQ' ? 'NASA' : normalizeCredit(`NASA/${center}`);
+      return { status: 'needs_review', credit, note: `no credit in NASA metadata; showing "${credit}" from center field ${center}` };
+    }
     return { status: 'needs_review', credit: null, note: 'no credit found' };
   }
 

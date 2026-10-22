@@ -84,6 +84,28 @@ describe('needs_review', () => {
     expect(r.note).toMatch(/no credit/i);
   });
 
+  it.each([
+    ['JSC', 'NASA/JSC'],
+    ['jsc', 'NASA/JSC'],
+    ['HQ', 'NASA'],
+    ['KSC', 'NASA/KSC'],
+    ['ARC', 'NASA/ARC'],
+  ])('no credit but center %s → shows %s, still needs review', (center, credit) => {
+    const r = checkCredit({ credits: [undefined], center });
+    expect(r.status).toBe('needs_review');
+    expect(r.credit).toBe(credit);
+    expect(r.note).toMatch(/no credit.*center/i);
+  });
+
+  it('center is ignored when a real credit exists', () => {
+    const r = checkCredit({ credits: ['NASA/JPL-Caltech/MSSS'], center: 'JPL' });
+    expect(r.credit).toBe('NASA/JPL-Caltech/MSSS');
+  });
+
+  it('center is ignored when the description names a credit', () => {
+    expect(checkCredit({ credits: [], center: 'JSC', description: 'Credit: ESA' }).status).toBe('rejected');
+  });
+
   it('bare person name without NASA (cannot tell staff from private) → review', () => {
     expect(check(['Bill Ingalls']).status).toBe('needs_review');
   });

@@ -60,7 +60,7 @@ export function cleanHref(href: string): string {
 }
 
 export function creditCheckFor(d: ItemData): CreditCheck {
-  return checkCredit({ credits: [d.secondary_creator, d.photographer], description: d.description });
+  return checkCredit({ credits: [d.secondary_creator, d.photographer], description: d.description, center: d.center });
 }
 
 export function parseSearch(json: unknown): Candidate[] {

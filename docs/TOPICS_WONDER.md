@@ -46,7 +46,7 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 
 - [x] Why do we have seasons? | query: earth seasons — video 73 in review
 - [x] How do wildfires look from space? | query: wildfire smoke satellite — video 75 in review
-- [ ] Why is the sky blue? | query: earth atmosphere blue sky
-- [ ] How big is the Amazon rainforest? | query: amazon rainforest
-- [ ] What does Earth look like at night? | query: earth at night city lights
+- [ ] Why is the sky blue? | query: earth atmosphere blue sky — retry after video 85 (credit fix)
+- [~] How big is the Amazon rainforest? | query: amazon rainforest — auto-skipped after 2 failed videos (81, 83): QA: caption splits 'Rondônia' into 'Rond'/'nia'. Pipeline bug: words() in src/script/readability.ts only matches ASCII letters
+- [x] What does Earth look like at night? | query: earth at night city lights — video 85 in review
 - [ ] Why is there day and night? | query: earth rotation day night
