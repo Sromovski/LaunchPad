@@ -14,7 +14,7 @@
 3. **Do the Google Cloud setup** (steps A–C in `NEEDS_FROM_THOMAS.md`).
 4. **Run `npm run youtube:auth`** and take screenshots of each Google screen as you go (**Win + Shift + S**, then paste into Paint and save as PNG): the account/channel picker, the "unverified app" warning, and the permission screen. These are the **OAuth flow screenshots**.
 5. **Run `npm run publish` once.** The video will land as private, which is expected. Screenshot the terminal output and the video in YouTube Studio (Made for Kids on, in the playlist). These are the **upload screenshots**.
-6. ~~Pages live~~ Done. Claude's screenshots are in `C:\Projects\LaunchPad\exports\audit\`; put yours from steps 4–5 in the same folder.
+6. ~~Pages live~~ Done. Claude's screenshots are in `D:\Projects\LaunchPad\exports\audit\`; put yours from steps 4–5 in the same folder.
 
 ## The form, section by section
 

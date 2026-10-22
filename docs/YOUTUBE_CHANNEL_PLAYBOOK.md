@@ -46,7 +46,7 @@ Signed in with the login that owns the channel, at https://console.cloud.google.
       - Leave the logo empty; a logo triggers a longer Google review.
     - **Audience:** External. Add your own Google address under **Test users**. Without this, sign-in fails with **"Access blocked"**.
     - **Data access (scopes):** `https://www.googleapis.com/auth/youtube`. The upload-only permission can't add videos to playlists, so full automation needs this one.
-11. **Clients → Create OAuth client → Desktop app** (ours: `launchpad-desktop`). **Download JSON** and save it as `C:\Projects\LaunchPad\data\google\client_secret.json`.
+11. **Clients → Create OAuth client → Desktop app** (ours: `launchpad-desktop`). **Download JSON** and save it as `D:\Projects\LaunchPad\data\google\client_secret.json`.
     - `data/` is gitignored, so it never reaches the public repo.
     - **Never paste it into chat or email.**
 12. **Audience → Publish app → In production.** While the app is in *Testing*, Google's login expires every **7 days**, which breaks unattended posting.
@@ -63,7 +63,7 @@ Signed in with the login that owns the channel, at https://console.cloud.google.
 
 ## Part 5 — Connect Launchpad to the channel
 
-16. In a terminal in `C:\Projects\LaunchPad`: **`npm run youtube:auth`**. A browser opens:
+16. In a terminal in `D:\Projects\LaunchPad`: **`npm run youtube:auth`**. A browser opens:
     - Pick your **main Google login** (the one that owns the channel), *not* the channel's contact Gmail.
     - On the next screen, pick the **channel** from the Brand Account list. It may still show an old name, as Blast of Facts showed "Story_Clips".
     - Get past the "unverified app" warning (step 12) and allow access.
