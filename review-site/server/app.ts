@@ -12,6 +12,9 @@ import { ReviewError, assetsNeedingReview, decide, saveDraft } from '../../src/r
 import { STATUSES } from '../../src/db/status.js';
 import { CHANNELS, isChannelKey } from '../../src/channels.js';
 import { postingQueue } from '../../src/publish/queue.js';
+import { snapshotStats, viewsReport } from '../../src/publish/stats.js';
+import type { YouTube } from '../../src/publish/youtube-api.js';
+import type { Channel } from '../../src/channels.js';
 
 /** Channel key → display name, for badges (src/channels.ts is the source of truth). */
 const channelTitle = (key: string) => (isChannelKey(key) ? CHANNELS[key].title : key);
@@ -19,6 +22,8 @@ const channelTitle = (key: string) => (isChannelKey(key) ? CHANNELS[key].title :
 export interface AppDeps {
   db: Database.Database;
   runsRoot: string;
+  /** Signed-in client per channel for the Views page's Refresh (null = not connected). Omitted = Refresh unavailable. */
+  youtubeFor?: (channel: Channel) => Pick<YouTube, 'channelStats' | 'videoStats'> | null;
 }
 
 const HISTORY = ['approved', 'rejected', 'changes_requested', 'scheduled', 'published', 'failed'];
@@ -50,7 +55,7 @@ export function parseRange(header: string, size: number): { start: number; end: 
   return { start, end };
 }
 
-export function createApp({ db, runsRoot }: AppDeps) {
+export function createApp({ db, runsRoot, youtubeFor }: AppDeps) {
   const app = new Hono();
   const runFile = (id: number, name: string) => resolve(runsRoot, String(id), name);
 
@@ -115,6 +120,26 @@ export function createApp({ db, runsRoot }: AppDeps) {
       return { key: ch.key, title: ch.title, post_times: ch.postTimes, next, posted, held };
     });
     return c.json({ channels });
+  });
+
+  // ---- Views -------------------------------------------------------------------------
+  /** Saved view/subscriber snapshots per channel (src/publish/stats.ts). */
+  app.get('/api/views', (c) => c.json({ channels: viewsReport(db), can_refresh: !!youtubeFor }));
+
+  /** Take today's snapshot now for every connected channel (a few YouTube quota units). */
+  app.post('/api/views/refresh', async (c) => {
+    if (!youtubeFor) throw new ReviewError('refresh is not available here', 400);
+    const errors: string[] = [];
+    for (const ch of Object.values(CHANNELS)) {
+      const yt = youtubeFor(ch);
+      if (!yt) continue;
+      try {
+        await snapshotStats(db, ch.key, yt);
+      } catch (e) {
+        errors.push(`${ch.title}: ${(e as Error).message}`);
+      }
+    }
+    return c.json({ channels: viewsReport(db), can_refresh: true, errors });
   });
 
   // ---- Detail ---------------------------------------------------------------------

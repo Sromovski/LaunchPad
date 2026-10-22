@@ -3,13 +3,15 @@ import { api, type VideoSummary } from './api';
 import { Queue } from './Queue';
 import { History } from './History';
 import { Detail } from './Detail';
+import { Views } from './Views';
 
-type Route = { page: 'queue' } | { page: 'history' } | { page: 'video'; id: number };
+type Route = { page: 'queue' } | { page: 'history' } | { page: 'views' } | { page: 'video'; id: number };
 
 function parseHash(): Route {
   const m = /^#\/v\/(\d+)/.exec(location.hash);
   if (m) return { page: 'video', id: Number(m[1]) };
   if (location.hash.startsWith('#/history')) return { page: 'history' };
+  if (location.hash.startsWith('#/views')) return { page: 'views' };
   return { page: 'queue' };
 }
 
@@ -81,6 +83,9 @@ export function App() {
             <NavLink href="#/history" active={route.page === 'history'}>
               History
             </NavLink>
+            <NavLink href="#/views" active={route.page === 'views'}>
+              Views
+            </NavLink>
           </nav>
           {channels.length > 1 && (
             <div className="flex flex-wrap gap-1" role="group" aria-label="Channel" data-testid="channel-filter">
@@ -103,6 +108,7 @@ export function App() {
       <main className="mx-auto max-w-7xl px-5 py-6">
         {route.page === 'queue' && <Queue videos={queue} error={queueError} channel={channel} />}
         {route.page === 'history' && <History channel={channel} />}
+        {route.page === 'views' && <Views channel={channel} />}
         {route.page === 'video' && <Detail key={route.id} id={route.id} queue={queue ?? []} onDecided={loadQueue} />}
       </main>
     </div>

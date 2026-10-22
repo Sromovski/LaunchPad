@@ -1,7 +1,7 @@
 /**
  * The four YouTube Data API v3 calls we need, over plain fetch:
- * channels.list (which channel is this login?), playlists.list/insert,
- * videos.insert (resumable upload), playlistItems.insert.
+ * channels.list (which channel is this login? its totals), playlists.list/insert,
+ * videos.insert (resumable upload), playlistItems.insert, videos.list (privacy, view counts).
  */
 import type { FetchFn } from './google-auth.js';
 
@@ -89,6 +89,27 @@ export class YouTube {
     const b = await check(await this.fetchFn(`${API}/videos?part=status&id=${ids.slice(0, 50).join(',')}`, { headers: await this.auth() }), 'videos.list');
     const items = (b.items as { id: string; status: { privacyStatus: UploadResult['privacyStatus'] } }[] | undefined) ?? [];
     return new Map(items.map((i) => [i.id, i.status.privacyStatus]));
+  }
+
+  /** Channel totals (1 quota unit). YouTube updates these a few times a day, not live. */
+  async channelStats(): Promise<{ views: number; subscribers: number | null; videos: number }> {
+    const b = await check(await this.fetchFn(`${API}/channels?part=statistics&mine=true`, { headers: await this.auth() }), 'channels.list');
+    const s = (b.items as { statistics: Record<string, string | boolean> }[] | undefined)?.[0]?.statistics;
+    if (!s) throw new YouTubeError(404, 'this Google login has no YouTube channel');
+    return { views: Number(s.viewCount ?? 0), subscribers: s.hiddenSubscriberCount ? null : Number(s.subscriberCount ?? 0), videos: Number(s.videoCount ?? 0) };
+  }
+
+  /** Views and likes per video, 50 IDs per call (1 quota unit each). Deleted videos are simply missing. */
+  async videoStats(ids: string[]): Promise<Map<string, { views: number; likes: number | null }>> {
+    const out = new Map<string, { views: number; likes: number | null }>();
+    for (let i = 0; i < ids.length; i += 50) {
+      const chunk = ids.slice(i, i + 50);
+      const b = await check(await this.fetchFn(`${API}/videos?part=statistics&id=${chunk.join(',')}`, { headers: await this.auth() }), 'videos.list');
+      for (const it of (b.items as { id: string; statistics: Record<string, string> }[] | undefined) ?? []) {
+        out.set(it.id, { views: Number(it.statistics.viewCount ?? 0), likes: it.statistics.likeCount == null ? null : Number(it.statistics.likeCount) });
+      }
+    }
+    return out;
   }
 
   /**

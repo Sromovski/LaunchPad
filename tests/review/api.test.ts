@@ -194,6 +194,35 @@ describe('publishing overview', () => {
   });
 });
 
+describe('views', () => {
+  it('lists every channel, empty before the first snapshot; refresh is off without a YouTube client', async () => {
+    const body = await (await app.request('/api/views')).json();
+    expect(body.can_refresh).toBe(false);
+    expect(body.channels.map((c: { key: string; latest: unknown }) => [c.key, c.latest])).toEqual([
+      ['blast', null],
+      ['wonder', null],
+    ]);
+    expect((await post('/api/views/refresh', {})).status).toBe(400);
+  });
+
+  it('refresh snapshots connected channels only and returns the new report', async () => {
+    const asked: string[] = [];
+    app = createApp({
+      db,
+      runsRoot,
+      youtubeFor: (ch) =>
+        ch.key === 'blast'
+          ? { channelStats: async () => (asked.push(ch.key), { views: 42, subscribers: 12, videos: 31 }), videoStats: async () => new Map() }
+          : null,
+    });
+    const body = await (await post('/api/views/refresh', {})).json();
+    expect(asked).toEqual(['blast']);
+    expect(body.errors).toEqual([]);
+    expect(body.channels[0].latest).toMatchObject({ views: 42, subscribers: 12 });
+    expect(body.channels[1].latest).toBeNull();
+  });
+});
+
 describe('channels in lists', () => {
   it('every video carries its channel; ?channel= filters', async () => {
     const a = seedVideo('in_review');

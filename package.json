@@ -48,7 +48,8 @@
     "video:mark-posted": "tsx src/cli/video.ts mark-posted",
     "video:hold": "tsx src/cli/video.ts hold",
     "youtube:auth": "tsx src/cli/youtube-auth.ts",
-    "publish": "tsx src/cli/publish.ts"
+    "publish": "tsx src/cli/publish.ts",
+    "stats": "tsx src/cli/stats.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",

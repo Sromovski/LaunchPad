@@ -30,6 +30,9 @@
   --dust-soft: rgba(227, 168, 87, 0.22);
   --rust: #b8392e;
   --ok: #2f7d4f;
+  /* Views chart lines, one per channel (validated for colour-blind separation on --panel). */
+  --series-blast: #b07a00;
+  --series-wonder: #2f6fc4;
 }
 .dark {
   --bg: #141a2e;
@@ -44,6 +47,8 @@
   --dust-soft: rgba(227, 168, 87, 0.14);
   --rust: #e0665a;
   --ok: #7fd1a0;
+  --series-blast: #c08a10;
+  --series-wonder: #4f94e0;
 }
 
 @theme inline {

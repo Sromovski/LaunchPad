@@ -131,3 +131,13 @@ test('queue is empty after every video is decided', async ({ page }) => {
   // The video sent back for changes is listed as waiting, not lost.
   await expect(page.getByTestId('revisions')).toContainText('Needs changes');
 });
+
+test('views page: totals per channel, chart with hover, empty channel explained', async ({ page }) => {
+  await page.goto('/#/views');
+  await expect(page.getByRole('heading', { name: 'Views', exact: true })).toBeVisible();
+  await expect(page.getByTestId('views-blast')).toContainText('42');
+  await expect(page.getByTestId('views-blast')).toContainText('+12 since Oct 20');
+  await expect(page.getByTestId('views-wonder')).toContainText('No numbers yet');
+  await page.getByTestId('views-chart').hover();
+  await expect(page.getByTestId('views-tooltip')).toContainText('Blast of Facts');
+});

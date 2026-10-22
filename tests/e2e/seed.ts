@@ -75,5 +75,7 @@ writeFileSync(
     bonus: { asset_id: 'iotd:earth-at-night', title: 'Space Station View of Earth at Night', credit: 'NASA/Jessica Meir', date_text: 'September 28, 2026', page: 'https://www.nasa.gov/image-detail/earth-at-night/', start_s: 2, end_s: 3 },
   }),
 );
+// Views page: two days of Blast of Facts numbers (enough for the chart); I Wonder Why has none yet.
+db.prepare("INSERT INTO channel_stats (channel, day, views, subscribers, videos) VALUES ('blast', '2026-10-20', 30, 10, 29), ('blast', '2026-10-22', 42, 12, 31)").run();
 db.close();
 console.log(`seeded ${TMP}`);

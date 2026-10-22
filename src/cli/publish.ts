@@ -3,15 +3,14 @@
  * Posts at most one approved video to one channel (no --channel = Blast of Facts; see src/publish/publisher.ts).
  * Scheduled at each channel's postTimes by `npm run schedule:install`. Thomas only; denied to agents.
  */
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { channelByKey } from '../channels.js';
 import { PROJECT_ROOT } from '../db/index.js';
 import { LockedError, acquireLock } from '../automation/lock.js';
-import { CLIENT_SECRET_PATH } from '../publish/config.js';
-import { accessTokenProvider, parseClientSecret, type StoredToken } from '../publish/google-auth.js';
+import { youtubeFor } from '../publish/client.js';
 import { publishNext } from '../publish/publisher.js';
-import { YouTube } from '../publish/youtube-api.js';
+import { snapshotStats } from '../publish/stats.js';
 import { THUMB_VERTICAL, makeThumbnails } from '../export/thumbnail.js';
 import { RUNS_ROOT, args, main, runDir } from './_lib.js';
 
@@ -40,15 +39,13 @@ await main(async (db) => {
       const r = await publishNext({ channel, db, yt: null as never, runsRoot: RUNS_ROOT, pendingDir: LOG_DIR, log }, { dryRun: true });
       return r;
     }
-    if (!existsSync(CLIENT_SECRET_PATH) || !existsSync(channel.tokenFile)) {
+    const yt = youtubeFor(channel);
+    if (!yt) {
       // Scheduled before Google setup is done: skip quietly instead of failing every day.
       const auth = `npm run youtube:auth${channel.key === 'blast' ? '' : ` -- --channel ${channel.key}`}`;
       log(`${channel.title} not connected yet (no ${relative(PROJECT_ROOT, channel.tokenFile)}): save data/google/client_secret.json, then run ${auth}`);
       return { outcome: 'not_connected', channel: channel.key };
     }
-    const secret = parseClientSecret(JSON.parse(readFileSync(CLIENT_SECRET_PATH, 'utf8')));
-    const token = JSON.parse(readFileSync(channel.tokenFile, 'utf8')) as StoredToken;
-    const yt = new YouTube(fetch, accessTokenProvider(fetch, secret, token.refresh_token));
     // The same 9:16 title thumbnail as the hand-posting export, kept in runs/<id>/thumbnail/.
     const thumbnail = (videoId: number, title: string) => {
       const outDir = resolve(runDir(videoId), 'thumbnail');
@@ -58,6 +55,13 @@ await main(async (db) => {
     };
     const r = await publishNext({ channel, db, yt, runsRoot: RUNS_ROOT, pendingDir: LOG_DIR, log, thumbnail });
     log(`result: ${JSON.stringify(r)}`);
+    // Views page: today's counts ride along with every posting run. Never fails the post.
+    try {
+      const s = await snapshotStats(db, channel.key, yt);
+      log(`stats: ${s.views} views, ${s.subscribers ?? 'hidden'} subscribers, ${s.videos_tracked} videos`);
+    } catch (e) {
+      log(`stats snapshot failed (views page keeps the last one): ${(e as Error).message}`);
+    }
     return r;
   } catch (e) {
     log(`FAILED: ${(e as Error).message}`);

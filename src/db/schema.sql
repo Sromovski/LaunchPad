@@ -136,3 +136,24 @@ CREATE TABLE IF NOT EXISTS posts (
   UNIQUE (video_id, platform),
   UNIQUE (platform, external_id)
 );
+
+-- View tracking: one snapshot per channel / posted video per day (src/publish/stats.ts).
+-- Taken by every posting run and by "Refresh" on the review site's Views page; later the same day overwrites.
+CREATE TABLE IF NOT EXISTS channel_stats (
+  channel     TEXT NOT NULL,
+  day         TEXT NOT NULL,  -- YYYY-MM-DD (UTC)
+  views       INTEGER NOT NULL,
+  subscribers INTEGER,        -- NULL when the channel hides its count
+  videos      INTEGER NOT NULL,
+  taken_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (channel, day)
+);
+
+CREATE TABLE IF NOT EXISTS video_stats (
+  external_id TEXT NOT NULL,  -- YouTube video ID (posts.external_id)
+  day         TEXT NOT NULL,
+  views       INTEGER NOT NULL,
+  likes       INTEGER,        -- NULL when likes are hidden
+  taken_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (external_id, day)
+);
