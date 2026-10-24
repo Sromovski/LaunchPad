@@ -53,7 +53,8 @@ export const CHANNELS: Record<ChannelKey, Channel> = {
       title === 'Mars Facts for Kids'
         ? `Short, true answers to big Mars questions, made with real NASA pictures and sounds. ${AI_VOICE}`
         : `${title}: short, true answers to big space questions for curious kids, made with real NASA pictures, footage and sounds. ${AI_VOICE}`,
-    makeTimes: ['07:00', '15:00'],
+    // 4 builds/day so the review queue outlasts days Thomas doesn't approve (2026-10-24).
+    makeTimes: ['07:00', '11:00', '15:00', '19:00'],
     postTimes: ['08:00', '16:00'],
     voice: 'af_heart',
     bonusOutro: true,
@@ -69,7 +70,7 @@ export const CHANNELS: Record<ChannelKey, Channel> = {
     playlistDescription: (title) =>
       `${title}: short, true answers to the questions curious kids ask about our planet, made with real NASA pictures and footage. ${AI_VOICE}`,
     // Two hours after Blast of Facts: its builds have taken up to 40 min (docs/RUN_LOG.md).
-    makeTimes: ['09:00', '17:00'],
+    makeTimes: ['09:00', '13:00', '17:00', '21:00'],
     postTimes: ['10:00', '18:00'],
     voice: 'af_heart', // Same voice as Blast of Facts (Thomas, 2026-10-12; was am_michael)
     bonusOutro: false,

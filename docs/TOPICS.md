@@ -49,13 +49,13 @@ Each `## World | playlist: Name` heading sets the YouTube playlist for the topic
 - [x] What happens to water in space? | query: water microgravity — video 56 in review
 - [x] What is a spacewalk? | query: spacewalk — video 86 in review
 - [x] How do astronauts sleep in space? | query: astronaut sleep space station — video 78 in review
-- [ ] How do astronauts go to the bathroom in space? | query: space toilet — retry after video 85 (credit fix)
-- [ ] How many sunrises do astronauts see each day? | query: space station sunrise orbit
-- [ ] Can plants grow in space? | query: plants space station veggie
+- [x] How do astronauts go to the bathroom in space? | query: space toilet — video 88 in review
+- [x] How many sunrises do astronauts see each day? | query: space station sunrise orbit — video 90 in review
+- [x] Can plants grow in space? | query: plants space station veggie — video 91 in review
 
 ## The Sun and Earth | playlist: Sun and Earth Facts for Kids
 
-- [ ] What happens in a solar eclipse? | query: solar eclipse
+- [x] What happens in a solar eclipse? | query: solar eclipse — video 93 in review
 - [ ] What does Earth look like from space? | query: earth from space
 - [ ] What makes the northern lights? | query: aurora
 - [ ] What is a solar flare? | query: solar flare

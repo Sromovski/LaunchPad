@@ -159,3 +159,8 @@ Short log of design choices. Newest last.
 - **Data:** YouTube's Data API has no history, so we save our own: `channel_stats` (per channel per day) and `video_stats` (per YouTube video per day), from `channels.list` + `videos.list` part=statistics (1 quota unit per call, 50 videos per call). A later snapshot the same day overwrites. History starts 2026-10-22.
 - **When:** every posting run takes a snapshot after posting (a failure is logged, never fails the post), so 2 per channel per day with no new scheduled task. `npm run stats` or **Refresh now** on the page does it by hand. Same OAuth tokens and scope as posting (`src/publish/client.ts` now builds the client for both).
 - **Chart colours:** `--series-blast` / `--series-wonder` in styles.css, checked for colour-blind separation and contrast on the panel colour in both themes. Text stays in ink colours; every line is direct-labelled and in the legend.
+
+## 2026-10-24 — 4 builds per channel per day
+
+- Blast of Facts missed Oct 23–24 posts because the approved queue ran dry, and Thomas does not review every day. Each channel now builds 4 videos/day (Blast 07/11/15/19, Wonder 09/13/17/21). Builds take about 20–30 min, so the 2 h stagger still holds. Posting stays at 2/day, so the review queue builds up between reviews.
+- The I Wonder Why backlog was empty. Added 18 Earth topics, each checked with `topics:check` for NASA footage.
