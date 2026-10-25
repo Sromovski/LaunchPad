@@ -88,3 +88,31 @@ Each `## World | playlist: Name` heading sets the YouTube playlist for the topic
 
 - [ ] What does the Webb telescope see? | query: webb telescope
 - [ ] What has Hubble shown us? | query: hubble
+
+## Rockets and Spacecraft | playlist: Rockets and Spacecraft for Kids
+
+- [ ] How does a rocket blast off? | query: rocket launch
+- [ ] How did the space shuttle land like a plane? | query: space shuttle landing
+- [ ] How do astronauts splash down back on Earth? | query: splashdown capsule
+- [ ] What is inside a spacesuit? | query: spacesuit
+- [ ] How do astronauts practice spacewalks underwater? | query: neutral buoyancy laboratory
+- [ ] How big is the International Space Station? | query: international space station
+- [ ] How do we talk to spacecraft far away? | query: deep space network
+- [ ] How do satellites stay up in the sky? | query: satellite orbit
+
+## The Planets | playlist: Planet Facts for Kids
+
+- [ ] Why is Venus the hottest planet? | query: venus
+- [ ] What is it like on Mercury? | query: planet mercury
+- [ ] Why is Uranus tipped on its side? | query: uranus
+- [ ] Why is Neptune so blue? | query: neptune
+- [ ] How far have the Voyager spacecraft gone? | query: voyager
+
+## Stars and Galaxies | playlist: Stars and Galaxies for Kids
+
+- [ ] How hot is the Sun? | query: sun sdo
+- [ ] What is a shooting star? | query: meteor shower
+- [ ] How are stars born? | query: star forming nebula
+- [ ] What is the Milky Way? | query: milky way galaxy
+- [ ] What is a black hole? | query: black hole
+- [ ] Are there planets around other stars? | query: exoplanet
