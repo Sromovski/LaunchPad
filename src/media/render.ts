@@ -12,6 +12,13 @@ import type { PauseWindow } from './timeline.js';
 import { FPS, H, KENBURNS_MAX_ZOOM, SAFE_BOTTOM_Y, W } from './layout.js';
 
 export const XFADE_S = 0.4;
+
+/**
+ * AAC settings for every encode (main render and the bonus join). -aac_ms 0: ffmpeg's
+ * mid/side stereo coding put a one-sample spike in one channel of our mono voice
+ * (video 92: limiter output −1.9 dB, right channel −0.45 dB after encoding).
+ */
+export const AAC_ARGS = ['-c:a', 'aac', '-aac_ms', '0', '-b:a', '192k', '-ar', '48000', '-ac', '2'];
 /** pano: band height cap, max upscale, and slide speed (px/s) so short clips don't whip past. */
 export const PANO = { maxBandH: 1100, maxUpscale: 1.2, speedPxPerS: 80 } as const;
 
@@ -178,7 +185,7 @@ export function buildRenderPlan(p: RenderPlanInput): RenderPlan {
     '-/filter_complex', p.filterFile ?? 'filter.txt',
     '-map', '[vout]', '-map', '[aout]',
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-color_range', 'tv', '-r', String(FPS),
-    '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2',
+    ...AAC_ARGS,
     '-t', f(p.duration_s),
     '-movflags', '+faststart',
     p.output,

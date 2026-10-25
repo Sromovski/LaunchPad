@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { XFADE_S, buildRenderPlan, type RenderClip, type RenderPlanInput } from '../../src/media/render.js';
+import { AAC_ARGS, XFADE_S, buildRenderPlan, type RenderClip, type RenderPlanInput } from '../../src/media/render.js';
 
 const clip = (o: Partial<RenderClip>): RenderClip => ({
   nasa_id: 'X',
@@ -45,6 +45,11 @@ describe('buildRenderPlan', () => {
     expect(s).toContain('-ar 48000');
     expect(s).toContain('-t 40');
     expect(args.at(-1)).toBe('final.mp4');
+  });
+
+  it('AAC without mid/side stereo (it spiked one channel past the QA peak limit in video 92)', () => {
+    expect(args.join(' ')).toContain(AAC_ARGS.join(' '));
+    expect(AAC_ARGS.join(' ')).toContain('-aac_ms 0');
   });
 
   it('loops stills and seeks into video sources', () => {

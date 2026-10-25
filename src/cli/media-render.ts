@@ -10,7 +10,7 @@ import { relative } from 'node:path';
 import { PROJECT_ROOT } from '../db/index.js';
 import { loadEditContext } from '../media/context.js';
 import { ffmpegBin, measureLoudness, probe, run } from '../media/probe.js';
-import { buildRenderPlan } from '../media/render.js';
+import { AAC_ARGS, buildRenderPlan } from '../media/render.js';
 import { clipGainDb } from '../media/audio-mix.js';
 import { FONTS_DIR } from '../media/layout.js';
 import { bonusCreditLine } from '../bonus/outro.js';
@@ -121,7 +121,7 @@ await main((db) => {
         '-y', '-loglevel', 'error', '-i', 'final-main.mp4', '-i', 'bonus.mp4',
         '-filter_complex', '[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a]', '-map', '[v]', '-map', '[a]',
         '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-color_range', 'tv', '-r', '30',
-        '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', 'final.mp4',
+        ...AAC_ARGS, '-movflags', '+faststart', 'final.mp4',
       ],
       { cwd: dir },
     );
