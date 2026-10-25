@@ -19,7 +19,7 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] Why does the sea turn green and blue? | query: phytoplankton bloom — video 36 in review
 - [x] How do we measure the height of the sea? | query: sea level satellite — video 37 in review
 
-- [ ] Why are coral reefs so colorful? | query: coral reef
+- [x] Why are coral reefs so colorful? | query: coral reef — video 94 in review
 - [ ] Where do big waves come from? | query: ocean waves
 - [ ] Why does the Pacific Ocean sometimes get extra warm? | query: el nino
 
