@@ -13,7 +13,7 @@ import { transitionVideo, type VideoState } from '../db/status.js';
 export class ReviewError extends Error {
   constructor(
     message: string,
-    public status: 400 | 404 | 409 = 400,
+    public status: 400 | 404 | 409 | 502 = 400,
   ) {
     super(message);
     this.name = 'ReviewError';

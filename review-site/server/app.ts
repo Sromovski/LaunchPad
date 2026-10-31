@@ -16,12 +16,15 @@ import { snapshotStats, viewsReport } from '../../src/publish/stats.js';
 import type { YouTube } from '../../src/publish/youtube-api.js';
 import type { Channel } from '../../src/channels.js';
 import { fablesRoutes } from './fables.js';
+import type { FablesYouTube } from '../../src/fables/publish.js';
 
 export interface AppDeps {
   db: Database.Database;
   runsRoot: string;
   /** Signed-in client per channel for the Views page's Refresh (null = not connected). Omitted = Refresh unavailable. */
   youtubeFor?: (channel: Channel) => Pick<YouTube, 'channelStats' | 'videoStats'> | null;
+  /** Signed-in client for the Pocket Fables channel (null = not connected). Omitted = uploading unavailable. */
+  fablesYoutube?: () => FablesYouTube | null;
 }
 
 const HISTORY = ['approved', 'rejected', 'changes_requested', 'scheduled', 'published', 'failed'];
@@ -53,7 +56,7 @@ export function parseRange(header: string, size: number): { start: number; end: 
   return { start, end };
 }
 
-export function createApp({ db, runsRoot, youtubeFor }: AppDeps) {
+export function createApp({ db, runsRoot, youtubeFor, fablesYoutube }: AppDeps) {
   const app = new Hono();
   const runFile = (id: number, name: string) => resolve(runsRoot, String(id), name);
 
@@ -70,7 +73,7 @@ export function createApp({ db, runsRoot, youtubeFor }: AppDeps) {
   };
 
   // Pocket Fables tab: own statuses and two review gates (channels/fables/CLAUDE.md).
-  fablesRoutes(app, db, runsRoot, videoId);
+  fablesRoutes(app, db, runsRoot, videoId, fablesYoutube);
 
   // ---- Lists ------------------------------------------------------------------
   app.get('/api/videos', (c) => {

@@ -1,7 +1,7 @@
 /**
  * Pocket Fables tab API (channels/fables/CLAUDE.md §3). Separate from the NASA routes:
  * its own statuses, two gates, no NASA assets or fact checks.
- * Scripts to review, Videos to review, Ready to upload (Mark uploaded) and the credits panel.
+ * Scripts to review, Videos to review, Ready to upload (Upload to YouTube, or Mark uploaded after a hand upload) and the credits panel.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -13,11 +13,12 @@ import { FableScript, scriptWarnings, sceneSeconds } from '../../src/fables/scri
 import { ReviewError } from '../../src/review/decide.js';
 import { creditsSummary } from '../../src/fables/render.js';
 import { decideScript, decideVideo, markUploaded } from '../../src/review/fables.js';
+import { FablePublishError, publishFable, type FablesYouTube } from '../../src/fables/publish.js';
 
 /** Queues the tab shows, by the status each holds. */
 const QUEUES = ['script_review', 'video_review', 'approved'] as const;
 
-export function fablesRoutes(app: Hono, db: Database.Database, runsRoot: string, videoId: (raw: string) => number) {
+export function fablesRoutes(app: Hono, db: Database.Database, runsRoot: string, videoId: (raw: string) => number, fablesYoutube?: () => FablesYouTube | null) {
   const readJson = (id: number, name: string): unknown => {
     const p = resolve(runsRoot, String(id), name);
     try {
@@ -94,7 +95,8 @@ export function fablesRoutes(app: Hono, db: Database.Database, runsRoot: string,
       has_video: existsSync(resolve(runsRoot, String(id), 'final.mp4')),
       qa: readJson(id, 'qa.json'),
       credits: db.prepare('SELECT credits_used, balance_after, created_at FROM credits WHERE video_id = ? ORDER BY id').all(id),
-      post: db.prepare("SELECT url, posted_at FROM posts WHERE video_id = ? AND platform = 'youtube'").get(id) ?? null,
+      post: db.prepare("SELECT url, visibility, posted_at FROM posts WHERE video_id = ? AND platform = 'youtube'").get(id) ?? null,
+      youtube_connected: !!fablesYoutube?.(),
     });
   });
 
@@ -114,5 +116,24 @@ export function fablesRoutes(app: Hono, db: Database.Database, runsRoot: string,
   app.post('/api/fables/videos/:id/uploaded', async (c) => {
     const id = videoId(c.req.param('id'));
     return c.json(markUploaded(db, id, await c.req.json()));
+  });
+
+  /** Thomas clicked approve (or Upload to YouTube): upload it to the Pocket Fables channel now. */
+  app.post('/api/fables/videos/:id/publish', async (c) => {
+    const id = videoId(c.req.param('id'));
+    const yt = fablesYoutube?.();
+    if (!yt) throw new ReviewError('Pocket Fables is not connected to YouTube yet: run npm run youtube:auth -- --channel fables, then try again', 409);
+    try {
+      const r = await publishFable(db, id, yt, {
+        runsRoot,
+        pendingDir: resolve(runsRoot, '_publish'),
+        log: (m) => console.log(`[fables publish] ${m}`),
+      });
+      return c.json(r);
+    } catch (e) {
+      if (e instanceof FablePublishError) throw new ReviewError(e.message, e.status);
+      // A YouTube refusal (quota, auth) is shown to Thomas as is; the video stays in Ready to upload.
+      throw new ReviewError(`YouTube upload failed: ${(e as Error).message}`, 502);
+    }
   });
 }

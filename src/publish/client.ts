@@ -5,7 +5,7 @@ import { CLIENT_SECRET_PATH } from './config.js';
 import { accessTokenProvider, parseClientSecret, type StoredToken } from './google-auth.js';
 import { YouTube } from './youtube-api.js';
 
-export function youtubeFor(channel: Channel): YouTube | null {
+export function youtubeFor(channel: Pick<Channel, 'tokenFile'>): YouTube | null {
   if (!existsSync(CLIENT_SECRET_PATH) || !existsSync(channel.tokenFile)) return null;
   const secret = parseClientSecret(JSON.parse(readFileSync(CLIENT_SECRET_PATH, 'utf8')));
   const token = JSON.parse(readFileSync(channel.tokenFile, 'utf8')) as StoredToken;

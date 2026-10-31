@@ -31,6 +31,13 @@ export const FABLES = {
   title: 'Pocket Fables',
   youtubeId: 'UCV0cfNkj1zyBopSoByRkgkw',
   madeForKids: true,
+  /** Refresh token from `npm run youtube:auth -- --channel fables` (gitignored). */
+  tokenFile: resolve(PROJECT_ROOT, 'data/google', 'token-fables.json'),
+  /** Every story goes into this playlist after upload. */
+  playlist: {
+    title: 'World Folktales with Pip',
+    description: 'Folktales and fables from around the world, retold in about a minute by Pip the fox. Narration voice is AI-generated.',
+  },
   /** Everygen voice id (Thomas, 2026-10-31). */
   everygenVoice: 'everygen',
   brand: { accent: '#E8742A' }, // Pip's fox orange, from channels/fables/art/banner-source.html

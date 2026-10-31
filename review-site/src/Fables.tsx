@@ -250,6 +250,7 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
       id={id}
       script={script}
       post={data.post}
+      connected={data.youtube_connected}
       onDone={() => {
         load();
         onDecided();
@@ -263,6 +264,7 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
       canDecide={reviewable}
       version={data.script_version}
       revisions={video.revision_count}
+      autoUpload={data.youtube_connected}
       mode={mode}
       setMode={setMode}
       onDone={() => {
@@ -482,6 +484,7 @@ function ScriptDecision({
   canDecide,
   version,
   revisions,
+  autoUpload,
   mode,
   setMode,
   onDone,
@@ -492,6 +495,8 @@ function ScriptDecision({
   canDecide: boolean;
   version: number | null;
   revisions: number;
+  /** Approving a video uploads it to YouTube straight away (when the channel is connected). */
+  autoUpload: boolean;
   mode: Mode;
   setMode: (m: Mode) => void;
   onDone: () => void;
@@ -525,7 +530,7 @@ function ScriptDecision({
         : status === 'script_changes' || status === 'video_changes'
           ? 'Changes requested. Claude revises the script and it comes back under Scripts to review as a new version.'
           : status === 'approved'
-            ? 'Approved. Upload it by hand in YouTube Studio, with the audience set to Made for Kids.'
+            ? 'Approved and ready to upload.'
             : `${STATUS_LABEL[status] ?? status}. Nothing to decide.`;
     return (
       <p className="rounded-2xl border border-line bg-panel p-4 text-muted" data-testid="fables-decided">
@@ -542,7 +547,17 @@ function ScriptDecision({
     try {
       if (gate === 'video') await fablesApi.reviewVideo(id, DECISION[mode], notes);
       else await fablesApi.reviewScript(id, DECISION[mode], notes, version);
-      setDone(mode === 'approve' ? (gate === 'video' ? 'Approved.' : 'Sent to Everygen.') : mode === 'changes' ? 'Changes requested.' : 'Rejected.');
+      let uploaded = '';
+      if (gate === 'video' && mode === 'approve' && autoUpload) {
+        try {
+          const r = await fablesApi.publish(id);
+          uploaded = r.visibility === 'public' ? ' Uploaded to YouTube.' : ` Uploaded to YouTube as ${r.visibility}.`;
+        } catch (e) {
+          // Approved either way; the upload can be retried from Ready to upload.
+          uploaded = ` The YouTube upload didn't work (${(e as Error).message}); try again from Ready to upload.`;
+        }
+      }
+      setDone(mode === 'approve' ? (gate === 'video' ? `Approved.${uploaded}` : 'Sent to Everygen.') : mode === 'changes' ? 'Changes requested.' : 'Rejected.');
       setMode(null);
       onDone();
     } catch (e) {
@@ -584,12 +599,14 @@ function ScriptDecision({
         <div>
           <p>
             {gate === 'video'
-              ? 'Approve this video? It moves to Ready to upload. Nothing is posted; you upload it in YouTube Studio.'
+              ? autoUpload
+                ? 'Approve this video and upload it to the Pocket Fables channel now (public, Made for Kids)?'
+                : 'Approve this video? It moves to Ready to upload. YouTube isn’t connected yet, so nothing is posted.'
               : 'Send this script to Everygen? Rendering it spends Everygen credits. Nothing is posted.'}
           </p>
           <div className="mt-3 flex gap-2">
             <button ref={confirmBtn} onClick={submit} disabled={busy} className="flex-1 rounded-lg bg-fox px-4 py-2 font-bold text-bg disabled:opacity-40" data-testid="fables-confirm">
-              {gate === 'video' ? 'Approve' : 'Approve & send to Everygen'}
+              {busy ? 'Working…' : gate === 'video' ? (autoUpload ? 'Approve & upload' : 'Approve') : 'Approve & send to Everygen'}
             </button>
             <button onClick={() => setMode(null)} className="rounded-lg border border-line px-4 py-2">
               Cancel
@@ -683,7 +700,19 @@ function CopyButton({ label, text }: { label: string; text: string }) {
  * Ready to upload: the MP4 and the YouTube text in the order Studio asks for them,
  * then the link back. Once uploaded: the link.
  */
-function UploadPanel({ id, script, post, onDone }: { id: number; script: FableScript; post: FableDetail['post']; onDone: () => void }) {
+function UploadPanel({
+  id,
+  script,
+  post,
+  connected,
+  onDone,
+}: {
+  id: number;
+  script: FableScript;
+  post: FableDetail['post'];
+  connected: boolean;
+  onDone: () => void;
+}) {
   const [url, setUrl] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -695,8 +724,81 @@ function UploadPanel({ id, script, post, onDone }: { id: number; script: FableSc
         <a href={post.url} target="_blank" rel="noreferrer" className="mt-1 block break-all">
           {post.url}
         </a>
+        {post.visibility !== 'public' && (
+          <p className="mt-2 rounded-lg bg-dust-soft p-2 text-sm">YouTube shows it as {post.visibility}. Make it public in YouTube Studio.</p>
+        )}
       </div>
     );
+
+  const upload = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await fablesApi.publish(id);
+      onDone();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const byHand = <ManualUpload id={id} script={script} url={url} setUrl={setUrl} busy={busy} setBusy={setBusy} setError={setError} onDone={onDone} />;
+
+  return (
+    <div className="rounded-2xl border border-line bg-panel p-4" data-testid="fables-upload">
+      {connected ? (
+        <>
+          <button onClick={upload} disabled={busy} className="w-full rounded-lg bg-fox px-3 py-3 text-left font-bold text-bg disabled:opacity-40" data-testid="fables-publish">
+            {busy ? 'Uploading…' : 'Upload to YouTube'}
+            <span className="block text-xs font-normal opacity-80">Pocket Fables channel, Made for Kids, public</span>
+          </button>
+          {error && (
+            <p className="mt-3 text-rust" role="alert">
+              {error}
+            </p>
+          )}
+          <details className="mt-3">
+            <summary className="cursor-pointer text-sm text-muted">Upload by hand instead</summary>
+            <div className="mt-2">{byHand}</div>
+          </details>
+        </>
+      ) : (
+        <>
+          <p className="mb-3 rounded-lg bg-dust-soft p-2 text-sm" data-testid="fables-not-connected">
+            Not connected to YouTube yet. Run <code>npm run youtube:auth -- --channel fables</code> once, then reload this page to upload with one click.
+          </p>
+          {byHand}
+          {error && (
+            <p className="mt-3 text-rust" role="alert">
+              {error}
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Hand upload: download, copy the text into YouTube Studio, paste the link back. */
+function ManualUpload({
+  id,
+  script,
+  url,
+  setUrl,
+  busy,
+  setBusy,
+  setError,
+  onDone,
+}: {
+  id: number;
+  script: FableScript;
+  url: string;
+  setUrl: (s: string) => void;
+  busy: boolean;
+  setBusy: (b: boolean) => void;
+  setError: (e: string | null) => void;
+  onDone: () => void;
+}) {
 
   const file = `pocket-fables-${id}-${script.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.mp4`;
   const submit = async () => {
@@ -713,7 +815,7 @@ function UploadPanel({ id, script, post, onDone }: { id: number; script: FableSc
   };
 
   return (
-    <div className="rounded-2xl border border-line bg-panel p-4" data-testid="fables-upload">
+    <div data-testid="fables-manual-upload">
       <a href={`/media/${id}/final.mp4`} download={file} className="block rounded-lg bg-fox px-3 py-3 font-bold text-bg no-underline" data-testid="fables-download">
         Download the video
         <span className="block break-all text-xs font-normal opacity-80">{file}</span>
@@ -747,11 +849,6 @@ function UploadPanel({ id, script, post, onDone }: { id: number; script: FableSc
           Mark uploaded
         </button>
       </form>
-      {error && (
-        <p className="mt-3 text-rust" role="alert">
-          {error}
-        </p>
-      )}
     </div>
   );
 }

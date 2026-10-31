@@ -1,5 +1,5 @@
 /**
- * npm run youtube:auth [-- --channel blast|wonder] — one-time sign-in per channel (Thomas only; denied to agents).
+ * npm run youtube:auth [-- --channel blast|wonder|fables] — one-time sign-in per channel (Thomas only; denied to agents).
  * Opens Google's consent page; pick that channel. Saves a refresh token to the channel's
  * token file in data/google/ (gitignored) only if the chosen channel is right.
  */
@@ -9,12 +9,14 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { parseArgs } from 'node:util';
-import { channelByKey } from '../channels.js';
+import { FABLES, channelByKey } from '../channels.js';
 import { CLIENT_SECRET_PATH, GOOGLE_DIR, SCOPES, isOurChannel } from '../publish/config.js';
 import { accessTokenProvider, buildAuthUrl, exchangeCode, parseClientSecret, pkce, type StoredToken } from '../publish/google-auth.js';
 import { YouTube } from '../publish/youtube-api.js';
 
-const target = channelByKey(parseArgs({ options: { channel: { type: 'string' } } }).values.channel);
+const wanted = parseArgs({ options: { channel: { type: 'string' } } }).values.channel;
+// Pocket Fables isn't a NASA channel (no channelByKey), but it signs in the same way.
+const target = wanted === FABLES.key ? FABLES : channelByKey(wanted);
 const CHANNEL_TITLE = target.title;
 const CHANNEL_ID = target.youtubeId;
 const TOKEN_PATH = target.tokenFile;

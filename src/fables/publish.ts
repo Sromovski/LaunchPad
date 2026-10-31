@@ -1,0 +1,115 @@
+/**
+ * Uploads one approved Pocket Fables video to the Pocket Fables YouTube channel.
+ * Called only from the review site, when Thomas approves a video (or clicks "Upload to
+ * YouTube" on Ready to upload), so it goes through the review path of the state machine:
+ * approved → uploaded happens only on his click. Same guards as the NASA poster: the
+ * signed-in channel is checked by ID, and a marker file stops a crash from uploading twice.
+ */
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import type Database from 'better-sqlite3';
+import { FABLES } from '../channels.js';
+import { transitionVideo } from '../db/status.js';
+import { isOurChannel } from '../publish/config.js';
+import type { VideoMetadata, YouTube } from '../publish/youtube-api.js';
+import { latestScript } from './render.js';
+import type { FableScript } from './script.js';
+
+export type FablesYouTube = Pick<YouTube, 'channel' | 'upload' | 'findOrCreatePlaylist' | 'addToPlaylist'>;
+
+/** YouTube category 1 = Film & Animation: these are animated stories (the NASA channels use 27, Education). */
+export const FABLES_CATEGORY_ID = '1';
+
+/** YouTube rejects < and > in titles/descriptions; tags are capped at about 500 characters in total. */
+export function fableMetadata(s: FableScript): VideoMetadata {
+  const clean = (t: string) => t.replace(/[<>]/g, '');
+  const tags: string[] = [];
+  let len = 0;
+  for (const t of s.youtube.tags.map((x) => clean(x.replace(/^#/, '')))) {
+    if (len + t.length + 1 > 450) break;
+    tags.push(t);
+    len += t.length + 1;
+  }
+  return {
+    snippet: {
+      title: clean(s.youtube.title).slice(0, 100),
+      description: clean(s.youtube.description).slice(0, 5000),
+      tags,
+      categoryId: FABLES_CATEGORY_ID,
+      defaultLanguage: 'en',
+      defaultAudioLanguage: 'en',
+    },
+    status: { privacyStatus: 'public', selfDeclaredMadeForKids: true, embeddable: true },
+  };
+}
+
+export interface FablePublishResult {
+  url: string;
+  visibility: 'public' | 'unlisted' | 'private';
+  playlist: 'added' | 'failed';
+  note?: string;
+}
+
+export class FablePublishError extends Error {
+  constructor(
+    message: string,
+    public status: 400 | 404 | 409 = 409,
+  ) {
+    super(message);
+  }
+}
+
+export async function publishFable(
+  db: Database.Database,
+  videoId: number,
+  yt: FablesYouTube,
+  opts: { runsRoot: string; pendingDir: string; readFile?: (p: string) => Uint8Array; log?: (m: string) => void },
+): Promise<FablePublishResult> {
+  const log = opts.log ?? (() => {});
+  const v = db.prepare('SELECT channel, status FROM videos WHERE id = ?').get(videoId) as { channel: string; status: string } | undefined;
+  if (!v || v.channel !== FABLES.key) throw new FablePublishError(`Pocket Fables video ${videoId} not found`, 404);
+  if (v.status !== 'approved') throw new FablePublishError(`video ${videoId} is ${v.status}, not approved`);
+  const file = resolve(opts.runsRoot, String(videoId), 'final.mp4');
+  if (!existsSync(file)) throw new FablePublishError(`video ${videoId} has no final.mp4`);
+
+  mkdirSync(opts.pendingDir, { recursive: true });
+  const pending = resolve(opts.pendingDir, `pending-fables-${videoId}.json`);
+  if (existsSync(pending)) {
+    throw new FablePublishError(
+      `video ${videoId} has an unfinished upload from earlier (${pending}). Check YouTube Studio: if it's there, paste its link under "upload by hand"; if not, delete that file and try again.`,
+    );
+  }
+
+  // Never post to the wrong channel: several channels share the same Google login.
+  const signedIn = await yt.channel();
+  if (!isOurChannel(signedIn, FABLES.youtubeId)) {
+    throw new FablePublishError(`signed in to "${signedIn.title}", not Pocket Fables: run npm run youtube:auth -- --channel fables and pick Pocket Fables`);
+  }
+
+  const meta = fableMetadata(latestScript(db, videoId).script);
+  writeFileSync(pending, JSON.stringify({ video_id: videoId, started: new Date().toISOString(), title: meta.snippet.title }));
+  log(`uploading Pocket Fables video ${videoId}: ${meta.snippet.title}`);
+  const res = await yt.upload((opts.readFile ?? readFileSync)(file), meta);
+  const url = `https://www.youtube.com/shorts/${res.id}`;
+  db.transaction(() => {
+    transitionVideo(db, videoId, 'uploaded', { via: 'review' });
+    db.prepare("INSERT INTO posts (video_id, platform, external_id, url, method, visibility) VALUES (?, 'youtube', ?, ?, 'api', ?)").run(videoId, res.id, url, res.privacyStatus);
+  })();
+  rmSync(pending, { force: true });
+  log(`uploaded ${url} (${res.privacyStatus})`);
+
+  let playlist: FablePublishResult['playlist'] = 'added';
+  try {
+    const id = await yt.findOrCreatePlaylist(FABLES.playlist.title, FABLES.playlist.description);
+    await yt.addToPlaylist(id, res.id);
+    db.prepare("UPDATE posts SET playlist_id = ? WHERE video_id = ? AND platform = 'youtube'").run(id, videoId);
+  } catch (e) {
+    playlist = 'failed';
+    log(`playlist add failed for video ${videoId}: ${(e as Error).message}`);
+  }
+  const note =
+    res.privacyStatus !== 'public'
+      ? 'YouTube kept it private (uploads from an unaudited API project). Make it public in YouTube Studio.'
+      : undefined;
+  return { url, visibility: res.privacyStatus, playlist, ...(note ? { note } : {}) };
+}
