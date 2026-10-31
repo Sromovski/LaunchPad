@@ -76,6 +76,8 @@ A traditional folktale from China, retold by Pip the fox in under a minute.
 
 Lesson: gifts are best when we use them to help others.
 
+Narration voice is AI-generated.
+
 #folktales #kidsstories #bedtimestories #fables
 
 **Tags:** magic paintbrush, Ma Liang, Chinese folktale, folktales for kids, kids stories, fables for kids, short stories for kids, Pocket Fables
