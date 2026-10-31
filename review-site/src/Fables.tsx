@@ -1,24 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { STATUS_LABEL, fablesApi, type Decision, type FableDetail, type FableScene, type FableSummary } from './api';
+import { STATUS_LABEL, fablesApi, type Decision, type FableCredits, type FableDetail, type FableScene, type FableSummary } from './api';
 import { go } from './App';
 
 /**
  * Pocket Fables tab (channels/fables/CLAUDE.md §3). Gate 1, "Scripts to review": Thomas reads
- * the script before any Everygen credits are spent. Videos to review and Ready to upload
- * come with the render step (build order steps 3–4).
+ * the script before any Everygen credits are spent. Gate 2, "Videos to review": the render,
+ * next to the approved script. Ready to upload comes in build step 4.
  */
 export function Fables({ id, onChanged }: { id: number | null; onChanged: () => void }) {
-  const [queue, setQueue] = useState<FableSummary[] | null>(null);
+  const [scripts, setScripts] = useState<FableSummary[] | null>(null);
+  const [videos, setVideos] = useState<FableSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const load = useCallback(() => {
-    fablesApi
-      .list('script_review')
-      .then((r) => {
-        setQueue(r.videos);
+    Promise.all([fablesApi.list('script_review'), fablesApi.list('video_review')])
+      .then(([s, v]) => {
+        setScripts(s.videos);
+        setVideos(v.videos);
         setError(null);
       })
       .catch((e: Error) => setError(e.message));
   }, []);
+  // J/K walk videos first (they cost credits already), then scripts.
+  const queue = [...(videos ?? []), ...(scripts ?? [])];
   useEffect(load, [load, id]);
 
   if (id !== null)
@@ -26,19 +29,88 @@ export function Fables({ id, onChanged }: { id: number | null; onChanged: () => 
       <ScriptDetail
         key={id}
         id={id}
-        queue={queue ?? []}
+        queue={queue}
         onDecided={() => {
           load();
           onChanged();
         }}
       />
     );
-  return <ScriptQueue videos={queue} error={error} />;
+  if (error) return <p className="text-rust">Couldn't load Pocket Fables: {error}</p>;
+  if (!scripts || !videos) return <p className="text-muted">Loading…</p>;
+  return (
+    <>
+      <CreditsPanel />
+      {videos.length > 0 && <VideoQueue videos={videos} />}
+      <ScriptQueue videos={scripts} />
+    </>
+  );
 }
 
-function ScriptQueue({ videos, error }: { videos: FableSummary[] | null; error: string | null }) {
-  if (error) return <p className="text-rust">Couldn't load Pocket Fables scripts: {error}</p>;
-  if (!videos) return <p className="text-muted">Loading…</p>;
+/** Everygen credits: the last balance Claude checked, and this month's renders (from the credits ledger). */
+function CreditsPanel() {
+  const [c, setC] = useState<FableCredits | null>(null);
+  useEffect(() => {
+    fablesApi
+      .credits()
+      .then(setC)
+      .catch(() => setC(null));
+  }, []);
+  if (!c) return null;
+  const pct = c.remaining != null && c.plan_max ? Math.min(100, (c.remaining / c.plan_max) * 100) : null;
+  const day = (iso: string | null) => (iso ? new Date(iso.includes('T') ? iso : `${iso.replace(' ', 'T')}Z`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : null);
+  return (
+    <section className="mb-10 max-w-3xl rounded-2xl border border-line bg-panel p-4" data-testid="fables-credits">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <h2 className="font-display text-xl font-semibold">Everygen credits</h2>
+        {c.checked_at && <span className="text-sm text-muted">checked {day(c.checked_at)}, {c.checked_at.slice(11, 16)} UTC</span>}
+      </div>
+      {c.remaining == null ? (
+        <p className="mt-1 text-muted">No balance checked yet. It's saved each time Claude renders a video.</p>
+      ) : (
+        <>
+          <p className="mt-1">
+            <span className="font-display text-3xl font-bold">{c.remaining}</span>
+            {c.plan_max ? <span className="text-muted"> of {c.plan_max} left</span> : <span className="text-muted"> left</span>}
+            {c.period_end && <span className="text-muted">, renews {day(c.period_end)}</span>}
+          </p>
+          {pct != null && (
+            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-fox-soft" role="meter" aria-valuemin={0} aria-valuemax={c.plan_max ?? 0} aria-valuenow={c.remaining} aria-label="Credits left">
+              <div className="h-full rounded-full bg-fox" style={{ width: `${pct}%` }} />
+            </div>
+          )}
+        </>
+      )}
+      <p className="mt-2 text-sm text-muted">
+        This month: {c.renders_this_month} {c.renders_this_month === 1 ? 'render' : 'renders'}, {c.used_this_month} credits.
+      </p>
+    </section>
+  );
+}
+
+function VideoQueue({ videos }: { videos: FableSummary[] }) {
+  return (
+    <section className="mb-12" data-testid="fables-video-queue">
+      <h1 className="font-display text-3xl font-bold">
+        {videos.length} {videos.length === 1 ? 'video' : 'videos'} to review
+      </h1>
+      <p className="mt-1 max-w-2xl text-muted">Rendered by Everygen from scripts you approved. Watch each one against its script.</p>
+      <ul className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-6">
+        {videos.map((v) => (
+          <li key={v.id}>
+            <a href={`#/fables/v/${v.id}`} className="group block text-ink no-underline" data-testid={`fables-video-${v.id}`}>
+              <video src={`/media/${v.id}/final.mp4#t=1`} preload="metadata" muted className="mb-3 aspect-[9/16] w-full rounded-2xl border border-line bg-panel object-cover group-hover:border-fox" />
+              <span className="block font-display text-lg font-semibold leading-snug group-hover:text-fox">{v.topic}</span>
+              <span className="text-sm text-muted">{v.origin}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function ScriptQueue({ videos }: { videos: FableSummary[] }) {
   return (
     <section data-testid="fables-queue">
       <h1 className="font-display text-3xl font-bold">
@@ -70,7 +142,6 @@ function ScriptQueue({ videos, error }: { videos: FableSummary[] | null; error: 
           </li>
         ))}
       </ul>
-      <p className="mt-6 text-sm text-muted">Videos to review and Ready to upload appear here after the first Everygen render.</p>
     </section>
   );
 }
@@ -102,7 +173,8 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
   }, [id]);
   useEffect(load, [load]);
 
-  const reviewable = data?.video.status === 'script_review' && !!data.script;
+  const gate: Gate = data?.video.status === 'video_review' ? 'video' : 'script';
+  const reviewable = (data?.video.status === 'script_review' || data?.video.status === 'video_review') && !!data.script;
 
   // A approve, C changes, R reject, J/K next/previous script. Ignored while typing.
   useEffect(() => {
@@ -130,11 +202,38 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
   if (!data) return <p className="text-muted">Loading…</p>;
   const { video, script } = data;
 
+  const decision = (
+    <ScriptDecision
+      id={id}
+      gate={gate}
+      status={video.status}
+      canDecide={reviewable}
+      version={data.script_version}
+      revisions={video.revision_count}
+      mode={mode}
+      setMode={setMode}
+      onDone={() => {
+        load();
+        onDecided();
+      }}
+    />
+  );
+  const creditsUsed = data.credits.reduce((n, c) => n + c.credits_used, 0);
+
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_minmax(280px,340px)]">
+    <div className={`grid gap-8 ${data.has_video ? 'lg:grid-cols-[minmax(280px,340px)_1fr]' : 'lg:grid-cols-[1fr_minmax(280px,340px)]'}`}>
+      {/* Videos: the phone player on the left so the narration can be checked against the script on the right. */}
+      {data.has_video && (
+        <aside className="lg:sticky lg:top-4 lg:self-start">
+          <div className="mx-auto mb-4 w-full max-w-[300px] rounded-[2.2rem] border-[10px] border-[#0a0e1c] bg-black shadow-2xl">
+            <video src={`/media/${id}/final.mp4`} controls playsInline preload="metadata" className="aspect-[9/16] w-full rounded-[1.5rem]" data-testid="fables-player" />
+          </div>
+          {decision}
+        </aside>
+      )}
       <article className="min-w-0" data-testid="fables-detail">
         <p className="text-muted">
-          <a href="#/fables">Scripts to review</a> <span aria-hidden>/</span> Video {video.id}
+          <a href="#/fables">{gate === 'video' ? 'Videos to review' : 'Scripts to review'}</a> <span aria-hidden>/</span> Video {video.id}
           {data.script_version && (
             <>
               {' '}
@@ -153,6 +252,25 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
         {script && <p className="mt-2 max-w-2xl font-display text-2xl font-semibold leading-snug text-fox">“{script.lesson}”</p>}
         {!reviewable && <p className="mt-3 inline-block rounded-lg bg-panel px-3 py-1 font-semibold">{STATUS_LABEL[video.status] ?? video.status}</p>}
 
+        {data.has_video && (
+          <dl className="mt-6 grid max-w-3xl gap-x-6 gap-y-3 sm:grid-cols-[11rem_1fr]" data-testid="fables-render">
+            <Meta term="Everygen credits">
+              {data.credits.length === 0 ? 'not recorded' : `${creditsUsed} for this render (${data.credits[data.credits.length - 1]!.balance_after} left)`}
+            </Meta>
+            {data.qa && (
+              <Meta term="Checks">
+                <ul>
+                  {data.qa.checks.map((c) => (
+                    <li key={c.name} className={c.ok ? '' : 'text-rust'}>
+                      {c.ok ? 'Passed' : 'Failed'}: {c.name} ({c.detail})
+                    </li>
+                  ))}
+                </ul>
+              </Meta>
+            )}
+          </dl>
+        )}
+
         {data.script_problem && (
           <p className="mt-4 rounded-lg border border-rust p-3 text-rust" role="alert">
             This script doesn't match the Pocket Fables format, so it can't be reviewed: {data.script_problem}
@@ -161,7 +279,7 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
 
         {script && (
           <>
-            <dl className="mt-6 grid max-w-3xl gap-x-6 gap-y-3 sm:grid-cols-[max-content_1fr]" data-testid="fables-header">
+            <dl className="mt-6 grid max-w-3xl gap-x-6 gap-y-3 sm:grid-cols-[11rem_1fr]" data-testid="fables-header">
               <Meta term="Lane">{script.lane}</Meta>
               <Meta term="Origin">{script.origin}</Meta>
               <Meta term="Length">
@@ -216,7 +334,7 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
             </div>
 
             <h2 className="mt-8 font-display text-2xl font-semibold">On YouTube</h2>
-            <dl className="mt-3 grid max-w-3xl gap-x-6 gap-y-3 sm:grid-cols-[max-content_1fr]">
+            <dl className="mt-3 grid max-w-3xl gap-x-6 gap-y-3 sm:grid-cols-[11rem_1fr]">
               <Meta term="Title">{script.youtube.title}</Meta>
               <Meta term="Description">
                 <span className="whitespace-pre-line">{script.youtube.description}</span>
@@ -245,21 +363,7 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
         )}
       </article>
 
-      <aside className="lg:sticky lg:top-4 lg:self-start">
-        <ScriptDecision
-          id={id}
-          status={video.status}
-          canDecide={reviewable}
-          version={data.script_version}
-          revisions={video.revision_count}
-          mode={mode}
-          setMode={setMode}
-          onDone={() => {
-            load();
-            onDecided();
-          }}
-        />
-      </aside>
+      {!data.has_video && <aside className="lg:sticky lg:top-4 lg:self-start">{decision}</aside>}
     </div>
   );
 }
@@ -308,8 +412,11 @@ function Timeline({ scenes, active, setActive }: { scenes: FableScene[]; active:
   );
 }
 
+type Gate = 'script' | 'video';
+
 function ScriptDecision({
   id,
+  gate,
   status,
   canDecide,
   version,
@@ -319,6 +426,7 @@ function ScriptDecision({
   onDone,
 }: {
   id: number;
+  gate: Gate;
   status: string;
   canDecide: boolean;
   version: number | null;
@@ -353,9 +461,11 @@ function ScriptDecision({
     const after =
       status === 'script_approved'
         ? 'Approved. Claude renders it with Everygen from Claude Code; it comes back under Videos to review.'
-        : status === 'script_changes'
-          ? 'Changes requested. Claude revises the script and it comes back here as a new version.'
-          : `${STATUS_LABEL[status] ?? status}. Nothing to decide.`;
+        : status === 'script_changes' || status === 'video_changes'
+          ? 'Changes requested. Claude revises the script and it comes back under Scripts to review as a new version.'
+          : status === 'approved'
+            ? 'Approved. Upload it by hand in YouTube Studio, with the audience set to Made for Kids.'
+            : `${STATUS_LABEL[status] ?? status}. Nothing to decide.`;
     return (
       <p className="rounded-2xl border border-line bg-panel p-4 text-muted" data-testid="fables-decided">
         {done ? `${done} ` : ''}
@@ -369,8 +479,9 @@ function ScriptDecision({
     setBusy(true);
     setError(null);
     try {
-      await fablesApi.reviewScript(id, DECISION[mode], notes, version);
-      setDone(mode === 'approve' ? 'Sent to Everygen.' : mode === 'changes' ? 'Changes requested.' : 'Rejected.');
+      if (gate === 'video') await fablesApi.reviewVideo(id, DECISION[mode], notes);
+      else await fablesApi.reviewScript(id, DECISION[mode], notes, version);
+      setDone(mode === 'approve' ? (gate === 'video' ? 'Approved.' : 'Sent to Everygen.') : mode === 'changes' ? 'Changes requested.' : 'Rejected.');
       setMode(null);
       onDone();
     } catch (e) {
@@ -385,7 +496,7 @@ function ScriptDecision({
       {mode === null && (
         <div className="grid gap-2">
           <button onClick={() => setMode('approve')} className="rounded-lg bg-fox px-3 py-3 text-left font-bold text-bg" aria-keyshortcuts="A" data-testid="fables-approve">
-            Approve & send to Everygen
+            {gate === 'video' ? 'Approve' : 'Approve & send to Everygen'}
             <span className="block text-xs font-normal opacity-80">key A</span>
           </button>
           <div className="grid grid-cols-2 gap-2">
@@ -410,10 +521,14 @@ function ScriptDecision({
 
       {mode === 'approve' && (
         <div>
-          <p>Send this script to Everygen? Rendering it spends Everygen credits. Nothing is posted.</p>
+          <p>
+            {gate === 'video'
+              ? 'Approve this video? It moves to Ready to upload. Nothing is posted; you upload it in YouTube Studio.'
+              : 'Send this script to Everygen? Rendering it spends Everygen credits. Nothing is posted.'}
+          </p>
           <div className="mt-3 flex gap-2">
             <button ref={confirmBtn} onClick={submit} disabled={busy} className="flex-1 rounded-lg bg-fox px-4 py-2 font-bold text-bg disabled:opacity-40" data-testid="fables-confirm">
-              Approve & send to Everygen
+              {gate === 'video' ? 'Approve' : 'Approve & send to Everygen'}
             </button>
             <button onClick={() => setMode(null)} className="rounded-lg border border-line px-4 py-2">
               Cancel
@@ -448,6 +563,11 @@ function ScriptDecision({
               data-testid="fables-notes"
             />
           </label>
+          {gate === 'video' && mode === 'changes' && (
+            <p className="mt-1 rounded-lg bg-dust-soft p-2 text-sm" data-testid="fables-rerender-warning">
+              Claude revises the script, you approve it again, then Everygen re-renders the whole video. A re-render costs credits.
+            </p>
+          )}
           <p className="text-sm text-muted">Ctrl+Enter to send, Esc to cancel.</p>
           <div className="mt-2 flex gap-2">
             <button
@@ -470,7 +590,7 @@ function ScriptDecision({
           {error}
         </p>
       )}
-      <p className="mt-3 text-sm text-muted">J and K move between scripts.</p>
+      <p className="mt-3 text-sm text-muted">J and K move through the queue.</p>
     </div>
   );
 }

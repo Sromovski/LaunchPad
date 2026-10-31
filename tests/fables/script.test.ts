@@ -42,7 +42,9 @@ describe('FableScript schema', () => {
     expect(w.join('\n')).toMatch(/spoken words/);
     expect(w.join('\n')).toMatch(/add up to/);
     expect(scriptWarnings({ ...s, youtube: { ...s.youtube, description: 'A fun story.' } }).join('\n')).toMatch(/culture of origin/);
-    expect(scriptWarnings(s).join('\n')).toMatch(/AI-generated/); // the sample's description doesn't have the line yet
+    expect(scriptWarnings(s).join('\n')).not.toMatch(/AI-generated/); // the sample has the line (added 2026-10-31)
+    const noLine = { ...s.youtube, description: s.youtube.description.replace('Narration voice is AI-generated.', '') };
+    expect(scriptWarnings({ ...s, youtube: noLine }).join('\n')).toMatch(/AI-generated/);
   });
 });
 

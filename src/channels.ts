@@ -34,6 +34,26 @@ export const FABLES = {
   /** Everygen voice id (Thomas, 2026-10-31). */
   everygenVoice: 'everygen',
   brand: { accent: '#E8742A' }, // Pip's fox orange, from channels/fables/art/banner-source.html
+  /**
+   * Everygen settings for /render-approved. Seedance 2 Mini at 480p: ~40 credits of clips per
+   * 60-second video on the 200-credit Starter plan (Thomas, 2026-10-31; Seedance 2.5 was ~108).
+   */
+  everygen: {
+    videoModel: 'Seedance 2 Mini',
+    resolution: '480p',
+    imageModel: 'gemini-3.1-flash-image-preview', // Nano Banana 2: start frames and Pip's sheet
+    minClipSeconds: 4,
+    maxClipSeconds: 15,
+    /** Don't start a render below this balance: a half-finished render wastes what it spent. */
+    minBalance: 80,
+    /**
+     * The `everygen` voice reads 151 words in 42 s at normal speed, under the 50 s minimum and
+     * too rushed for a storyteller; 0.8 gave 52.7 s on video 139 (2026-10-31).
+     */
+    voiceSpeed: 0.8,
+    /** Saved Everygen character "Pip (Pocket Fables)", made for video 139. Reuse it: Pip looks the same in every video. */
+    pipCharacterId: 'cmvwtswdm000jp002a20oquw6',
+  },
 } as const;
 
 /** Display name for any videos.channel value (review-site badges). */

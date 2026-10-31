@@ -17,7 +17,7 @@ describe('schema', () => {
       .map((r) => r.name)
       .filter((n) => !n.startsWith('sqlite_'))
       .sort();
-    expect(names).toEqual(['assets', 'automation_runs', 'channel_stats', 'credits', 'fact_checks', 'posts', 'reviews', 'runs', 'scripts', 'sources', 'video_stats', 'videos']);
+    expect(names).toEqual(['assets', 'automation_runs', 'channel_stats', 'credits', 'everygen_balance', 'fact_checks', 'posts', 'reviews', 'runs', 'scripts', 'sources', 'video_stats', 'videos']);
   });
 
   it('is idempotent (re-applying does not throw)', () => {

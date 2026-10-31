@@ -177,3 +177,12 @@ CREATE TABLE IF NOT EXISTS credits (
   created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_credits_video ON credits(video_id);
+
+-- Pocket Fables: Everygen balance whenever Claude checks it (the review site can't call Everygen).
+CREATE TABLE IF NOT EXISTS everygen_balance (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  remaining  REAL NOT NULL CHECK (remaining >= 0),
+  plan_max   REAL,             -- monthly plan credits (200 on Starter)
+  period_end TEXT,             -- when the plan's credits renew (ISO)
+  checked_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

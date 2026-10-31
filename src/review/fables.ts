@@ -23,6 +23,33 @@ const SCRIPT_GATE: Record<z.infer<typeof ScriptReviewInput>['decision'], Status>
   rejected: 'rejected',
 };
 
+const VIDEO_GATE: Record<z.infer<typeof ScriptReviewInput>['decision'], Status> = {
+  approved: 'approved',
+  changes_requested: 'video_changes',
+  rejected: 'rejected',
+};
+
+/** Gate 2: the rendered video. Changes send the script back through gate 1 (and cost a re-render). */
+export function decideVideo(db: Database.Database, videoId: number, raw: unknown): { review_id: number; state: VideoState } {
+  const input = ScriptReviewInput.omit({ version: true }).parse(raw);
+  const video = db.prepare('SELECT channel, status FROM videos WHERE id = ?').get(videoId) as { channel: string; status: string } | undefined;
+  if (!video || video.channel !== FABLES.key) throw new ReviewError(`Pocket Fables video ${videoId} not found`, 404);
+  if (video.status !== 'video_review') throw new ReviewError(`video ${videoId} is ${video.status}, not video_review`, 409);
+  if (input.decision === 'changes_requested' && !input.notes.trim()) throw new ReviewError('request changes needs notes');
+  return db.transaction(() => {
+    let state: VideoState;
+    try {
+      state = transitionVideo(db, videoId, VIDEO_GATE[input.decision], { via: 'review' });
+    } catch (e) {
+      throw new ReviewError((e as Error).message, 409);
+    }
+    const reviewId = Number(
+      db.prepare("INSERT INTO reviews (video_id, decision, notes, gate) VALUES (?, ?, ?, 'video')").run(videoId, input.decision, input.notes.trim() || null).lastInsertRowid,
+    );
+    return { review_id: reviewId, state };
+  })();
+}
+
 export function decideScript(db: Database.Database, videoId: number, raw: unknown): { review_id: number; state: VideoState } {
   const input = ScriptReviewInput.parse(raw);
   const video = db.prepare('SELECT channel, status FROM videos WHERE id = ?').get(videoId) as { channel: string; status: string } | undefined;

@@ -70,7 +70,7 @@ export function createApp({ db, runsRoot, youtubeFor }: AppDeps) {
   };
 
   // Pocket Fables tab: own statuses and two review gates (channels/fables/CLAUDE.md).
-  fablesRoutes(app, db, videoId);
+  fablesRoutes(app, db, runsRoot, videoId);
 
   // ---- Lists ------------------------------------------------------------------
   app.get('/api/videos', (c) => {

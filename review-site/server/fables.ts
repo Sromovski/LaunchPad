@@ -1,21 +1,32 @@
 /**
  * Pocket Fables tab API (channels/fables/CLAUDE.md §3). Separate from the NASA routes:
  * its own statuses, two gates, no NASA assets or fact checks.
- * Step 2 of the build order: the "Scripts to review" queue. Videos to review, Ready to
- * upload and the credits panel come in steps 3–4.
+ * Build steps 2–3: Scripts to review and Videos to review. Ready to upload and the
+ * credits panel come in step 4.
  */
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type Database from 'better-sqlite3';
 import type { Hono } from 'hono';
 import { FABLES } from '../../src/channels.js';
 import { FABLES_STATUSES } from '../../src/db/status.js';
 import { FableScript, scriptWarnings, sceneSeconds } from '../../src/fables/script.js';
 import { ReviewError } from '../../src/review/decide.js';
-import { decideScript } from '../../src/review/fables.js';
+import { creditsSummary } from '../../src/fables/render.js';
+import { decideScript, decideVideo } from '../../src/review/fables.js';
 
 /** Queues the tab shows, by the status each holds. */
-const QUEUES = ['script_review'] as const;
+const QUEUES = ['script_review', 'video_review'] as const;
 
-export function fablesRoutes(app: Hono, db: Database.Database, videoId: (raw: string) => number) {
+export function fablesRoutes(app: Hono, db: Database.Database, runsRoot: string, videoId: (raw: string) => number) {
+  const readJson = (id: number, name: string): unknown => {
+    const p = resolve(runsRoot, String(id), name);
+    try {
+      return existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null;
+    } catch {
+      return null;
+    }
+  };
   app.get('/api/fables/videos', (c) => {
     const status = c.req.query('status') ?? 'script_review';
     if (!(FABLES_STATUSES as readonly string[]).includes(status)) throw new ReviewError('unknown status', 400);
@@ -42,6 +53,9 @@ export function fablesRoutes(app: Hono, db: Database.Database, videoId: (raw: st
     return c.json({ videos });
   });
 
+  /** Credits panel: the last balance Claude saw, and what renders cost this month. */
+  app.get('/api/fables/credits', (c) => c.json(creditsSummary(db)));
+
   /** Counts for the tab badge and the queue switcher. */
   app.get('/api/fables/counts', (c) => {
     const rows = db.prepare("SELECT status, COUNT(*) AS n FROM videos WHERE channel = ? GROUP BY status").all(FABLES.key) as { status: string; n: number }[];
@@ -52,7 +66,7 @@ export function fablesRoutes(app: Hono, db: Database.Database, videoId: (raw: st
   app.get('/api/fables/videos/:id', (c) => {
     const id = videoId(c.req.param('id'));
     const video = db
-      .prepare('SELECT id, channel, topic, title, status, revision_count, error, created_at, updated_at FROM videos WHERE id = ?')
+      .prepare('SELECT id, channel, topic, title, status, revision_count, duration_s, error, created_at, updated_at FROM videos WHERE id = ?')
       .get(id) as { channel: string } | undefined;
     if (!video || video.channel !== FABLES.key) throw new ReviewError(`Pocket Fables video ${id} not found`, 404);
 
@@ -77,6 +91,9 @@ export function fablesRoutes(app: Hono, db: Database.Database, videoId: (raw: st
       warnings: script ? scriptWarnings(script) : [],
       est_seconds: script ? sceneSeconds(script) : null,
       reviews: db.prepare('SELECT id, gate, decision, notes, created_at FROM reviews WHERE video_id = ? ORDER BY id DESC').all(id),
+      has_video: existsSync(resolve(runsRoot, String(id), 'final.mp4')),
+      qa: readJson(id, 'qa.json'),
+      credits: db.prepare('SELECT credits_used, balance_after, created_at FROM credits WHERE video_id = ? ORDER BY id').all(id),
     });
   });
 
@@ -84,5 +101,11 @@ export function fablesRoutes(app: Hono, db: Database.Database, videoId: (raw: st
   app.post('/api/fables/videos/:id/script-review', async (c) => {
     const id = videoId(c.req.param('id'));
     return c.json(decideScript(db, id, await c.req.json()));
+  });
+
+  /** Gate 2: the rendered video. */
+  app.post('/api/fables/videos/:id/video-review', async (c) => {
+    const id = videoId(c.req.param('id'));
+    return c.json(decideVideo(db, id, await c.req.json()));
   });
 }

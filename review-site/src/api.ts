@@ -125,12 +125,27 @@ export interface FableDetail {
   warnings: string[];
   est_seconds: number | null;
   reviews: { id: number; gate: 'script' | 'video'; decision: string; notes: string | null; created_at: string }[];
+  has_video: boolean;
+  qa: { pass: boolean; checks: { name: string; ok: boolean; detail: string }[] } | null;
+  credits: { credits_used: number; balance_after: number | null; created_at: string }[];
+}
+
+export interface FableCredits {
+  remaining: number | null;
+  plan_max: number | null;
+  period_end: string | null;
+  checked_at: string | null;
+  used_this_month: number;
+  renders_this_month: number;
 }
 
 export const fablesApi = {
+  credits: () => call<FableCredits>('/api/fables/credits'),
   list: (status = 'script_review') => call<{ videos: FableSummary[] }>(`/api/fables/videos?status=${encodeURIComponent(status)}`),
   counts: () => call<{ counts: Record<string, number> }>('/api/fables/counts'),
   detail: (id: number) => call<FableDetail>(`/api/fables/videos/${id}`),
+  reviewVideo: (id: number, decision: Decision, notes: string) =>
+    call<{ review_id: number }>(`/api/fables/videos/${id}/video-review`, { method: 'POST', body: JSON.stringify({ decision, notes }) }),
   reviewScript: (id: number, decision: Decision, notes: string, version: number | null) =>
     call<{ review_id: number }>(`/api/fables/videos/${id}/script-review`, {
       method: 'POST',

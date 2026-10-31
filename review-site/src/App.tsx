@@ -43,7 +43,7 @@ export function App() {
   const loadFablesCount = useCallback(() => {
     fablesApi
       .counts()
-      .then((r) => setFablesCount(r.counts.script_review ?? 0))
+      .then((r) => setFablesCount((r.counts.script_review ?? 0) + (r.counts.video_review ?? 0)))
       .catch(() => setFablesCount(null));
   }, []);
   useEffect(loadFablesCount, [loadFablesCount, route]);

@@ -37,7 +37,7 @@ describe('Scripts to review API', () => {
     expect(videos).toHaveLength(1);
     expect(videos[0]).toMatchObject({ id, topic: 'The Magic Paintbrush', lane: 'folktale', version: 1, scene_count: 10, est_seconds: 60 });
     expect(videos[0].lesson).toMatch(/Gifts/);
-    expect((await (await app.request('/api/fables/counts')).json()).counts).toEqual({ script_review: 1 });
+    expect((await (await app.request('/api/fables/counts')).json()).counts).toEqual({ script_review: 1, video_review: 0 });
   });
 
   it('detail has the script, warnings and reviews; 404 for NASA ids', async () => {
