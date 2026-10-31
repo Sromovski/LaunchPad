@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { FABLES } from '../channels.js';
 import { transitionVideo, type Status, type VideoState } from '../db/status.js';
 import { ReviewError } from './decide.js';
+import { canonicalShortUrl, youtubeId } from '../publish/youtube-url.js';
 
 export const ScriptReviewInput = z.object({
   decision: z.enum(['approved', 'changes_requested', 'rejected']),
@@ -76,5 +77,37 @@ export function decideScript(db: Database.Database, videoId: number, raw: unknow
       db.prepare("INSERT INTO reviews (video_id, decision, notes, gate) VALUES (?, ?, ?, 'script')").run(videoId, input.decision, notes).lastInsertRowid,
     );
     return { review_id: reviewId, state };
+  })();
+}
+
+export const UploadedInput = z.object({ url: z.string().trim().min(1, 'paste the YouTube link') });
+
+/**
+ * Step 4, after Thomas uploads by hand in YouTube Studio: approved → uploaded, with the
+ * Short's link saved in `posts` (method 'manual') so it is never recorded twice.
+ */
+export function markUploaded(db: Database.Database, videoId: number, raw: unknown): { url: string; state: VideoState } {
+  const input = UploadedInput.parse(raw);
+  const video = db.prepare('SELECT channel, status FROM videos WHERE id = ?').get(videoId) as { channel: string; status: string } | undefined;
+  if (!video || video.channel !== FABLES.key) throw new ReviewError(`Pocket Fables video ${videoId} not found`, 404);
+  if (video.status !== 'approved') throw new ReviewError(`video ${videoId} is ${video.status}, not approved`, 409);
+  let externalId: string;
+  try {
+    externalId = youtubeId(input.url);
+  } catch (e) {
+    throw new ReviewError((e as Error).message);
+  }
+  const url = canonicalShortUrl(externalId);
+  return db.transaction(() => {
+    const taken = db.prepare("SELECT video_id FROM posts WHERE platform = 'youtube' AND external_id = ?").get(externalId) as { video_id: number } | undefined;
+    if (taken) throw new ReviewError(`that YouTube video is already recorded for video ${taken.video_id}`, 409);
+    let state: VideoState;
+    try {
+      state = transitionVideo(db, videoId, 'uploaded', { via: 'review' });
+    } catch (e) {
+      throw new ReviewError((e as Error).message, 409);
+    }
+    db.prepare("INSERT INTO posts (video_id, platform, external_id, url, method) VALUES (?, 'youtube', ?, ?, 'manual')").run(videoId, externalId, url);
+    return { url, state };
   })();
 }

@@ -37,7 +37,7 @@ describe('Scripts to review API', () => {
     expect(videos).toHaveLength(1);
     expect(videos[0]).toMatchObject({ id, topic: 'The Magic Paintbrush', lane: 'folktale', version: 1, scene_count: 10, est_seconds: 60 });
     expect(videos[0].lesson).toMatch(/Gifts/);
-    expect((await (await app.request('/api/fables/counts')).json()).counts).toEqual({ script_review: 1, video_review: 0 });
+    expect((await (await app.request('/api/fables/counts')).json()).counts).toEqual({ script_review: 1, video_review: 0, approved: 0 });
   });
 
   it('detail has the script, warnings and reviews; 404 for NASA ids', async () => {
@@ -81,5 +81,45 @@ describe('fables videos stay out of the NASA views', () => {
     expect((await (await app.request('/api/videos?status=approved')).json()).videos).toEqual([]);
     expect(postingQueue(db)).toEqual([]);
     expect((await app.request('/api/videos?channel=fables')).status).toBe(400);
+  });
+});
+
+describe('Ready to upload (step 4)', () => {
+  let n = 0;
+  const seedAs = () => saveFableScript(db, { ...SAMPLE, title: `Story ${++n}` }, { createdBy: 'test', runsRoot }).video_id;
+  const approvedVideo = () => {
+    const id = seedAs();
+    db.prepare("UPDATE videos SET status = 'approved' WHERE id = ?").run(id);
+    return id;
+  };
+
+  it('lists approved videos and counts them for the tab badge', async () => {
+    const id = approvedVideo();
+    const { videos } = await (await app.request('/api/fables/videos?status=approved')).json();
+    expect(videos.map((v: { id: number }) => v.id)).toEqual([id]);
+    expect((await (await app.request('/api/fables/counts')).json()).counts.approved).toBe(1);
+  });
+
+  it('Mark uploaded saves the canonical Shorts link and moves to uploaded', async () => {
+    const id = approvedVideo();
+    const res = await post(`/api/fables/videos/${id}/uploaded`, { url: 'https://youtu.be/abcdefghijk?si=x' });
+    expect(res.status).toBe(200);
+    expect(db.prepare('SELECT status FROM videos WHERE id = ?').get(id)).toEqual({ status: 'uploaded' });
+    expect(db.prepare('SELECT url, method FROM posts WHERE video_id = ?').get(id)).toEqual({ url: 'https://www.youtube.com/shorts/abcdefghijk', method: 'manual' });
+    const d = await (await app.request(`/api/fables/videos/${id}`)).json();
+    expect(d.post.url).toBe('https://www.youtube.com/shorts/abcdefghijk');
+    const { videos } = await (await app.request('/api/fables/videos?status=uploaded')).json();
+    expect(videos[0].youtube_url).toBe('https://www.youtube.com/shorts/abcdefghijk');
+  });
+
+  it('refuses a non-YouTube link, a video not yet approved, a second upload and a link used twice', async () => {
+    const id = approvedVideo();
+    expect((await post(`/api/fables/videos/${id}/uploaded`, { url: 'https://example.com/v' })).status).toBe(400);
+    expect((await post(`/api/fables/videos/${seedAs()}/uploaded`, { url: 'https://youtube.com/shorts/abcdefghijk' })).status).toBe(409);
+    expect((await post(`/api/fables/videos/${id}/uploaded`, { url: 'https://youtube.com/shorts/abcdefghijk' })).status).toBe(200);
+    expect((await post(`/api/fables/videos/${id}/uploaded`, { url: 'https://youtube.com/shorts/abcdefghijk' })).status).toBe(409);
+    const other = approvedVideo();
+    expect((await post(`/api/fables/videos/${other}/uploaded`, { url: 'https://www.youtube.com/watch?v=abcdefghijk' })).status).toBe(409);
+    expect(db.prepare('SELECT status FROM videos WHERE id = ?').get(other)).toEqual({ status: 'approved' });
   });
 });

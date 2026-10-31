@@ -1,27 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { STATUS_LABEL, fablesApi, type Decision, type FableCredits, type FableDetail, type FableScene, type FableSummary } from './api';
+import { STATUS_LABEL, fablesApi, type Decision, type FableCredits, type FableDetail, type FableScene, type FableScript, type FableSummary } from './api';
 import { go } from './App';
 
 /**
  * Pocket Fables tab (channels/fables/CLAUDE.md §3). Gate 1, "Scripts to review": Thomas reads
  * the script before any Everygen credits are spent. Gate 2, "Videos to review": the render,
- * next to the approved script. Ready to upload comes in build step 4.
+ * next to the approved script. "Ready to upload": download, copy the YouTube text, upload by
+ * hand in YouTube Studio, then paste the link to mark it uploaded.
  */
 export function Fables({ id, onChanged }: { id: number | null; onChanged: () => void }) {
   const [scripts, setScripts] = useState<FableSummary[] | null>(null);
   const [videos, setVideos] = useState<FableSummary[] | null>(null);
+  const [ready, setReady] = useState<FableSummary[] | null>(null);
+  const [uploaded, setUploaded] = useState<FableSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const load = useCallback(() => {
-    Promise.all([fablesApi.list('script_review'), fablesApi.list('video_review')])
-      .then(([s, v]) => {
+    Promise.all([fablesApi.list('script_review'), fablesApi.list('video_review'), fablesApi.list('approved'), fablesApi.list('uploaded')])
+      .then(([s, v, a, u]) => {
         setScripts(s.videos);
         setVideos(v.videos);
+        setReady(a.videos);
+        setUploaded(u.videos);
         setError(null);
       })
       .catch((e: Error) => setError(e.message));
   }, []);
-  // J/K walk videos first (they cost credits already), then scripts.
-  const queue = [...(videos ?? []), ...(scripts ?? [])];
+  // J/K walk ready-to-upload first, then videos (they cost credits already), then scripts.
+  const queue = [...(ready ?? []), ...(videos ?? []), ...(scripts ?? [])];
   useEffect(load, [load, id]);
 
   if (id !== null)
@@ -37,13 +42,52 @@ export function Fables({ id, onChanged }: { id: number | null; onChanged: () => 
       />
     );
   if (error) return <p className="text-rust">Couldn't load Pocket Fables: {error}</p>;
-  if (!scripts || !videos) return <p className="text-muted">Loading…</p>;
+  if (!scripts || !videos || !ready) return <p className="text-muted">Loading…</p>;
   return (
     <>
       <CreditsPanel />
-      {videos.length > 0 && <VideoQueue videos={videos} />}
+      {ready.length > 0 && (
+        <VideoQueue
+          videos={ready}
+          testId="fables-ready-queue"
+          heading={`${ready.length} ${ready.length === 1 ? 'video' : 'videos'} ready to upload`}
+          blurb="You approved these. Upload each one in YouTube Studio, then paste its link here."
+        />
+      )}
+      {videos.length > 0 && (
+        <VideoQueue
+          videos={videos}
+          testId="fables-video-queue"
+          heading={`${videos.length} ${videos.length === 1 ? 'video' : 'videos'} to review`}
+          blurb="Rendered by Everygen from scripts you approved. Watch each one against its script."
+        />
+      )}
       <ScriptQueue videos={scripts} />
+      {uploaded.length > 0 && <UploadedList videos={uploaded} />}
     </>
+  );
+}
+
+/** On YouTube already: newest first, with the Short's link. */
+function UploadedList({ videos }: { videos: FableSummary[] }) {
+  return (
+    <section className="mt-12" data-testid="fables-uploaded">
+      <h2 className="font-display text-2xl font-semibold">On YouTube</h2>
+      <ul className="mt-3 max-w-3xl divide-y divide-line border-y border-line">
+        {videos.map((v) => (
+          <li key={v.id} className="flex flex-wrap items-baseline justify-between gap-x-4 py-3">
+            <a href={`#/fables/v/${v.id}`} className="font-display text-lg font-semibold">
+              {v.topic}
+            </a>
+            {v.youtube_url && (
+              <a href={v.youtube_url} target="_blank" rel="noreferrer" className="text-sm">
+                Watch on YouTube
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -88,13 +132,11 @@ function CreditsPanel() {
   );
 }
 
-function VideoQueue({ videos }: { videos: FableSummary[] }) {
+function VideoQueue({ videos, heading, blurb, testId }: { videos: FableSummary[]; heading: string; blurb: string; testId: string }) {
   return (
-    <section className="mb-12" data-testid="fables-video-queue">
-      <h1 className="font-display text-3xl font-bold">
-        {videos.length} {videos.length === 1 ? 'video' : 'videos'} to review
-      </h1>
-      <p className="mt-1 max-w-2xl text-muted">Rendered by Everygen from scripts you approved. Watch each one against its script.</p>
+    <section className="mb-12" data-testid={testId}>
+      <h1 className="font-display text-3xl font-bold">{heading}</h1>
+      <p className="mt-1 max-w-2xl text-muted">{blurb}</p>
       <ul className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-6">
         {videos.map((v) => (
           <li key={v.id}>
@@ -202,7 +244,18 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
   if (!data) return <p className="text-muted">Loading…</p>;
   const { video, script } = data;
 
-  const decision = (
+  const afterApproval = !!script && (video.status === 'approved' || video.status === 'uploaded');
+  const decision = afterApproval ? (
+    <UploadPanel
+      id={id}
+      script={script}
+      post={data.post}
+      onDone={() => {
+        load();
+        onDecided();
+      }}
+    />
+  ) : (
     <ScriptDecision
       id={id}
       gate={gate}
@@ -233,7 +286,7 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
       )}
       <article className="min-w-0" data-testid="fables-detail">
         <p className="text-muted">
-          <a href="#/fables">{gate === 'video' ? 'Videos to review' : 'Scripts to review'}</a> <span aria-hidden>/</span> Video {video.id}
+          <a href="#/fables">{video.status === 'approved' ? 'Ready to upload' : video.status === 'uploaded' ? 'On YouTube' : gate === 'video' ? 'Videos to review' : 'Scripts to review'}</a> <span aria-hidden>/</span> Video {video.id}
           {data.script_version && (
             <>
               {' '}
@@ -591,6 +644,106 @@ function ScriptDecision({
         </p>
       )}
       <p className="mt-3 text-sm text-muted">J and K move through the queue.</p>
+    </div>
+  );
+}
+
+/** Copies one field for YouTube Studio and says so for two seconds. */
+function CopyButton({ label, text }: { label: string; text: string }) {
+  const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            setState('copied');
+            setTimeout(() => setState('idle'), 2000);
+          })
+          .catch(() => setState('failed'));
+      }}
+      className="rounded-lg border border-line px-3 py-2 text-left font-semibold hover:border-fox"
+      data-testid={`fables-copy-${label.toLowerCase()}`}
+    >
+      {state === 'copied' ? `${label} copied` : state === 'failed' ? `Couldn't copy the ${label.toLowerCase()}` : `Copy ${label.toLowerCase()}`}
+    </button>
+  );
+}
+
+/**
+ * Ready to upload: the MP4 and the YouTube text in the order Studio asks for them,
+ * then the link back. Once uploaded: the link.
+ */
+function UploadPanel({ id, script, post, onDone }: { id: number; script: FableScript; post: FableDetail['post']; onDone: () => void }) {
+  const [url, setUrl] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (post)
+    return (
+      <div className="rounded-2xl border border-line bg-panel p-4" data-testid="fables-uploaded-panel">
+        <p className="font-semibold">On YouTube since {post.posted_at.slice(0, 10)}.</p>
+        <a href={post.url} target="_blank" rel="noreferrer" className="mt-1 block break-all">
+          {post.url}
+        </a>
+      </div>
+    );
+
+  const file = `pocket-fables-${id}-${script.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.mp4`;
+  const submit = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await fablesApi.markUploaded(id, url);
+      onDone();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-line bg-panel p-4" data-testid="fables-upload">
+      <a href={`/media/${id}/final.mp4`} download={file} className="block rounded-lg bg-fox px-3 py-3 font-bold text-bg no-underline" data-testid="fables-download">
+        Download the video
+        <span className="block break-all text-xs font-normal opacity-80">{file}</span>
+      </a>
+      <div className="mt-2 grid gap-2">
+        <CopyButton label="Title" text={script.youtube.title} />
+        <CopyButton label="Description" text={script.youtube.description} />
+        <CopyButton label="Tags" text={script.youtube.tags.join(', ')} />
+      </div>
+      <p className="mt-3 text-sm text-muted">In YouTube Studio, upload it to Pocket Fables and set the audience to “Yes, it’s made for kids”.</p>
+      <form
+        className="mt-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+      >
+        <label className="block">
+          <span className="font-semibold">Link to the Short</span>
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            required
+            placeholder="https://youtube.com/shorts/…"
+            className="mt-1 w-full rounded-lg border border-line bg-bg p-2 text-ink placeholder:text-muted"
+            data-testid="fables-youtube-url"
+          />
+        </label>
+        <button type="submit" disabled={busy || !url.trim()} className="mt-2 w-full rounded-lg bg-ink px-4 py-2 font-bold text-bg disabled:opacity-40" data-testid="fables-mark-uploaded">
+          Mark uploaded
+        </button>
+      </form>
+      {error && (
+        <p className="mt-3 text-rust" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

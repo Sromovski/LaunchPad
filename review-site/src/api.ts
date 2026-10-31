@@ -113,6 +113,7 @@ export interface FableSummary {
   est_seconds: number | null;
   scene_count: number | null;
   last_review: string | null;
+  youtube_url: string | null;
 }
 
 export interface FableDetail {
@@ -128,6 +129,7 @@ export interface FableDetail {
   has_video: boolean;
   qa: { pass: boolean; checks: { name: string; ok: boolean; detail: string }[] } | null;
   credits: { credits_used: number; balance_after: number | null; created_at: string }[];
+  post: { url: string; posted_at: string } | null;
 }
 
 export interface FableCredits {
@@ -146,6 +148,8 @@ export const fablesApi = {
   detail: (id: number) => call<FableDetail>(`/api/fables/videos/${id}`),
   reviewVideo: (id: number, decision: Decision, notes: string) =>
     call<{ review_id: number }>(`/api/fables/videos/${id}/video-review`, { method: 'POST', body: JSON.stringify({ decision, notes }) }),
+  markUploaded: (id: number, url: string) =>
+    call<{ url: string }>(`/api/fables/videos/${id}/uploaded`, { method: 'POST', body: JSON.stringify({ url }) }),
   reviewScript: (id: number, decision: Decision, notes: string, version: number | null) =>
     call<{ review_id: number }>(`/api/fables/videos/${id}/script-review`, {
       method: 'POST',
