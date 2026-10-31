@@ -20,8 +20,8 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] How do we measure the height of the sea? | query: sea level satellite — video 37 in review
 
 - [x] Why are coral reefs so colorful? | query: coral reef — video 94 in review
-- [ ] Where do big waves come from? | query: ocean waves
-- [ ] Why does the Pacific Ocean sometimes get extra warm? | query: el nino
+- [x] Where do big waves come from? | query: ocean waves — video 96 in review
+- [x] Why does the Pacific Ocean sometimes get extra warm? | query: el nino — video 100 in review
 
 ## Volcanoes | playlist: Volcanoes for Kids
 
@@ -30,8 +30,8 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] Where does lava come from? | query: lava kilauea — video 49 in review
 - [x] How far can volcano ash travel? | query: volcanic ash plume — video 51 in review
 
-- [ ] What is an earthquake? | query: earthquake
-- [ ] How tall is the tallest mountain? | query: mount everest
+- [x] What is an earthquake? | query: earthquake — video 102 in review
+- [x] How tall is the tallest mountain? | query: mount everest — video 104 in review
 
 ## Wild Weather | playlist: Wild Weather for Kids
 
@@ -42,10 +42,10 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] How can dust from Africa cross the ocean? | query: saharan dust — video 63 in review
 - [~] How big can a snowstorm get? | query: blizzard snowstorm satellite — no NASA video or pictures found (2026-10-07 scan)
 
-- [ ] What makes the wind blow? | query: global winds
-- [ ] What happens in a flood? | query: flooding satellite
-- [ ] What is a drought? | query: drought
-- [ ] What is a rainbow? | query: rainbow
+- [x] What makes the wind blow? | query: global winds — video 106 in review
+- [x] What happens in a flood? | query: flooding satellite — video 113 in review
+- [x] What is a drought? | query: drought — video 114 in review
+- [x] What is a rainbow? | query: rainbow — video 117 in review
 
 ## Ice and Snow | playlist: Ice and Snow for Kids
 
@@ -54,9 +54,9 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] How much ice covers Antarctica? | query: antarctica ice sheet — video 69 in review
 - [x] How do icebergs break off? | query: iceberg calving — video 71 in review
 
-- [ ] How big is Greenland's ice? | query: greenland ice sheet
-- [ ] How do scientists read old ice? | query: ice core
-- [ ] What does snow do for our planet? | query: snow cover
+- [x] How big is Greenland's ice? | query: greenland ice sheet — video 119 in review
+- [x] How do scientists read old ice? | query: ice core — video 121 in review
+- [x] What does snow do for our planet? | query: snow cover — video 123 in review
 
 ## Our Amazing Planet | playlist: Our Wild Planet
 
@@ -66,9 +66,9 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [~] How big is the Amazon rainforest? | query: amazon rainforest — auto-skipped after 2 failed videos (81, 83): QA: caption splits 'Rondônia' into 'Rond'/'nia'. Pipeline bug: words() in src/script/readability.ts only matches ASCII letters
 - [x] What does Earth look like at night? | query: earth at night city lights — video 85 in review
 - [x] Why is there day and night? | query: earth rotation day night — video 89 in review
-- [ ] How big is the Sahara desert? | query: sahara desert
-- [ ] Why do rivers wiggle? | query: river meander
-- [ ] Where do rivers meet the sea? | query: river delta
-- [ ] How does Earth turn green in spring? | query: vegetation seasons earth
-- [ ] How big are the Great Lakes? | query: great lakes
+- [x] How big is the Sahara desert? | query: sahara desert — video 125 in review
+- [x] Why do rivers wiggle? | query: river meander — video 129 in review
+- [x] Where do rivers meet the sea? | query: river delta — video 131 in review
+- [x] How does Earth turn green in spring? | query: vegetation seasons earth — video 135 in review
+- [x] How big are the Great Lakes? | query: great lakes — video 137 in review
 - [ ] How do sand dunes move? | query: sand dunes

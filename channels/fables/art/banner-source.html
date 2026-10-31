@@ -1,0 +1,179 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Fredoka;font-weight:700;src:url(node_modules/@fontsource/fredoka/files/fredoka-latin-700-normal.woff2)}
+@font-face{font-family:Nunito;font-weight:800;src:url(node_modules/@fontsource/nunito/files/nunito-latin-800-normal.woff2)}
+html,body{margin:0;padding:0;background:#0f3b45}
+svg{display:block}
+</style></head>
+<body>
+<svg width="2560" height="1440" viewBox="0 0 2560 1440" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#0d3640"/>
+    <stop offset="0.45" stop-color="#1c6a72"/>
+    <stop offset="0.75" stop-color="#5fa59a"/>
+    <stop offset="1" stop-color="#f2c879"/>
+  </linearGradient>
+  <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#ffe7a8" stop-opacity="0.55"/>
+    <stop offset="1" stop-color="#ffe7a8" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="scrollGlow" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#fff3c4" stop-opacity="0.9"/>
+    <stop offset="1" stop-color="#ffd76a" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="paper" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4"/>
+    <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0"/>
+    <feComposite in2="SourceGraphic" operator="in"/>
+  </filter>
+  <filter id="soft"><feGaussianBlur stdDeviation="6"/></filter>
+  <filter id="shadow" x="-10%" y="-10%" width="120%" height="140%">
+    <feDropShadow dx="0" dy="8" stdDeviation="0" flood-color="#3b2416" flood-opacity="0.9"/>
+  </filter>
+</defs>
+
+<!-- sky -->
+<rect width="2560" height="1440" fill="url(#sky)"/>
+<circle cx="1280" cy="760" r="900" fill="url(#glow)"/>
+
+<!-- stars -->
+<g fill="#fff6d6">
+  <circle cx="180" cy="160" r="5"/><circle cx="420" cy="90" r="3"/><circle cx="640" cy="230" r="4"/>
+  <circle cx="900" cy="120" r="3"/><circle cx="1130" cy="70" r="4"/><circle cx="1460" cy="110" r="3"/>
+  <circle cx="1700" cy="60" r="5"/><circle cx="1960" cy="170" r="3"/><circle cx="2200" cy="90" r="4"/>
+  <circle cx="2420" cy="220" r="3"/><circle cx="300" cy="330" r="3"/><circle cx="2300" cy="380" r="4"/>
+  <circle cx="780" cy="400" r="2.5"/><circle cx="1820" cy="300" r="2.5"/>
+</g>
+<g fill="#fff6d6">
+  <path d="M520 160 l8 22 22 8 -22 8 -8 22 -8 -22 -22 -8 22 -8z"/>
+  <path d="M2080 260 l7 18 18 7 -18 7 -7 18 -7 -18 -18 -7 18 -7z"/>
+  <path d="M1580 230 l5 14 14 5 -14 5 -5 14 -5 -14 -14 -5 14 -5z"/>
+</g>
+<!-- moon -->
+<circle cx="2240" cy="300" r="70" fill="#fff1c9"/>
+<circle cx="2268" cy="282" r="64" fill="#1a5f68"/>
+
+<!-- hills -->
+<path d="M0 1080 C 300 960 600 1000 900 1060 S 1500 1000 1800 1050 S 2300 980 2560 1040 V1440 H0Z" fill="#3f8a7a"/>
+<path d="M0 1180 C 350 1090 700 1160 1050 1150 S 1700 1100 2050 1160 S 2400 1120 2560 1150 V1440 H0Z" fill="#2f7364"/>
+<path d="M0 1290 C 400 1230 900 1290 1300 1270 S 2100 1240 2560 1280 V1440 H0Z" fill="#245d51"/>
+<!-- little trees -->
+<g fill="#1d4f45">
+  <path d="M240 1110 l40 -110 40 110z"/><path d="M300 1120 l30 -80 30 80z"/>
+  <path d="M2290 1090 l40 -110 40 110z"/><path d="M2360 1100 l30 -80 30 80z"/>
+</g>
+
+<!-- ===== Pip on hill (left of title, inside safe width) ===== -->
+<g transform="translate(560,600) scale(0.82)">
+  <!-- little hill -->
+  <ellipse cx="80" cy="330" rx="240" ry="60" fill="#4f9a7c"/>
+  <!-- tail -->
+  <path d="M150 260 C 280 250 300 120 230 70 C 250 150 200 210 130 220 Z" fill="#e8742a"/>
+  <path d="M230 70 C 255 95 262 130 250 160 C 232 130 220 100 230 70Z" fill="#fff4e3"/>
+  <!-- body -->
+  <ellipse cx="80" cy="230" rx="95" ry="105" fill="#e8742a"/>
+  <ellipse cx="70" cy="250" rx="52" ry="72" fill="#fff4e3"/>
+  <!-- backpack -->
+  <rect x="140" y="150" width="90" height="120" rx="26" fill="#8a5a36"/>
+  <rect x="152" y="175" width="40" height="34" rx="10" fill="#c98b4f"/>
+  <rect x="150" y="222" width="70" height="36" rx="10" fill="#6f8f4e"/>
+  <rect x="198" y="168" width="22" height="22" rx="6" fill="#d9a441"/>
+  <path d="M120 150 C 140 190 140 240 130 270" stroke="#6b4426" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <!-- feet -->
+  <ellipse cx="40" cy="330" rx="36" ry="18" fill="#3a2a22"/>
+  <ellipse cx="115" cy="330" rx="36" ry="18" fill="#3a2a22"/>
+  <!-- head -->
+  <path d="M-10 70 L-40 -40 L40 30 Z" fill="#e8742a"/>
+  <path d="M-12 50 L-30 -15 L18 30 Z" fill="#3a2a22"/>
+  <path d="M160 70 L190 -40 L110 30 Z" fill="#e8742a"/>
+  <path d="M162 50 L180 -15 L132 30 Z" fill="#3a2a22"/>
+  <ellipse cx="75" cy="85" rx="100" ry="85" fill="#e8742a"/>
+  <path d="M-20 105 C 20 125 50 150 75 175 C 100 150 130 125 170 105 C 150 160 110 185 75 185 C 40 185 0 160 -20 105Z" fill="#fff4e3"/>
+  <!-- eyes -->
+  <ellipse cx="38" cy="82" rx="14" ry="17" fill="#3a2a22"/>
+  <ellipse cx="112" cy="82" rx="14" ry="17" fill="#3a2a22"/>
+  <circle cx="43" cy="76" r="5" fill="#fff"/><circle cx="117" cy="76" r="5" fill="#fff"/>
+  <!-- cheeks -->
+  <ellipse cx="18" cy="118" rx="14" ry="8" fill="#f2a07a" opacity="0.7"/>
+  <ellipse cx="132" cy="118" rx="14" ry="8" fill="#f2a07a" opacity="0.7"/>
+  <!-- nose & smile -->
+  <ellipse cx="75" cy="130" rx="15" ry="11" fill="#3a2a22"/>
+  <path d="M58 150 Q 75 165 92 150" stroke="#3a2a22" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- arm holding scroll -->
+  <path d="M150 210 C 210 200 250 180 290 150" stroke="#e8742a" stroke-width="30" fill="none" stroke-linecap="round"/>
+</g>
+
+<!-- glowing scroll in Pip's paw -->
+<g transform="translate(800,790) rotate(-18) scale(0.8)">
+  <circle cx="0" cy="0" r="110" fill="url(#scrollGlow)"/>
+  <rect x="-60" y="-26" width="120" height="52" rx="8" fill="#fff3d0"/>
+  <rect x="-72" y="-34" width="18" height="68" rx="9" fill="#c98b4f"/>
+  <rect x="54" y="-34" width="18" height="68" rx="9" fill="#c98b4f"/>
+  <path d="M-40 -8 H 40 M -40 8 H 25" stroke="#d9b277" stroke-width="5" stroke-linecap="round"/>
+</g>
+<!-- sparkle trail from scroll to the right -->
+<g fill="#ffe08a">
+  <circle cx="860" cy="720" r="6"/><circle cx="880" cy="670" r="4"/><circle cx="905" cy="630" r="3"/>
+  <path d="M830 700 l6 16 16 6 -16 6 -6 16 -6 -16 -16 -6 16 -6z"/>
+</g>
+
+<!-- ===== Title (centered in safe area) ===== -->
+<g font-family="Fredoka" font-weight="700" text-anchor="middle">
+  <text x="1450" y="725" font-size="178" fill="#3b2416" stroke="#3b2416" stroke-width="22" stroke-linejoin="round">Pocket Fables</text>
+  <text x="1450" y="725" font-size="178" fill="#fff4dc">Pocket Fables</text>
+</g>
+<text x="1450" y="820" font-family="Nunito" font-weight="800" font-size="58" text-anchor="middle" fill="#ffe7a8" letter-spacing="2">Tiny tales from around the world</text>
+
+<!-- floating story objects (right side, outside safe text) -->
+<!-- paper crane -->
+<g transform="translate(2120,560)">
+  <path d="M0 40 L70 -10 L60 40 Z" fill="#f7e9d0"/>
+  <path d="M60 40 L140 0 L90 50 Z" fill="#e9d6b4"/>
+  <path d="M0 40 L-40 10 L20 45 Z" fill="#e9d6b4"/>
+  <path d="M30 45 L90 50 L60 80 Z" fill="#d7c09a"/>
+</g>
+<!-- tortoise -->
+<g transform="translate(2180,880)">
+  <ellipse cx="0" cy="0" rx="90" ry="55" fill="#7a9a4a"/>
+  <path d="M-50 -10 Q 0 -60 50 -10" stroke="#5b7a35" stroke-width="8" fill="none"/>
+  <path d="M-30 15 L0 -20 L30 15" stroke="#5b7a35" stroke-width="8" fill="none"/>
+  <circle cx="105" cy="-10" r="28" fill="#b5c27a"/>
+  <circle cx="114" cy="-16" r="5" fill="#3a2a22"/>
+  <ellipse cx="-55" cy="48" rx="20" ry="12" fill="#b5c27a"/><ellipse cx="55" cy="48" rx="20" ry="12" fill="#b5c27a"/>
+</g>
+<!-- spider on web (top left) -->
+<g transform="translate(300,520)" stroke="#e8eef0" stroke-width="3" fill="none" opacity="0.85">
+  <path d="M0 -110 V110 M-110 0 H110 M-78 -78 L78 78 M78 -78 L-78 78"/>
+  <circle r="30"/><circle r="60"/><circle r="92"/>
+  <line x1="0" y1="-110" x2="0" y2="20" stroke="#e8eef0"/>
+</g>
+<g transform="translate(300,545)">
+  <circle r="20" fill="#3a2a22"/><circle cx="0" cy="-18" r="12" fill="#3a2a22"/>
+  <circle cx="-4" cy="-21" r="3" fill="#fff"/><circle cx="5" cy="-21" r="3" fill="#fff"/>
+  <g stroke="#3a2a22" stroke-width="5" stroke-linecap="round">
+    <path d="M-18 -4 L-40 -18 M-18 6 L-42 6 M-16 14 L-36 30 M18 -4 L40 -18 M18 6 L42 6 M16 14 L36 30"/>
+  </g>
+</g>
+<!-- lantern -->
+<g transform="translate(2380,600)">
+  <line x1="0" y1="-90" x2="0" y2="-50" stroke="#c98b4f" stroke-width="5"/>
+  <circle cx="0" cy="0" r="80" fill="url(#scrollGlow)"/>
+  <ellipse cx="0" cy="0" rx="42" ry="52" fill="#e8553e"/>
+  <rect x="-24" y="-58" width="48" height="12" rx="4" fill="#d9a441"/>
+  <rect x="-24" y="46" width="48" height="12" rx="4" fill="#d9a441"/>
+  <path d="M-20 -40 Q 0 0 -20 40 M20 -40 Q 0 0 20 40" stroke="#c43f2c" stroke-width="4" fill="none"/>
+</g>
+<!-- golden paintbrush -->
+<g transform="translate(160,860) rotate(-35)">
+  <rect x="-8" y="-110" width="16" height="150" rx="8" fill="#d9a441"/>
+  <rect x="-11" y="30" width="22" height="22" rx="4" fill="#b98a2e"/>
+  <path d="M-12 52 Q 0 110 12 52 Z" fill="#3a2a22"/>
+  <circle cx="0" cy="-90" r="40" fill="url(#scrollGlow)"/>
+</g>
+
+<!-- paper texture over everything -->
+<rect width="2560" height="1440" filter="url(#paper)" fill="#fff"/>
+</svg>
+</body></html>

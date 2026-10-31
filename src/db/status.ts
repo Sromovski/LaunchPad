@@ -1,11 +1,18 @@
 /**
- * Video status state machine (CLAUDE.md §5). Every status change in the
- * codebase must go through `nextState` / `transitionVideo` so illegal moves —
- * especially anything that skips human approval — are impossible.
+ * Video status state machine (CLAUDE.md §5, channels/fables/CLAUDE.md §1). Every
+ * status change in the codebase must go through `nextState` / `transitionVideo` so
+ * illegal moves — especially anything that skips human approval — are impossible.
+ *
+ * Two workflows share the `videos` table, picked by `videos.channel`:
+ *  - NASA channels (blast, wonder): one human gate, `in_review`.
+ *  - Pocket Fables (fables): two human gates, `script_review` (before any Everygen
+ *    credits are spent) and `video_review`. Leaving a gate needs `via: 'review'`,
+ *    which only the review decision code (src/review/) passes. No CLI or agent can
+ *    set `script_approved` (the hard rule in channels/fables/CLAUDE.md).
  */
 import type Database from 'better-sqlite3';
 
-export const STATUSES = [
+export const NASA_STATUSES = [
   'idea',
   'researched',
   'scripted',
@@ -21,7 +28,37 @@ export const STATUSES = [
   'failed',
 ] as const;
 
-export type Status = (typeof STATUSES)[number];
+export const FABLES_STATUSES = [
+  'idea',
+  'scripted',
+  'script_review',
+  'script_approved',
+  'script_changes',
+  'rendering',
+  'rendered',
+  'video_review',
+  'approved',
+  'video_changes',
+  'uploaded',
+  'rejected',
+  'failed',
+] as const;
+
+export type Status = (typeof NASA_STATUSES)[number] | (typeof FABLES_STATUSES)[number];
+
+/** Every status any channel uses (the videos.status CHECK in schema.sql lists exactly these). */
+export const STATUSES: readonly Status[] = [...new Set<Status>([...NASA_STATUSES, ...FABLES_STATUSES])];
+
+/** Which workflow a channel runs. Anything but `fables` is the NASA one, as before Pocket Fables. */
+export type Workflow = 'nasa' | 'fables';
+export const workflowOf = (channel: string | null | undefined): Workflow => (channel === 'fables' ? 'fables' : 'nasa');
+
+export interface TransitionOptions {
+  /** videos.channel: picks which workflow's moves apply. Default: NASA. */
+  channel?: string | null;
+  /** Set only by human review decisions (src/review/). Required to leave a Pocket Fables gate. */
+  via?: 'review';
+}
 
 export const MAX_REVISIONS = 2;
 export const MAX_RETRIES = 1;
@@ -41,8 +78,8 @@ export class IllegalTransitionError extends Error {
   }
 }
 
-/** Forward moves. `failed` and retries are handled separately below. */
-const EDGES: Record<Status, readonly Status[]> = {
+/** Forward moves, NASA channels. `failed` and retries are handled separately below. */
+const NASA_EDGES: Partial<Record<Status, readonly Status[]>> = {
   idea: ['researched'],
   researched: ['scripted'],
   scripted: ['fact_checked'],
@@ -60,21 +97,71 @@ const EDGES: Record<Status, readonly Status[]> = {
   published: [],
 };
 
-const TERMINAL: readonly Status[] = ['rejected', 'published'];
+/** Forward moves, Pocket Fables (channels/fables/CLAUDE.md §1). */
+const FABLES_EDGES: Partial<Record<Status, readonly Status[]>> = {
+  idea: ['scripted'],
+  scripted: ['script_review'],
+  script_review: ['script_approved', 'script_changes', 'rejected'],
+  script_changes: ['scripted', 'rejected'], // Claude revises the script: one revision
+  script_approved: ['rendering'],
+  rendering: ['rendered'],
+  rendered: ['video_review'],
+  video_review: ['approved', 'video_changes', 'rejected'],
+  video_changes: ['script_review', 'rejected'], // revised script goes back to gate 1: one revision
+  approved: ['uploaded'], // Thomas uploads by hand in YouTube Studio, then clicks Mark uploaded
+  failed: ['rejected'],
+  rejected: [],
+  uploaded: [],
+};
+
+interface WorkflowRules {
+  statuses: readonly Status[];
+  edges: Partial<Record<Status, readonly Status[]>>;
+  terminal: readonly Status[];
+  /** Statuses only a human review decision may move on from (except to `failed`). */
+  reviewOnlyFrom: readonly Status[];
+  /** Entering one of these asks for a revision; leaving it to work counts one (max MAX_REVISIONS). */
+  revisionRequests: readonly Status[];
+}
+
+const RULES: Record<Workflow, WorkflowRules> = {
+  nasa: {
+    statuses: NASA_STATUSES,
+    edges: NASA_EDGES,
+    terminal: ['rejected', 'published'],
+    // The NASA gate is enforced by src/review/decide.ts, unchanged since before Pocket Fables.
+    reviewOnlyFrom: [],
+    revisionRequests: ['changes_requested'],
+  },
+  fables: {
+    statuses: FABLES_STATUSES,
+    edges: FABLES_EDGES,
+    terminal: ['rejected', 'uploaded'],
+    reviewOnlyFrom: ['script_review', 'video_review', 'approved'],
+    // One shared count for both gates: max 2 revision loops per video, at either gate.
+    revisionRequests: ['script_changes', 'video_changes'],
+  },
+};
 
 const isStatus = (s: string): s is Status => (STATUSES as readonly string[]).includes(s);
 
 /** Returns the new state or throws IllegalTransitionError. Pure. */
-export function nextState(state: VideoState, to: Status): VideoState {
+export function nextState(state: VideoState, to: Status, opts: TransitionOptions = {}): VideoState {
   const from = state.status;
+  const workflow = workflowOf(opts.channel);
+  const rules = RULES[workflow];
   if (!isStatus(to)) throw new IllegalTransitionError(from, to, 'unknown status');
+  if (!rules.statuses.includes(to) || !rules.statuses.includes(from)) {
+    throw new IllegalTransitionError(from, to, `not a status of the ${workflow} workflow`);
+  }
 
   if (to === 'failed') {
-    if (from === 'failed' || TERMINAL.includes(from)) throw new IllegalTransitionError(from, to);
+    if (from === 'failed' || rules.terminal.includes(from)) throw new IllegalTransitionError(from, to);
     return { ...state, status: 'failed', failed_from_status: from };
   }
 
   if (from === 'failed' && to !== 'rejected') {
+    // A retry only goes back to where the video already was, so it never crosses a review gate.
     if (to !== state.failed_from_status) {
       throw new IllegalTransitionError(from, to, `can only retry to ${state.failed_from_status ?? '(unknown)'}`);
     }
@@ -84,13 +171,17 @@ export function nextState(state: VideoState, to: Status): VideoState {
     return { ...state, status: to, retry_count: state.retry_count + 1, failed_from_status: null };
   }
 
-  if (!EDGES[from].includes(to)) throw new IllegalTransitionError(from, to);
+  if (!(rules.edges[from] ?? []).includes(to)) throw new IllegalTransitionError(from, to);
 
-  if (from === 'in_review' && to === 'changes_requested' && state.revision_count >= MAX_REVISIONS) {
+  if (rules.reviewOnlyFrom.includes(from) && opts.via !== 'review') {
+    throw new IllegalTransitionError(from, to, 'only a review decision in the review site can do this');
+  }
+
+  if (rules.revisionRequests.includes(to) && state.revision_count >= MAX_REVISIONS) {
     throw new IllegalTransitionError(from, to, `max ${MAX_REVISIONS} revisions reached; approve or reject`);
   }
 
-  if (from === 'changes_requested' && to !== 'rejected') {
+  if (rules.revisionRequests.includes(from) && to !== 'rejected') {
     if (state.revision_count >= MAX_REVISIONS) {
       throw new IllegalTransitionError(from, to, `max ${MAX_REVISIONS} revisions reached; reject instead`);
     }
@@ -100,9 +191,9 @@ export function nextState(state: VideoState, to: Status): VideoState {
   return { ...state, status: to, failed_from_status: from === 'failed' ? null : state.failed_from_status };
 }
 
-export function canTransition(state: VideoState, to: Status): boolean {
+export function canTransition(state: VideoState, to: Status, opts: TransitionOptions = {}): boolean {
   try {
-    nextState(state, to);
+    nextState(state, to, opts);
     return true;
   } catch (e) {
     if (e instanceof IllegalTransitionError) return false;
@@ -111,22 +202,23 @@ export function canTransition(state: VideoState, to: Status): boolean {
 }
 
 /**
- * Apply a transition to a `videos` row atomically. `error` is stored when
- * moving to `failed` and cleared on any other move.
+ * Apply a transition to a `videos` row atomically, using the row's channel's workflow.
+ * `error` is stored when moving to `failed` and cleared on any other move.
  */
 export function transitionVideo(
   db: Database.Database,
   videoId: number,
   to: Status,
-  opts: { error?: string } = {},
+  opts: { error?: string; via?: 'review' } = {},
 ): VideoState {
   return db.transaction(() => {
     const row = db
-      .prepare('SELECT status, revision_count, retry_count, failed_from_status FROM videos WHERE id = ?')
-      .get(videoId) as VideoState | undefined;
+      .prepare('SELECT status, revision_count, retry_count, failed_from_status, channel FROM videos WHERE id = ?')
+      .get(videoId) as (VideoState & { channel: string }) | undefined;
     if (!row) throw new Error(`Video ${videoId} not found`);
 
-    const next = nextState(row, to);
+    const { channel, ...state } = row;
+    const next = nextState(state, to, { channel, via: opts.via });
     db.prepare(
       `UPDATE videos
          SET status = ?, revision_count = ?, retry_count = ?, failed_from_status = ?,

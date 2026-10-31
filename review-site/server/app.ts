@@ -10,14 +10,12 @@ import { Hono } from 'hono';
 import { ZodError } from 'zod';
 import { ReviewError, assetsNeedingReview, decide, saveDraft } from '../../src/review/decide.js';
 import { STATUSES } from '../../src/db/status.js';
-import { CHANNELS, isChannelKey } from '../../src/channels.js';
+import { CHANNELS, CHANNEL_KEYS, channelTitle, isChannelKey } from '../../src/channels.js';
 import { postingQueue } from '../../src/publish/queue.js';
 import { snapshotStats, viewsReport } from '../../src/publish/stats.js';
 import type { YouTube } from '../../src/publish/youtube-api.js';
 import type { Channel } from '../../src/channels.js';
-
-/** Channel key → display name, for badges (src/channels.ts is the source of truth). */
-const channelTitle = (key: string) => (isChannelKey(key) ? CHANNELS[key].title : key);
+import { fablesRoutes } from './fables.js';
 
 export interface AppDeps {
   db: Database.Database;
@@ -71,13 +69,17 @@ export function createApp({ db, runsRoot, youtubeFor }: AppDeps) {
     return Number(raw);
   };
 
+  // Pocket Fables tab: own statuses and two review gates (channels/fables/CLAUDE.md).
+  fablesRoutes(app, db, videoId);
+
   // ---- Lists ------------------------------------------------------------------
   app.get('/api/videos', (c) => {
     const wanted = (c.req.query('status') ?? 'in_review').split(',').filter(Boolean);
     const statuses = wanted.includes('history') ? HISTORY : wanted;
     if (statuses.some((s) => !(STATUSES as readonly string[]).includes(s))) throw new ReviewError('unknown status', 400);
     const q = `%${(c.req.query('q') ?? '').trim()}%`;
-    const channel = c.req.query('channel') || null; // empty = every channel
+    // Empty = every NASA channel. Pocket Fables has its own tab and API (fables.ts).
+    const channel = c.req.query('channel') || null;
     if (channel && !isChannelKey(channel)) throw new ReviewError('unknown channel', 400);
     const rows = db
       .prepare(
@@ -86,9 +88,10 @@ export function createApp({ db, runsRoot, youtubeFor }: AppDeps) {
                 (SELECT decision || '|' || created_at FROM reviews r WHERE r.video_id = v.id ORDER BY r.id DESC LIMIT 1) AS last_review
          FROM videos v
          WHERE v.status IN (${statuses.map(() => '?').join(',')}) AND (v.title LIKE ? OR v.topic LIKE ?) AND (? IS NULL OR v.channel = ?)
+           AND v.channel IN (${CHANNEL_KEYS.map(() => '?').join(',')})
          ORDER BY v.updated_at DESC, v.id DESC`,
       )
-      .all(...statuses, q, q, channel, channel) as { channel: string }[];
+      .all(...statuses, q, q, channel, channel, ...CHANNEL_KEYS) as { channel: string }[];
     return c.json({ videos: rows.map((r) => ({ ...r, channel_title: channelTitle(r.channel) })) });
   });
 

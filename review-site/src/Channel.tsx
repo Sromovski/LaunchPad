@@ -2,6 +2,7 @@
 const DOT: Record<string, string> = {
   blast: '#FFD23F', // Blast of Facts yellow
   wonder: '#6EC6FF', // I Wonder Why sky blue
+  fables: '#E8742A', // Pocket Fables: Pip's fox orange
 };
 
 export function ChannelBadge({ channel, title }: { channel: string; title: string }) {

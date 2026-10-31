@@ -56,46 +56,46 @@ Each `## World | playlist: Name` heading sets the YouTube playlist for the topic
 ## The Sun and Earth | playlist: Sun and Earth Facts for Kids
 
 - [x] What happens in a solar eclipse? | query: solar eclipse — video 93 in review
-- [ ] What does Earth look like from space? | query: earth from space
-- [ ] What makes the northern lights? | query: aurora
-- [ ] What is a solar flare? | query: solar flare
-- [ ] How big are hurricanes from space? | query: hurricane from space
-- [ ] What are sunspots? | query: sunspots
+- [x] What does Earth look like from space? | query: earth from space — video 95 in review
+- [x] What makes the northern lights? | query: aurora — video 97 in review
+- [x] What is a solar flare? | query: solar flare — video 99 in review
+- [x] How big are hurricanes from space? | query: hurricane from space — video 101 in review
+- [x] What are sunspots? | query: sunspots — video 103 in review
 
 ## Jupiter | playlist: Jupiter Facts for Kids
 
-- [ ] Does a moon of Jupiter hide an ocean? | query: europa ocean
-- [ ] What is the Great Red Spot? | query: great red spot
-- [ ] How big is Jupiter? | query: jupiter juno
-- [ ] Does Jupiter have a moon with volcanoes? | query: io volcanoes
+- [x] Does a moon of Jupiter hide an ocean? | query: europa ocean — video 105 in review
+- [x] What is the Great Red Spot? | query: great red spot — video 108 in review
+- [x] How big is Jupiter? | query: jupiter juno — video 109 in review
+- [x] Does Jupiter have a moon with volcanoes? | query: io volcanoes — video 110 in review
 
 ## Asteroids, Comets and Pluto | playlist: Asteroids, Comets and Pluto for Kids
 
-- [ ] Can we push an asteroid? | query: dart asteroid impact
-- [ ] How did a spacecraft grab dirt from an asteroid? | query: osiris-rex sample
-- [ ] Why does Pluto have a heart? | query: pluto new horizons
-- [ ] What is a comet? | query: comet
+- [x] Can we push an asteroid? | query: dart asteroid impact — video 111 in review
+- [x] How did a spacecraft grab dirt from an asteroid? | query: osiris-rex sample — video 112 in review
+- [x] Why does Pluto have a heart? | query: pluto new horizons — video 115 in review
+- [x] What is a comet? | query: comet — video 116 in review
 
 ## Saturn | playlist: Saturn Facts for Kids
 
-- [ ] What are Saturn's rings made of? | query: saturn rings cassini
-- [ ] Does a moon of Saturn shoot out water? | query: enceladus plumes
-- [ ] Is there a moon with lakes? | query: titan lakes
+- [x] What are Saturn's rings made of? | query: saturn rings cassini — video 118 in review
+- [x] Does a moon of Saturn shoot out water? | query: enceladus plumes — video 120 in review
+- [~] Is there a moon with lakes? | query: titan lakes — auto-skipped after 2 failed videos (122, 124): render: ffmpeg AAC encoder fails (-22 Invalid argument), likely -aac_ms 0 from c73e7cc
 
 ## Telescopes and Deep Space | playlist: Deep Space for Kids
 
 <!-- Many Webb/Hubble images are co-credited ESA/STScI: expect rights checks. -->
 
-- [ ] What does the Webb telescope see? | query: webb telescope
-- [ ] What has Hubble shown us? | query: hubble
+- [x] What does the Webb telescope see? | query: webb telescope — video 126 in review
+- [x] What has Hubble shown us? | query: hubble — video 128 in review
 
 ## Rockets and Spacecraft | playlist: Rockets and Spacecraft for Kids
 
-- [ ] How does a rocket blast off? | query: rocket launch
-- [ ] How did the space shuttle land like a plane? | query: space shuttle landing
-- [ ] How do astronauts splash down back on Earth? | query: splashdown capsule
-- [ ] What is inside a spacesuit? | query: spacesuit
-- [ ] How do astronauts practice spacewalks underwater? | query: neutral buoyancy laboratory
+- [x] How does a rocket blast off? | query: rocket launch — video 130 in review
+- [x] How did the space shuttle land like a plane? | query: space shuttle landing — video 132 in review
+- [x] How do astronauts splash down back on Earth? | query: splashdown capsule — video 134 in review
+- [x] What is inside a spacesuit? | query: spacesuit — video 136 in review
+- [x] How do astronauts practice spacewalks underwater? | query: neutral buoyancy laboratory — video 138 in review
 - [ ] How big is the International Space Station? | query: international space station
 - [ ] How do we talk to spacecraft far away? | query: deep space network
 - [ ] How do satellites stay up in the sky? | query: satellite orbit

@@ -1,8 +1,9 @@
 # CLAUDE.md — Project "Launchpad"
 
-> Codename **Launchpad**. Two YouTube channels, both Brand Accounts under Thomas's Google login, both Made for Kids, running side by side:
+> Codename **Launchpad**. Three YouTube channels, all Brand Accounts under Thomas's Google login, all Made for Kids, running side by side:
 > - **Blast of Facts** (space; renamed from Story_Clips). Key `blast`, topics in `docs/TOPICS.md`.
 > - **I Wonder Why** (@I_Wonder_Why; our planet seen with NASA footage, added 2026-10-07). Key `wonder`, topics in `docs/TOPICS_WONDER.md`.
+> - **Pocket Fables** (world folktales retold by Pip the fox, made with Everygen, added 2026-10-31). Key `fables`. Its own workflow and review tab: see `channels/fables/CLAUDE.md`.
 >
 > Each video belongs to one channel (`videos.channel`). Per-channel settings (YouTube ID, login file, playlists, schedule, colours, voice, outro) live in `src/channels.ts`; commands take `--channel blast|wonder` (default `blast`).
 > Channel decisions, brand colors, future sources and topics: see `docs/ROADMAP.md`. Read it when relevant; don't build its "Later" items until Phases 1–4 are done and Thomas says go.

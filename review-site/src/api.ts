@@ -74,7 +74,78 @@ export const api = {
     call<{ review_id: number }>(`/api/videos/${id}/review`, { method: 'POST', body: JSON.stringify({ decision, notes, rights_checked }) }),
 };
 
+// ---- Pocket Fables (channels/fables/CLAUDE.md §3) --------------------------------
+
+export interface FableScene {
+  n: number;
+  seconds: number;
+  narration: string;
+  visuals: string;
+  on_screen_text: string;
+}
+
+export interface FableScript {
+  video_id: string;
+  title: string;
+  lane: 'folktale' | 'bedtime' | 'lesson';
+  origin: string;
+  lesson: string;
+  narrator: string;
+  visual_style: string;
+  est_seconds: number;
+  word_count: number;
+  scenes: FableScene[];
+  youtube: { title: string; description: string; tags: string[]; made_for_kids: true };
+}
+
+export interface FableSummary {
+  id: number;
+  topic: string;
+  title: string | null;
+  status: string;
+  revision_count: number;
+  updated_at: string;
+  version: number | null;
+  lane: string | null;
+  origin: string | null;
+  word_count: number | null;
+  lesson: string | null;
+  est_seconds: number | null;
+  scene_count: number | null;
+  last_review: string | null;
+}
+
+export interface FableDetail {
+  video: { id: number; topic: string; title: string | null; status: string; revision_count: number; error: string | null; updated_at: string };
+  script: FableScript | null;
+  script_version: number | null;
+  script_versions: number;
+  script_by: string | null;
+  script_problem: string | null;
+  warnings: string[];
+  est_seconds: number | null;
+  reviews: { id: number; gate: 'script' | 'video'; decision: string; notes: string | null; created_at: string }[];
+}
+
+export const fablesApi = {
+  list: (status = 'script_review') => call<{ videos: FableSummary[] }>(`/api/fables/videos?status=${encodeURIComponent(status)}`),
+  counts: () => call<{ counts: Record<string, number> }>('/api/fables/counts'),
+  detail: (id: number) => call<FableDetail>(`/api/fables/videos/${id}`),
+  reviewScript: (id: number, decision: Decision, notes: string, version: number | null) =>
+    call<{ review_id: number }>(`/api/fables/videos/${id}/script-review`, {
+      method: 'POST',
+      body: JSON.stringify({ decision, notes, ...(version ? { version } : {}) }),
+    }),
+};
+
 export const STATUS_LABEL: Record<string, string> = {
+  script_review: 'Script waiting for review',
+  script_approved: 'Script approved, waiting for Everygen',
+  script_changes: 'Script changes requested',
+  rendering: 'Rendering in Everygen',
+  video_review: 'Video waiting for review',
+  video_changes: 'Video changes requested',
+  uploaded: 'Uploaded',
   in_review: 'Waiting for review',
   approved: 'Approved',
   rejected: 'Rejected',

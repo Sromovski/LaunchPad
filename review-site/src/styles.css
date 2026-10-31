@@ -33,6 +33,9 @@
   /* Views chart lines, one per channel (validated for colour-blind separation on --panel). */
   --series-blast: #b07a00;
   --series-wonder: #2f6fc4;
+  /* Pocket Fables tab only: Pip the fox. Darker in light mode so text on bg passes 4.5:1. */
+  --fox: #b4520f;
+  --fox-soft: rgba(232, 116, 42, 0.16);
 }
 .dark {
   --bg: #141a2e;
@@ -49,6 +52,8 @@
   --ok: #7fd1a0;
   --series-blast: #c08a10;
   --series-wonder: #4f94e0;
+  --fox: #f08a45;
+  --fox-soft: rgba(240, 138, 69, 0.16);
 }
 
 @theme inline {
@@ -63,6 +68,8 @@
   --color-dust-soft: var(--dust-soft);
   --color-rust: var(--rust);
   --color-ok: var(--ok);
+  --color-fox: var(--fox);
+  --color-fox-soft: var(--fox-soft);
   --font-display: 'Fredoka', ui-rounded, system-ui, sans-serif;
   --font-body: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
 }

@@ -3,12 +3,16 @@
 CREATE TABLE IF NOT EXISTS videos (
   id                 INTEGER PRIMARY KEY AUTOINCREMENT,
   topic              TEXT NOT NULL,
-  -- Which YouTube channel this video is for (src/channels.ts)
-  channel            TEXT NOT NULL DEFAULT 'blast' CHECK (channel IN ('blast','wonder')),
+  -- Which YouTube channel this video is for (src/channels.ts). Widening either CHECK is
+  -- done by src/db/index.ts, which rebuilds this table when a listed value is missing.
+  channel            TEXT NOT NULL DEFAULT 'blast' CHECK (channel IN ('blast','wonder','fables')),
+  -- NASA and Pocket Fables statuses (src/db/status.ts)
   status             TEXT NOT NULL DEFAULT 'idea' CHECK (status IN (
                        'idea','researched','scripted','fact_checked','rendered','qa_passed',
                        'in_review','approved','changes_requested','rejected',
-                       'scheduled','published','failed')),
+                       'scheduled','published','failed',
+                       'script_review','script_approved','script_changes','rendering',
+                       'video_review','video_changes','uploaded')),
   title              TEXT,
   created_at         TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at         TEXT NOT NULL DEFAULT (datetime('now')),
@@ -56,6 +60,10 @@ CREATE TABLE IF NOT EXISTS scripts (
   word_count    INTEGER,
   reading_grade REAL,
   created_by    TEXT,
+  -- Pocket Fables only: the scene list, story lane and culture of origin (channels/fables/CLAUDE.md §2)
+  scenes_json   TEXT CHECK (scenes_json IS NULL OR json_valid(scenes_json)),
+  lane          TEXT CHECK (lane IS NULL OR lane IN ('folktale','bedtime','lesson')),
+  origin        TEXT,
   UNIQUE (video_id, version)
 );
 
@@ -82,6 +90,8 @@ CREATE TABLE IF NOT EXISTS reviews (
   video_id   INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
   decision   TEXT NOT NULL CHECK (decision IN ('approved','rejected','changes_requested')),
   notes      TEXT,
+  -- Which human gate: NASA videos only have the video one; Pocket Fables also reviews the script first.
+  gate       TEXT NOT NULL DEFAULT 'video' CHECK (gate IN ('script','video')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -157,3 +167,13 @@ CREATE TABLE IF NOT EXISTS video_stats (
   taken_at    TEXT NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (external_id, day)
 );
+
+-- Pocket Fables: Everygen credits spent per render (channels/fables/CLAUDE.md §5).
+CREATE TABLE IF NOT EXISTS credits (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  video_id      INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  credits_used  REAL NOT NULL CHECK (credits_used >= 0),
+  balance_after REAL,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_credits_video ON credits(video_id);

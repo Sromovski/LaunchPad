@@ -3,6 +3,7 @@ import {
   IllegalTransitionError,
   MAX_RETRIES,
   MAX_REVISIONS,
+  NASA_STATUSES,
   STATUSES,
   canTransition,
   manualReset,
@@ -142,7 +143,7 @@ describe('revision cap', () => {
 });
 
 describe('failure and retry', () => {
-  const failable = STATUSES.filter((s) => !['failed', 'rejected', 'published'].includes(s));
+  const failable = NASA_STATUSES.filter((s) => !['failed', 'rejected', 'published'].includes(s));
 
   it.each(failable)('%s → failed records where it failed', (from) => {
     const s = nextState(at(from), 'failed');

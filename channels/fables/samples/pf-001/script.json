@@ -1,0 +1,98 @@
+{
+  "video_id": "pf-001",
+  "title": "The Magic Paintbrush",
+  "lane": "folktale",
+  "origin": "China (traditional tale of Ma Liang)",
+  "lesson": "Gifts are best when we use them to help others.",
+  "narrator": "Pip, a tiny red fox with a patched backpack full of story pockets. Warm, playful, gentle voice; young-sounding but not squeaky. Storyteller pace, not rushed.",
+  "visual_style": "Hand-painted 2D storybook look, soft watercolor and gouache textures, warm golden light, gentle rounded shapes, friendly faces. Ancient Chinese village setting with rice fields, hills and tiled roofs. Things Ma Liang paints glow with a soft golden shimmer as they come to life. Same style and same character designs in every scene. Calm camera moves only.",
+  "est_seconds": 60,
+  "word_count": 151,
+  "scenes": [
+    {
+      "n": 1,
+      "seconds": 5,
+      "narration": "Hi, I'm Pip! What's in my pocket today? A paintbrush!",
+      "visuals": "Pip the fox sits on a grassy hill at golden hour, opens one pocket of his patched backpack and pulls out a small golden paintbrush that sparkles. He grins at the camera.",
+      "on_screen_text": "Pocket Fables"
+    },
+    {
+      "n": 2,
+      "seconds": 7,
+      "narration": "Long ago in China, a boy named Ma Liang loved to paint, but he couldn't afford a brush.",
+      "visuals": "Transition from the brush's sparkle into a small village by rice fields. Ma Liang, a cheerful boy about 9 in simple patched clothes, looks through a shop window at brushes he can't afford.",
+      "on_screen_text": ""
+    },
+    {
+      "n": 3,
+      "seconds": 5,
+      "narration": "So he drew with a stick in the sand, and with charcoal on stones.",
+      "visuals": "Ma Liang draws a fish in the riverbank sand with a stick, then a bird on a flat stone with charcoal. Village kids watch, delighted.",
+      "on_screen_text": ""
+    },
+    {
+      "n": 4,
+      "seconds": 7,
+      "narration": "One night, a kind old man gave him a shining brush. \"Paint for people who need help.\"",
+      "visuals": "Moonlit room. A gentle old man with a long white beard, glowing softly, hands Ma Liang a golden brush. Ma Liang's eyes go wide. The old man fades into sparkles.",
+      "on_screen_text": ""
+    },
+    {
+      "n": 5,
+      "seconds": 8,
+      "narration": "Ma Liang painted a bird, and it flew away! He painted a plow for a farmer, and a bucket for a thirsty village.",
+      "visuals": "Montage: a painted bird glows, peels off the paper and flies away. A painted plow becomes real beside a smiling farmer. A painted bucket fills with water at a dusty well and villagers cheer.",
+      "on_screen_text": ""
+    },
+    {
+      "n": 6,
+      "seconds": 7,
+      "narration": "But a greedy emperor heard about the brush. \"Paint me a mountain of gold!\" he ordered.",
+      "visuals": "A grand palace hall. A pompous, cartoonish emperor (silly, not scary) points and demands. Ma Liang stands calmly holding the brush, thinking.",
+      "on_screen_text": ""
+    },
+    {
+      "n": 7,
+      "seconds": 8,
+      "narration": "So Ma Liang painted a wide sea, with a gold mountain across it. Then a ship. Then wind. Lots of wind!",
+      "visuals": "Ma Liang paints on a huge scroll: a sparkling sea and a distant golden mountain appear for real. The emperor hurries onto a painted ship. Ma Liang adds swirly painted wind, and the ship's sails puff up big.",
+      "on_screen_text": ""
+    },
+    {
+      "n": 8,
+      "seconds": 5,
+      "narration": "Whoosh! The ship sailed far away, and the emperor never bossed anyone around again.",
+      "visuals": "The ship zooms over gentle waves toward the horizon, getting tiny. The emperor is shown safe aboard, clutching his crown, looking more grumpy than scared. A seagull laughs.",
+      "on_screen_text": ""
+    },
+    {
+      "n": 9,
+      "seconds": 4,
+      "narration": "And Ma Liang kept painting for anyone who needed help.",
+      "visuals": "Back in the village at sunset, Ma Liang paints a little bridge over a stream as children cross it happily.",
+      "on_screen_text": ""
+    },
+    {
+      "n": 10,
+      "seconds": 4,
+      "narration": "Remember: gifts are best when we share them!",
+      "visuals": "Back to Pip on the hill. He tucks the golden brush back into his pocket, winks, and waves goodbye.",
+      "on_screen_text": "Gifts are best when we share them!"
+    }
+  ],
+  "youtube": {
+    "title": "The Magic Paintbrush 🖌️ | A Folktale from China | Pocket Fables",
+    "description": "Ma Liang loves to paint, but he's too poor to buy a brush, until a kind stranger gives him a magic one! Whatever he paints comes to life. What will he do when a greedy emperor wants a mountain of gold?\n\nA traditional folktale from China, retold by Pip the fox in under a minute.\n\nLesson: gifts are best when we use them to help others.\n\n#folktales #kidsstories #bedtimestories #fables",
+    "tags": [
+      "magic paintbrush",
+      "Ma Liang",
+      "Chinese folktale",
+      "folktales for kids",
+      "kids stories",
+      "fables for kids",
+      "short stories for kids",
+      "Pocket Fables"
+    ],
+    "made_for_kids": true
+  }
+}

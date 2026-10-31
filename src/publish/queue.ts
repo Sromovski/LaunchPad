@@ -1,6 +1,9 @@
 /** What gets posted next: approved, not held back by Thomas, not yet on YouTube — oldest approval first. */
 import type Database from 'better-sqlite3';
-import type { ChannelKey } from '../channels.js';
+import { CHANNEL_KEYS, type ChannelKey } from '../channels.js';
+
+// Pocket Fables also uses 'approved' but is uploaded by hand, so only NASA channels queue here.
+const NASA_ONLY = `v.channel IN (${CHANNEL_KEYS.map((k) => `'${k}'`).join(',')})`;
 
 export interface QueuedVideo {
   id: number;
@@ -21,7 +24,7 @@ export function postingQueue(db: Database.Database, channel?: ChannelKey): Queue
               (SELECT MIN(r.created_at) FROM reviews r WHERE r.video_id = v.id AND r.decision = 'approved') AS approved_at
        FROM videos v
        WHERE v.status = 'approved' AND v.do_not_post = 0
-         AND (@channel IS NULL OR v.channel = @channel)
+         AND (@channel IS NULL OR v.channel = @channel) AND ${NASA_ONLY}
          AND NOT EXISTS (SELECT 1 FROM posts p WHERE p.video_id = v.id AND p.platform = 'youtube')
        ORDER BY approved_at IS NULL, approved_at, v.id`,
     )

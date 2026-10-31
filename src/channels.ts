@@ -7,9 +7,40 @@ import { resolve } from 'node:path';
 import type Database from 'better-sqlite3';
 import { PROJECT_ROOT } from './db/index.js';
 
+/**
+ * The NASA-pipeline channels. This list drives the Windows scheduler (src/cli/schedule.ts),
+ * posting, view stats and every `--channel` NASA command, so Pocket Fables is NOT in it:
+ * it runs its own Everygen workflow, has no scheduled builds and never touches the NASA steps.
+ */
 export const CHANNEL_KEYS = ['blast', 'wonder'] as const;
 export type ChannelKey = (typeof CHANNEL_KEYS)[number];
 export const DEFAULT_CHANNEL: ChannelKey = 'blast';
+
+/** Every value videos.channel may hold (the CHECK in src/db/schema.sql). */
+export const VIDEO_CHANNEL_KEYS = [...CHANNEL_KEYS, 'fables'] as const;
+export type VideoChannelKey = (typeof VIDEO_CHANNEL_KEYS)[number];
+
+/**
+ * Pocket Fables (channels/fables/CLAUDE.md): world folktales retold by Pip the fox,
+ * made with Everygen. Uploaded by hand in YouTube Studio for the test month, so no
+ * token file, playlists or post times. Deliberately not a `Channel`: none of the
+ * NASA settings (topics file, Kokoro voice, bonus outro, schedule) apply.
+ */
+export const FABLES = {
+  key: 'fables',
+  title: 'Pocket Fables',
+  youtubeId: 'UCV0cfNkj1zyBopSoByRkgkw',
+  madeForKids: true,
+  /** Everygen voice id (Thomas, 2026-10-31). */
+  everygenVoice: 'everygen',
+  brand: { accent: '#E8742A' }, // Pip's fox orange, from channels/fables/art/banner-source.html
+} as const;
+
+/** Display name for any videos.channel value (review-site badges). */
+export function channelTitle(key: string): string {
+  if (key === FABLES.key) return FABLES.title;
+  return isChannelKey(key) ? CHANNELS[key].title : key;
+}
 
 export interface Channel {
   key: ChannelKey;
