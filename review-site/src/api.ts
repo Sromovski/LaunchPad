@@ -82,6 +82,7 @@ export interface FableScene {
   narration: string;
   visuals: string;
   on_screen_text: string;
+  pip_on_camera?: boolean;
 }
 
 export interface FableScript {
@@ -92,6 +93,7 @@ export interface FableScript {
   lesson: string;
   narrator: string;
   visual_style: string;
+  hero?: { name: string; look: string };
   est_seconds: number;
   word_count: number;
   scenes: FableScene[];

@@ -23,6 +23,18 @@ export const Scene = z.object({
   narration: text,
   visuals: text,
   on_screen_text: z.string().default(''),
+  /**
+   * Pip talks to camera in this scene: its clip is generated from Pip's own voiceover so
+   * the mouth moves with the words. Only the first and last scenes (intro and lesson).
+   */
+  pip_on_camera: z.boolean().default(false),
+});
+
+/** The story's main character, saved as an Everygen character so they look the same in every scene. */
+export const Hero = z.object({
+  name: text.max(60),
+  /** One fixed description: age, hair, clothes, colours. Used for the character sheet. */
+  look: text.max(600),
 });
 
 export const FableScript = z.object({
@@ -34,12 +46,14 @@ export const FableScript = z.object({
   lesson: text,
   narrator: text,
   visual_style: text,
+  hero: Hero.optional(),
   est_seconds: z.number().positive(),
   word_count: z.number().int().nonnegative(),
   scenes: z
     .array(Scene)
     .min(3)
-    .refine((s) => s.every((x, i) => x.n === i + 1), 'scenes must be numbered 1, 2, 3… in order'),
+    .refine((s) => s.every((x, i) => x.n === i + 1), 'scenes must be numbered 1, 2, 3… in order')
+    .refine((s) => s.every((x, i) => !x.pip_on_camera || i === 0 || i === s.length - 1), 'only the first and last scenes can have Pip talking to camera'),
   youtube: z.object({
     title: text.max(100),
     description: text.max(5000),
@@ -53,6 +67,33 @@ export type FableScript = z.infer<typeof FableScript>;
 export const countWords = (s: string) => s.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 export const narrationWords = (script: Pick<FableScript, 'scenes'>) => script.scenes.reduce((n, s) => n + countWords(s.narration), 0);
 export const sceneSeconds = (script: Pick<FableScript, 'scenes'>) => script.scenes.reduce((n, s) => n + s.seconds, 0);
+
+/** Sentences of spoken text (split after . ! ? and any closing quote). */
+export const sentences = (s: string) =>
+  s
+    .split(/(?<=[.!?]["”’]?)\s+/)
+    .map((x) => x.trim())
+    .filter((x) => countWords(x) > 0);
+
+/** n't, 'm, 're, 've, 'll, 'd always; 's only after words where it means "is" (not possessives). */
+const CONTRACTION = /\b(?:\w+n['’]t|\w+['’](?:m|re|ve|ll|d)|(?:it|that|what|there|here|he|she|who|let|where|how)['’]s)\b/gi;
+export const countContractions = (s: string) => (s.match(CONTRACTION) ?? []).length;
+
+/**
+ * Same idea as Everygen's free check_voice_cadence: AI narration sounds flat when nothing
+ * is contracted and every sentence is the same length. Thresholds match that tool.
+ */
+export function cadenceWarnings(narration: string): string[] {
+  const w: string[] = [];
+  const lens = sentences(narration).map(countWords);
+  if (lens.length < 4) return w;
+  const contractions = countContractions(narration);
+  if (contractions < lens.length / 4) w.push(`Sounds stiff read aloud: ${contractions} contractions in ${lens.length} sentences. Use more (he's, didn't, we'll).`);
+  const mean = lens.reduce((a, b) => a + b, 0) / lens.length;
+  const stdev = Math.sqrt(lens.reduce((a, b) => a + (b - mean) ** 2, 0) / lens.length);
+  if (stdev < 3) w.push(`Sentence lengths are too even (spread ${stdev.toFixed(1)} words) and will sound robotic. Mix short punches with longer lines.`);
+  return w;
+}
 
 /**
  * Things Thomas should see before approving, not hard errors: the script is still
@@ -73,6 +114,13 @@ export function scriptWarnings(script: FableScript): string[] {
     if (culture && !desc.toLowerCase().includes(culture.toLowerCase())) w.push(`Folktale: the description should name the culture of origin (${script.origin}).`);
   }
   if (/\bnasa\b/i.test(desc)) w.push('Description mentions NASA; Pocket Fables has no NASA material.');
+  w.push(...cadenceWarnings(script.scenes.map((x) => x.narration).join(' ')));
+  const wps = FABLES.everygen.wordsPerSecond;
+  if (wps) {
+    const spoken = Math.round(words / wps);
+    if (spoken < SECONDS.min || spoken > SECONDS.max) w.push(`At the narrator's natural pace this reads in about ${spoken} s; it must land in ${SECONDS.min}–${SECONDS.max} s.`);
+  }
+  if (!script.hero) w.push("No hero set: the story's main character may look different from scene to scene.");
   return w;
 }
 
@@ -80,7 +128,7 @@ export function scriptMarkdown(s: FableScript): string {
   const scenes = s.scenes
     .map((x) =>
       [
-        `### Scene ${x.n} · ${x.seconds}s`,
+        `### Scene ${x.n} · ${x.seconds}s${x.pip_on_camera ? ' · Pip talks to camera' : ''}`,
         `**Narration:** ${x.narration}`,
         '',
         `**Visuals:** ${x.visuals}`,
@@ -97,7 +145,7 @@ export function scriptMarkdown(s: FableScript): string {
 **Narrator / voice:** ${s.narrator}
 
 **Visual style:** ${s.visual_style}
-
+${s.hero ? `\n**Hero:** ${s.hero.name}: ${s.hero.look}\n` : ''}
 ## Scenes
 
 ${scenes}

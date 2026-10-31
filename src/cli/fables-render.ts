@@ -4,7 +4,8 @@
  *   fables:render -- list                                                 script_approved videos + Everygen settings
  *   fables:render -- start  --video <id> --balance <credits now>        script_approved → rendering
  *   fables:render -- log    --video <id> --step <name> --job <id> [--scene n] [--url https://…]
- *   fables:render -- plan   --video <id> --total <voiceover s> --sentence-ends "2.1,5.8,…" [--min 4]
+ *   fables:render -- plan   --video <id> --total <story voiceover s> --sentence-ends "2.1,5.8,…" [--intro <s>] [--outro <s>] [--min 4]
+ *     (--intro/--outro: lengths of Pip's own voiceovers when the first/last scene has pip_on_camera)
  *   fables:render -- finish --video <id> --url <final https mp4> --balance <credits now>
  *   fables:render -- fail   --video <id> --error "…"
  * start refuses unless Thomas approved the newest script version in the review site.
@@ -13,7 +14,8 @@ import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { FABLES } from '../channels.js';
 import { transitionVideo } from '../db/status.js';
-import { finishRender, latestScript, recordBalance, logJob, readRenderLog, sceneWindows, startRender } from '../fables/render.js';
+import { finishRender, latestScript, recordBalance, logJob, plannedWindows, readRenderLog, startRender } from '../fables/render.js';
+import { SECONDS } from '../fables/script.js';
 import { RUNS_ROOT, args, main, requireVideoId, runDir } from './_lib.js';
 
 const command = process.argv[2];
@@ -27,6 +29,8 @@ const a = args({
   url: { type: 'string' },
   total: { type: 'string' },
   'sentence-ends': { type: 'string' },
+  intro: { type: 'string' },
+  outro: { type: 'string' },
   min: { type: 'string' },
   error: { type: 'string' },
   remaining: { type: 'string' },
@@ -65,12 +69,19 @@ await main(async (db) => {
       if (!readRenderLog(RUNS_ROOT, id)) throw new Error(`video ${id} has no render log; run start first`);
       const { script } = latestScript(db, id);
       const ends = (a['sentence-ends'] ?? '').split(',').filter(Boolean).map(Number);
-      const windows = sceneWindows(script.scenes.map((s) => s.narration), ends, num(a.total, 'total'), a.min ? Number(a.min) : FABLES.everygen.minClipSeconds);
+      const windows = plannedWindows(
+        script.scenes,
+        { total: num(a.total, 'total'), sentenceEnds: ends },
+        { intro: a.intro ? num(a.intro, 'intro') : undefined, outro: a.outro ? num(a.outro, 'outro') : undefined },
+        a.min ? Number(a.min) : FABLES.everygen.minClipSeconds,
+      );
+      const total = windows[windows.length - 1]!.end;
+      if (total < SECONDS.min || total > SECONDS.max) throw new Error(`the plan is ${total} s; a Short must be ${SECONDS.min}–${SECONDS.max} s`);
       const tooLong = windows.filter((w) => w.clip_seconds > FABLES.everygen.maxClipSeconds);
       if (tooLong.length) throw new Error(`scene(s) ${tooLong.map((w) => w.n).join(', ')} need more than ${FABLES.everygen.maxClipSeconds} s; split them in the script`);
       const plan = windows.map((w, i) => ({ ...w, visuals: script.scenes[i]!.visuals, on_screen_text: script.scenes[i]!.on_screen_text }));
       writeFileSync(resolve(runDir(id), 'scene-plan.json'), `${JSON.stringify({ visual_style: script.visual_style, scenes: plan }, null, 2)}\n`);
-      return { video_id: id, total_s: windows[windows.length - 1]!.end, clip_seconds: windows.reduce((n, w) => n + w.clip_seconds, 0), scenes: windows };
+      return { video_id: id, total_s: total, clip_seconds: windows.reduce((n, w) => n + w.clip_seconds, 0), scenes: windows };
     }
     case 'finish':
       if (!a.url) throw new Error('--url is required');

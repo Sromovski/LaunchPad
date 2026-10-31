@@ -186,3 +186,11 @@ Short log of design choices. Newest last.
 
 - Approved fables videos show under **Ready to upload** with a download button (named `pocket-fables-<id>-<title>.mp4`), copy buttons for the YouTube title, description and tags, and a Made for Kids reminder. Uploading stays by hand in YouTube Studio for the test month.
 - **Mark uploaded** takes the Short's link, stores it in `posts` (method `manual`, canonical `/shorts/<id>` URL) and moves `approved` → `uploaded` through the review path. A link already recorded for another video is refused. The NASA posting, playlist, thumbnail and view-stats queries all filter by NASA channel, so they never touch these rows.
+
+## 2026-10-31 — Pocket Fables: improvements for the next short (after video 139)
+
+Thomas approved video 139 but found the voice machine-like and asked for four changes:
+- **Natural voice speed.** `voiceSpeed` is back to 1.0. Scripts must fit the narrator's pace instead of slowing the voice. `FABLES.everygen.wordsPerSecond` (measured on the next render) lets the review site warn when a script won't land in 50–65 s. At most one retry at 0.9 if a voiceover comes out short.
+- **Cadence warnings.** `cadenceWarnings()` mirrors Everygen's free `check_voice_cadence`: too few contractions (fewer than 1 per 4 sentences) or too-even sentence lengths (spread under 3 words). They show as script warnings. Video 139 had 3 contractions, which is the warning Everygen gave too.
+- **Hero lock.** An optional `hero { name, look }` in the script. The render makes a character sheet and saves it as an Everygen character (about 2 credits), so the hero stays the same in every frame. This fixes drift like Ma Liang's hair in scene 7. Frames with both Pip and the hero use the hero's character plus Pip's sheet as a reference image (`pipSheetUrl`), because `generate_image` takes one character id.
+- **Pip talks to camera.** `pip_on_camera` on the first and/or last scene. Those lines get their own voiceover, which drives the clip through Seedance's reference audio (`audio: true`, same 3 credits per clip as a silent one), and plays over it in the final. The story voiceover covers the scenes in between (`plannedWindows`). That costs one extra compose pass and about 1 credit per extra voiceover. It's experimental: the first render reports whether the lip movement works.

@@ -3,7 +3,7 @@
 > Lives at `channels/fables/CLAUDE.md`. Claude Code loads this file automatically when working in this folder.
 > Channel name: **Pocket Fables**. Channel key **`fables`** (alongside `blast` and `wonder` in `src/channels.ts`; commands take `--channel fables`). Audience: ages 5–10, Made for Kids.
 > YouTube channel ID: **`UCV0cfNkj1zyBopSoByRkgkw`** (Brand Account, Made for Kids). Upload is manual in YouTube Studio for the test month, so no `youtube:auth` token yet.
-> Narrator voice: Everygen voice id **`everygen`** (chosen by Thomas 2026-10-31).
+> Narrator voice: Everygen voice id **`everygen`** (chosen by Thomas 2026-10-31), read at natural speed (slowing it to 0.8 sounded machine-like). Settings in `FABLES.everygen` in `src/channels.ts`.
 > **Careful when adding `fables` to `src/channels.ts`:** `CHANNEL_KEYS` drives the Windows scheduler (`src/cli/schedule.ts`) and the NASA/Kokoro build. Pocket Fables must get **no** `makeTimes`/`postTimes` and must never run the NASA pipeline. Also widen the `videos.channel` CHECK in `src/db/index.ts` with a migration. Check every place that loops over `CHANNEL_KEYS` before adding it.
 > Hand-written sample script for testing: `channels/fables/samples/pf-001/` ("The Magic Paintbrush").
 > Content lane for the test month: **world folktales and fables retold in 60 seconds**. Bedtime stories may be added later.
@@ -36,6 +36,10 @@ Max 2 revision loops per video at either gate; after that it's `rejected` unless
 - Every script has a clear beginning, middle and end (YouTube's inauthentic-content policy targets templated or plotless videos). No two scripts may reuse the same structure with names swapped.
 - No animals or children in peril or exaggerated distress. Nervous or sad is fine; scary is not.
 - Folktales: name the culture of origin in the description; retell in our own words.
+- Written to be read aloud: use contractions (he's, didn't, we'll) and mix very short lines with longer ones. Flat, uncontracted, evenly sized sentences make the AI voice sound robotic; the review site warns about both (same rules as Everygen's free `check_voice_cadence`).
+- Fit the narrator's natural pace, not a slowed voice: once `FABLES.everygen.wordsPerSecond` is measured, the review site warns when the words won't land in 50–65 s.
+- `hero`: the story's main character, with one fixed look. The render saves it as an Everygen character (about 2 credits) so it looks the same in every scene, as Pip does.
+- `pip_on_camera` (first and/or last scene only): Pip says that line to the camera, with his mouth moving to his own voiceover. Use it for the opening ("Hi, I'm Pip! …") and the closing lesson.
 - Save each script as both:
   - `runs/<video_id>/script.json` (source of truth, shape below)
   - `runs/<video_id>/script.md` (human-readable, rendered in the review site)
@@ -49,10 +53,11 @@ Max 2 revision loops per video at either gate; after that it's `rejected` unless
   "lesson": "one sentence",
   "narrator": "recurring narrator character + voice style",
   "visual_style": "one consistent style description for every scene",
+  "hero": { "name": "the story's main character", "look": "one fixed description: age, hair, clothes, colours" },
   "est_seconds": 60,
   "word_count": 0,
   "scenes": [
-    { "n": 1, "seconds": 6, "narration": "", "visuals": "", "on_screen_text": "" }
+    { "n": 1, "seconds": 6, "narration": "", "visuals": "", "on_screen_text": "", "pip_on_camera": true }
   ],
   "youtube": { "title": "", "description": "", "tags": [], "made_for_kids": true }
 }

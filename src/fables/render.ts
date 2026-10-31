@@ -174,6 +174,53 @@ export function sceneWindows(narrations: string[], sentenceEnds: number[], total
   });
 }
 
+export interface PlannedWindow extends SceneWindow {
+  /** Which voiceover plays under this scene: Pip's own intro/outro line, or the story narration. */
+  audio: 'intro' | 'story' | 'outro';
+}
+
+/**
+ * Scene windows when Pip talks to camera in the first and/or last scene. Those scenes get
+ * their own short voiceover (it drives the clip's mouth movement and plays over it), and the
+ * story voiceover covers the scenes in between. A small breath after Pip's line, then the cut.
+ */
+export function plannedWindows(
+  scenes: { narration: string; pip_on_camera?: boolean }[],
+  story: { total: number; sentenceEnds: number[] },
+  pip: { intro?: number; outro?: number },
+  minClip = 4,
+): PlannedWindow[] {
+  const hasIntro = !!scenes[0]?.pip_on_camera;
+  const hasOutro = scenes.length > 1 && !!scenes[scenes.length - 1]?.pip_on_camera;
+  if (hasIntro && !pip.intro) throw new Error("scene 1 has Pip talking to camera: pass Pip's intro voiceover length (--intro)");
+  if (hasOutro && !pip.outro) throw new Error("the last scene has Pip talking to camera: pass Pip's outro voiceover length (--outro)");
+  const pipWindow = (secs: number) => Math.max(minClip, Math.ceil(secs + 0.3));
+
+  const out: PlannedWindow[] = [];
+  let offset = 0;
+  if (hasIntro) {
+    const len = pipWindow(pip.intro!);
+    out.push({ n: 1, start: 0, end: len, clip_seconds: len, audio: 'intro' });
+    offset = len;
+  }
+  const middle = scenes.slice(hasIntro ? 1 : 0, hasOutro ? -1 : undefined);
+  if (middle.length === 0) throw new Error('no story scenes between Pip’s intro and outro');
+  for (const w of sceneWindows(
+    middle.map((s) => s.narration),
+    story.sentenceEnds,
+    story.total,
+    minClip,
+  )) {
+    out.push({ ...w, n: out.length + 1, start: w.start + offset, end: w.end + offset, audio: 'story' });
+  }
+  if (hasOutro) {
+    const start = out[out.length - 1]!.end;
+    const len = pipWindow(pip.outro!);
+    out.push({ n: out.length + 1, start, end: start + len, clip_seconds: len, audio: 'outro' });
+  }
+  return out;
+}
+
 // ---- QA (§4: 9:16, 50–65 s, has audio, file plays) ---------------------------------
 
 export interface FablesQa {

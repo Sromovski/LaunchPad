@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
 import { openDb } from '../../src/db/index.js';
-import { FableScript, countWords, narrationWords, saveFableScript, scriptWarnings } from '../../src/fables/script.js';
+import { FableScript, cadenceWarnings, countContractions, countWords, narrationWords, saveFableScript, scriptMarkdown, scriptWarnings } from '../../src/fables/script.js';
 import { decideScript } from '../../src/review/fables.js';
 
 const SAMPLE = JSON.parse(readFileSync(new URL('../../channels/fables/samples/pf-001/script.json', import.meta.url), 'utf8'));
@@ -125,5 +125,40 @@ describe('decideScript (gate 1)', () => {
     expect(() => decideScript(db, id, { decision: 'approved' })).toThrow(/not script_review/);
     const nasa = Number(db.prepare("INSERT INTO videos (topic, status) VALUES ('x', 'in_review')").run().lastInsertRowid);
     expect(() => decideScript(db, nasa, { decision: 'approved' })).toThrow(/not found/);
+  });
+});
+
+describe('next-short improvements (2026-10-31)', () => {
+  it('counts contractions but not possessives', () => {
+    expect(countContractions("I'm Pip. What's that? He couldn't. Ma Liang's brush. We'll see, they've gone, she'd go.")).toBe(6);
+  });
+
+  it('flags stiff, even narration like Everygen check_voice_cadence does', () => {
+    const stiff = 'The boy did not have a brush. The man gave him a brush. The boy painted a bird. The bird flew far away.';
+    expect(cadenceWarnings(stiff).join(' ')).toMatch(/contractions/);
+    expect(cadenceWarnings(stiff).join(' ')).toMatch(/too even/);
+    expect(cadenceWarnings("Hi, I'm Pip! What's in my pocket today? A paintbrush! Long ago in China, a boy who couldn't afford a brush drew pictures in the sand every day.")).toEqual([]);
+  });
+
+  it('video 139 gets the contraction warning Everygen gave it (3 contractions)', () => {
+    const narration = SAMPLE.scenes.map((s: { narration: string }) => s.narration).join(' ');
+    expect(cadenceWarnings(narration)).toEqual([expect.stringMatching(/^Sounds stiff read aloud: 3 contractions in /)]);
+  });
+
+  it('warns when no hero is set, and keeps hero and Pip-on-camera scenes', () => {
+    expect(scriptWarnings(FableScript.parse(SAMPLE)).join(' ')).toMatch(/No hero set/);
+    const s = FableScript.parse({
+      ...SAMPLE,
+      hero: { name: 'Ma Liang', look: 'a boy of about ten, short black hair, blue tunic' },
+      scenes: SAMPLE.scenes.map((x: object, i: number) => ({ ...x, pip_on_camera: i === 0 || i === SAMPLE.scenes.length - 1 })),
+    });
+    expect(scriptWarnings(s).join(' ')).not.toMatch(/No hero set/);
+    expect(scriptMarkdown(s)).toMatch(/Hero:\*\* Ma Liang/);
+    expect(scriptMarkdown(s)).toMatch(/Scene 1 · 5s · Pip talks to camera/);
+  });
+
+  it('refuses Pip on camera in a middle scene', () => {
+    const bad = { ...SAMPLE, scenes: SAMPLE.scenes.map((x: object, i: number) => ({ ...x, pip_on_camera: i === 3 })) };
+    expect(() => FableScript.parse(bad)).toThrow(/first and last scenes/);
   });
 });

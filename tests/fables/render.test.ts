@@ -5,7 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
 import { openDb } from '../../src/db/index.js';
 import { saveFableScript } from '../../src/fables/script.js';
-import { assertScriptApproved, creditsSummary, fablesQa, finishRender, logJob, readRenderLog, recordBalance, sceneWindows, startRender } from '../../src/fables/render.js';
+import { assertScriptApproved, creditsSummary, fablesQa, finishRender, logJob, plannedWindows, readRenderLog, recordBalance, sceneWindows, startRender } from '../../src/fables/render.js';
 import { ffmpegBin, run } from '../../src/media/probe.js';
 import { decideScript, decideVideo } from '../../src/review/fables.js';
 import { transitionVideo } from '../../src/db/status.js';
@@ -205,5 +205,30 @@ describe('credits panel data', () => {
       used_this_month: 66,
       renders_this_month: 1,
     });
+  });
+});
+
+describe('plannedWindows (Pip talks to camera in the first and last scene)', () => {
+  const scenes = [
+    { narration: "Hi, I'm Pip!", pip_on_camera: true },
+    { narration: 'one two three four' },
+    { narration: 'five six seven eight' },
+    { narration: 'Remember: share!', pip_on_camera: true },
+  ];
+
+  it('gives Pip his own windows around the story voiceover, contiguous, with a breath after his line', () => {
+    const w = plannedWindows(scenes, { total: 10.2, sentenceEnds: [] }, { intro: 2.4, outro: 4.1 });
+    expect(w.map((x) => [x.n, x.start, x.end, x.audio])).toEqual([
+      [1, 0, 4, 'intro'],
+      [2, 4, 9, 'story'],
+      [3, 9, 15, 'story'],
+      [4, 15, 20, 'outro'],
+    ]);
+  });
+
+  it('works like sceneWindows when nobody is on camera, and asks for missing Pip lengths', () => {
+    const plain = scenes.map(({ narration }) => ({ narration }));
+    expect(plannedWindows(plain, { total: 12, sentenceEnds: [] }, {}).every((x) => x.audio === 'story')).toBe(true);
+    expect(() => plannedWindows(scenes, { total: 10, sentenceEnds: [] }, { outro: 3 })).toThrow(/--intro/);
   });
 });

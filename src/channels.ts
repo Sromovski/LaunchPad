@@ -47,12 +47,20 @@ export const FABLES = {
     /** Don't start a render below this balance: a half-finished render wastes what it spent. */
     minBalance: 80,
     /**
-     * The `everygen` voice reads 151 words in 42 s at normal speed, under the 50 s minimum and
-     * too rushed for a storyteller; 0.8 gave 52.7 s on video 139 (2026-10-31).
+     * Natural speed (Thomas, 2026-10-31): slowing the `everygen` voice to 0.8 on video 139
+     * made it sound machine-like. Scripts are written to the voice's pace instead.
      */
-    voiceSpeed: 0.8,
+    voiceSpeed: 1.0,
+    /**
+     * Spoken words per second of `everygenVoice` at `voiceSpeed`, so the review site can warn
+     * when a script won't land in 50–65 s. Measured on the first render with a voice
+     * (the `everygen` voice: 151 words in 42.4 s = 3.56). null = not measured yet.
+     */
+    wordsPerSecond: null as number | null,
     /** Saved Everygen character "Pip (Pocket Fables)", made for video 139. Reuse it: Pip looks the same in every video. */
     pipCharacterId: 'cmvwtswdm000jp002a20oquw6',
+    /** Pip's character sheet, passed as a reference image when a frame also uses the story's hero character. */
+    pipSheetUrl: 'https://media.viewmax.io/users/egJmG9TOyyA4oDHYC2fN4hD2QzOw8TNR/generated/3bb6b27b-1fd8-4c03-b434-dfa3bcaa8c47.jpg',
   },
 } as const;
 

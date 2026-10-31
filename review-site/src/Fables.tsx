@@ -340,6 +340,11 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
               </Meta>
               <Meta term="Narrator and voice">{script.narrator}</Meta>
               <Meta term="Visual style">{script.visual_style}</Meta>
+              {script.hero && (
+                <Meta term="Hero">
+                  <span className="font-semibold">{script.hero.name}</span>: {script.hero.look}
+                </Meta>
+              )}
             </dl>
 
             {data.warnings.length > 0 && (
@@ -377,7 +382,10 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
                     >
                       <td className="py-3 pr-3 font-display text-lg font-bold text-fox">{s.n}</td>
                       <td className="whitespace-nowrap py-3 pr-3 text-muted">{s.seconds} s</td>
-                      <td className="w-[38%] py-3 pr-3 text-lg leading-snug">{s.narration}</td>
+                      <td className="w-[38%] py-3 pr-3 text-lg leading-snug">
+                        {s.pip_on_camera && <span className="mb-1 block text-sm font-bold text-fox">Pip says it on camera</span>}
+                        {s.narration}
+                      </td>
                       <td className="w-[38%] py-3 pr-3 text-sm text-muted">{s.visuals}</td>
                       <td className="py-3 text-sm">{s.on_screen_text || <span className="text-muted">none</span>}</td>
                     </tr>
