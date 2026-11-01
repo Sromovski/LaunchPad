@@ -71,4 +71,4 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] Where do rivers meet the sea? | query: river delta — video 131 in review
 - [x] How does Earth turn green in spring? | query: vegetation seasons earth — video 135 in review
 - [x] How big are the Great Lakes? | query: great lakes — video 137 in review
-- [ ] How do sand dunes move? | query: sand dunes
+- [x] How do sand dunes move? | query: sand dunes — video 140 in review

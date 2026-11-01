@@ -96,7 +96,7 @@ Each `## World | playlist: Name` heading sets the YouTube playlist for the topic
 - [x] How do astronauts splash down back on Earth? | query: splashdown capsule — video 134 in review
 - [x] What is inside a spacesuit? | query: spacesuit — video 136 in review
 - [x] How do astronauts practice spacewalks underwater? | query: neutral buoyancy laboratory — video 138 in review
-- [ ] How big is the International Space Station? | query: international space station
+- [x] How big is the International Space Station? | query: international space station — video 141 in review
 - [ ] How do we talk to spacecraft far away? | query: deep space network
 - [ ] How do satellites stay up in the sky? | query: satellite orbit
 
