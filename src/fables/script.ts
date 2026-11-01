@@ -12,7 +12,7 @@ import { PROJECT_ROOT } from '../db/index.js';
 import { transitionVideo } from '../db/status.js';
 
 export const WORDS = { min: 130, max: 150 } as const;
-export const SECONDS = { min: 50, max: 65 } as const; // same window as the render QA (§4)
+export const SECONDS = { min: 45, max: 65 } as const; // same window as the render QA (§4)
 const AI_VOICE = 'Narration voice is AI-generated.';
 
 const text = z.string().trim().min(1);

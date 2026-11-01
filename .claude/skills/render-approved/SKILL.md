@@ -19,6 +19,7 @@ Turns `script_approved` Pocket Fables videos into finished 9:16 MP4s with the Ev
 2. `mcp__everygen__get_credit_balance` → `remaining`.
 3. Per video, in order: `npm run fables:render -- start --video <id> --balance <remaining>`. It moves the video to `rendering` and refuses below the minimum balance.
 4. Read `runs/<id>/script.json` (title, narrator, visual_style, hero, scenes with `pip_on_camera`).
+5. **Re-render** (`start` moved the earlier log to `runs/<id>/everygen.v<n>.json`): read it, and Thomas's latest video-gate notes. Reuse every finished job the change doesn't touch: re-log it in the new log under the same step and scene with its URL and `--job reused-<old id>`, and don't generate it again. The hero character is reused. A voice change redoes the voiceovers, the Pip-on-camera clips (his mouth follows the voice) and both composes and captions; story clips are reused as long as the new plan's window for a scene fits that clip's real length (a window longer than the clip would freeze, so only that scene's clip is redone, at the new `clip_seconds`).
 
 ## 1. Characters
 **Pip** (once for the channel, reused forever): `everygen.pipCharacterId` ("Pip (Pocket Fables)"); his sheet is `everygen.pipSheetUrl`. Only if `list_characters` no longer finds him: `generate_image` (imageModel, 16:9) a character sheet of Pip, "a tiny red fox with a patched backpack full of story pockets", in the visual style: front, side, back and a happy pose, plain warm background, no text. Log it (`--step pip-sheet`), check it's one consistent friendly fox (one retry), then `create_character` "Pip (Pocket Fables)". Tell Thomas the new id and sheet URL for `src/channels.ts`.
@@ -31,7 +32,7 @@ Turns `script_approved` Pocket Fables videos into finished 9:16 MP4s with the Ev
    - **Pip on camera** (`pip_on_camera` on scene 1 and/or the last scene): one voiceover per Pip scene with just that scene's narration (log `--step voiceover-intro` / `--step voiceover-outro`), plus one **story** voiceover with the other scenes' narration joined with a space (`--step voiceover`).
    - Otherwise one voiceover of all the narration (`--step voiceover`).
 3. `npm run fables:render -- plan --video <id> --total <story durationSeconds> --sentence-ends "<story timing.sentenceEnds, comma separated>" [--intro <intro timing.speechEndSeconds>] [--outro <outro timing.speechEndSeconds>]`
-   It writes `runs/<id>/scene-plan.json` (each scene's window, `clip_seconds` and `audio`: intro, story or outro) and refuses a plan outside 50–65 s. Too short: one retry of the story voiceover at speed 0.9, never lower. Too long, or still too short → `fables:render fail` with the reason and stop (the script needs changing, not a slower voice).
+   It writes `runs/<id>/scene-plan.json` (each scene's window, `clip_seconds` and `audio`: intro, story or outro) and refuses a plan outside 45–65 s. Too short: one retry of the story voiceover at speed 0.9, never lower. Too long, or still too short → `fables:render fail` with the reason and stop (the script needs changing, not a slower voice).
 4. Work out the voice's pace for `everygen.wordsPerSecond` (spoken words ÷ seconds of speech, at this speed) and put it in the report.
 
 ## 3. Start frames (one per scene)
@@ -69,7 +70,7 @@ Note anything off in the report; it's Thomas's call at the video gate.
 ## 7. Finish
 `mcp__everygen__get_credit_balance`, then:
 `npm run fables:render -- finish --video <id> --url <final captioned https URL> --balance <remaining>`
-It downloads `runs/<id>/final.mp4`, records the credits used, runs QA (9:16, 50–65 s, audio, plays) and moves the video to `video_review`, or `failed` with the reason.
+It downloads `runs/<id>/final.mp4`, records the credits used, runs QA (9:16, 45–65 s, audio, plays) and moves the video to `video_review`, or `failed` with the reason.
 
 ## Report
 Per video: final status, credits used (and the hero sheet's share), the QA result, the voice's words per second, whether Pip's lip movement worked, and anything you changed or redid.

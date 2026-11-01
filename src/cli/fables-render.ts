@@ -57,7 +57,10 @@ await main(async (db) => {
   switch (command) {
     case 'start': {
       const balance = num(a.balance, 'balance');
-      if (balance < FABLES.everygen.minBalance) throw new Error(`only ${balance} Everygen credits left (need ${FABLES.everygen.minBalance}); not starting a render that can't finish`);
+      // A re-render reuses the earlier render's paid frames and clips, so it needs far fewer credits.
+      const rerender = !!readRenderLog(RUNS_ROOT, id)?.jobs.some((j) => j.step === 'clip');
+      const need = rerender ? FABLES.everygen.rerenderMinBalance : FABLES.everygen.minBalance;
+      if (balance < need) throw new Error(`only ${balance} Everygen credits left (need ${need}${rerender ? ' for a re-render' : ''}); not starting a render that can't finish`);
       return startRender(db, id, balance, RUNS_ROOT);
     }
     case 'log': {

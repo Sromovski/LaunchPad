@@ -221,7 +221,7 @@ export function plannedWindows(
   return out;
 }
 
-// ---- QA (§4: 9:16, 50–65 s, has audio, file plays) ---------------------------------
+// ---- QA (§4: 9:16, 45–65 s, has audio, file plays) ---------------------------------
 
 export interface FablesQa {
   pass: boolean;

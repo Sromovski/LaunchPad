@@ -440,7 +440,7 @@ function Meta({ term, children }: { term: string; children: React.ReactNode }) {
   );
 }
 
-/** Each scene as wide as it is long, so pacing and the 50–65 s window read at a glance. Click to jump to the row. */
+/** Each scene as wide as it is long, so pacing and the 45–65 s window read at a glance. Click to jump to the row. */
 function Timeline({ scenes, active, setActive }: { scenes: FableScene[]; active: number | null; setActive: (n: number | null) => void }) {
   const total = scenes.reduce((n, s) => n + s.seconds, 0);
   const span = Math.max(total, 65);
@@ -465,11 +465,11 @@ function Timeline({ scenes, active, setActive }: { scenes: FableScene[]; active:
             </button>
           ))}
         </div>
-        {/* The window the render must land in (50–65 s). */}
-        <div aria-hidden className="pointer-events-none absolute inset-y-[-6px] border-x-2 border-dashed border-muted/60" style={{ left: `${(50 / span) * 100}%`, width: `${(15 / span) * 100}%` }} />
+        {/* The window the render must land in (45–65 s). */}
+        <div aria-hidden className="pointer-events-none absolute inset-y-[-6px] border-x-2 border-dashed border-muted/60" style={{ left: `${(45 / span) * 100}%`, width: `${(20 / span) * 100}%` }} />
       </div>
       <p className="mt-2 text-sm text-muted">
-        {total} s in total. The dashed lines mark the 50–65 s a Short must fit.
+        {total} s in total. The dashed lines mark the 45–65 s a Short must fit.
       </p>
     </div>
   );

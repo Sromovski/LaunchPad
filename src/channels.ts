@@ -54,13 +54,18 @@ export const FABLES = {
     /** Don't start a render below this balance: a half-finished render wastes what it spent. */
     minBalance: 80,
     /**
+     * A re-render (an earlier render of this video already made clips) reuses the paid frames and
+     * clips and only redoes what the change needs, so it may start from a lower balance (Thomas, 2026-11-01).
+     */
+    rerenderMinBalance: 20,
+    /**
      * Natural speed (Thomas, 2026-10-31): slowing the `everygen` voice to 0.8 on video 139
      * made it sound machine-like. Scripts are written to the voice's pace instead.
      */
     voiceSpeed: 1.0,
     /**
      * Spoken words per second of `everygenVoice` at `voiceSpeed`, so the review site can warn
-     * when a script won't land in 50–65 s. Measured on the first render with a voice
+     * when a script won't land in 45–65 s. Measured on the first render with a voice
      * (the `everygen` voice at 1.0, video 139: 151 words in 42.4 s = 3.56; Arabella at 1.0,
      * video 142: 152 words in 49.8 s = 3.05). null = not measured yet.
      */

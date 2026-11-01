@@ -3,7 +3,7 @@
 > Lives at `channels/fables/CLAUDE.md`. Claude Code loads this file automatically when working in this folder.
 > Channel name: **Pocket Fables**. Channel key **`fables`** (alongside `blast` and `wonder` in `src/channels.ts`; commands take `--channel fables`). Audience: ages 5–10, Made for Kids.
 > YouTube channel ID: **`UCV0cfNkj1zyBopSoByRkgkw`** (Brand Account, Made for Kids). Approving a video in the review site uploads it to this channel (public, Made for Kids) and adds it to the "World Folktales with Pip" playlist. One-time sign-in: `npm run youtube:auth -- --channel fables` (token in `data/google/token-fables.json`). Hand upload stays available as a fallback.
-> Narrator voice: Everygen voice id **`everygen`** (the voice of video 139; Arabella was tried on video 142 and dropped, Thomas 2026-11-01), read at natural speed (slowing it to 0.8 sounded machine-like). At that pace (3.56 words/s) a 50–65 s Short needs about 175–210 spoken words. Captions sit at the bottom. Settings in `FABLES.everygen` in `src/channels.ts`.
+> Narrator voice: Everygen voice id **`everygen`** (the voice of video 139; Arabella was tried on video 142 and dropped, Thomas 2026-11-01), read at natural speed (slowing it to 0.8 sounded machine-like). At that pace (3.56 words/s) a 45–65 s Short needs about 160–210 spoken words. Captions sit at the bottom. Settings in `FABLES.everygen` in `src/channels.ts`.
 > **Careful when adding `fables` to `src/channels.ts`:** `CHANNEL_KEYS` drives the Windows scheduler (`src/cli/schedule.ts`) and the NASA/Kokoro build. Pocket Fables must get **no** `makeTimes`/`postTimes` and must never run the NASA pipeline. Also widen the `videos.channel` CHECK in `src/db/index.ts` with a migration. Check every place that loops over `CHANNEL_KEYS` before adding it.
 > Hand-written sample script for testing: `channels/fables/samples/pf-001/` ("The Magic Paintbrush").
 > Content lane for the test month: **world folktales and fables retold in 60 seconds**. Bedtime stories may be added later.
@@ -37,7 +37,7 @@ Max 2 revision loops per video at either gate; after that it's `rejected` unless
 - No animals or children in peril or exaggerated distress. Nervous or sad is fine; scary is not.
 - Folktales: name the culture of origin in the description; retell in our own words.
 - Written to be read aloud: use contractions (he's, didn't, we'll) and mix very short lines with longer ones. Flat, uncontracted, evenly sized sentences make the AI voice sound robotic; the review site warns about both (same rules as Everygen's free `check_voice_cadence`).
-- Fit the narrator's natural pace, not a slowed voice: once `FABLES.everygen.wordsPerSecond` is measured, the review site warns when the words won't land in 50–65 s.
+- Fit the narrator's natural pace, not a slowed voice: once `FABLES.everygen.wordsPerSecond` is measured, the review site warns when the words won't land in 45–65 s.
 - `hero`: the story's main character, with one fixed look. The render saves it as an Everygen character (about 2 credits) so it looks the same in every scene, as Pip does.
 - `pip_on_camera` (first and/or last scene only): Pip says that line to the camera, with his mouth moving to his own voiceover. Use it for the opening ("Hi, I'm Pip! …") and the closing lesson.
 - Save each script as both:
@@ -89,7 +89,7 @@ Also a small credits panel: credits used this month and renders done.
 The review site can't call Everygen directly; Everygen's MCP is connected in Claude Code (`claude mcp add --transport http everygen https://everygen.ai/api/mcp`). Rendering is triggered from Claude Code:
 
 - Command/skill `render-approved`: find all `script_approved` videos → set `rendering` → call Everygen's compose tool with the script's narration, scenes, visual style, voice, 9:16, ~60s, captions on → download the MP4 to `runs/<video_id>/final.mp4` → record credits used → set `rendered` → run QA → `video_review`.
-- QA checks (ffprobe): 9:16, 50–65 s, has audio, file plays.
+- QA checks (ffprobe): 9:16, 45–65 s, has audio, file plays.
 - Before the first render ever, list the Everygen connector's tools and check the credit balance; log the actual credit cost of the first video in `docs/DECISIONS.md`.
 - One render per approved script. Never batch-retry a failed render without checking whether Everygen already produced it.
 

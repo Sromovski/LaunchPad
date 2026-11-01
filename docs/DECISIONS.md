@@ -208,3 +208,4 @@ Thomas approved video 139 but found the voice machine-like and asked for four ch
 - Arabella at speed 1.0 reads 3.05 words/s; `FABLES.everygen.wordsPerSecond` is now set, so the review site warns about script length.
 - Seedance 2 Mini refuses a first frame together with a reference audio. Pip-on-camera clips pass the start frame as a reference image instead; lip movement worked and Pip stayed on-model.
 - Later the same day Thomas chose to go back to the `everygen` voice of video 139 at natural speed (3.56 words/s), with captions at the bottom (`position: "bottom"`) instead of 70% down.
+- Shorts may now be 45–65 s (was 50–65; YouTube allows any length under 3 minutes), so the natural-pace voice fits without slowing it down. A re-render that reuses an earlier render's frames and clips may start from 20 credits instead of 80 (`rerenderMinBalance`). Anansi is re-rendered this way with the `everygen` voice and bottom captions.

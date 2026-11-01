@@ -103,7 +103,7 @@ describe('fablesQa', () => {
     { codec_type: 'video', codec_name: 'h264', width: w, height: h },
     ...(audio ? [{ codec_type: 'audio', codec_name: 'aac' }] : []),
   ];
-  it('passes 9:16, 50–65 s, with audio, decoding cleanly', () => {
+  it('passes 9:16, 45–65 s, with audio, decoding cleanly', () => {
     expect(fablesQa({ duration: 59.5, streams: streams(1080, 1920) }, null).pass).toBe(true);
   });
   it.each([
