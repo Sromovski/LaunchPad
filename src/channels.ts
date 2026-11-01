@@ -61,9 +61,10 @@ export const FABLES = {
     /**
      * Spoken words per second of `everygenVoice` at `voiceSpeed`, so the review site can warn
      * when a script won't land in 50–65 s. Measured on the first render with a voice
-     * (the `everygen` voice: 151 words in 42.4 s = 3.56). null = not measured yet.
+     * (the `everygen` voice: 151 words in 42.4 s = 3.56). Arabella at 1.0, video 142:
+     * 152 words in 49.8 s of speech = 3.05. null = not measured yet.
      */
-    wordsPerSecond: null as number | null,
+    wordsPerSecond: 3.05 as number | null,
     /** Saved Everygen character "Pip (Pocket Fables)", made for video 139. Reuse it: Pip looks the same in every video. */
     pipCharacterId: 'cmvwtswdm000jp002a20oquw6',
     /** Pip's character sheet, passed as a reference image when a frame also uses the story's hero character. */

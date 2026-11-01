@@ -202,3 +202,8 @@ Thomas approved video 139 but found the voice machine-like and asked for four ch
 - Same Google project and OAuth client as the NASA channels, with its own token (`npm run youtube:auth -- --channel fables`). One upload costs about 1,600 of the 10,000 daily quota units. With the NASA channels' 4 posts a day, that leaves room for one fables upload a day.
 - Playwright runs with `LAUNCHPAD_DB` set, so the test server never gets the real YouTube client.
 - **Voice changed to Arabella** ("natural-sounding young female", Thomas, 2026-10-31) at natural speed. Its pace is measured on the first Anansi render (video 142) and goes into `wordsPerSecond`.
+
+### 2026-11-01: Second Pocket Fables render (video 142, Anansi)
+- 72 credits (139 used 66): hero sheet 2, voiceovers 3, 12 frames 24 (one redo), 11 clips 39, compose and captions the rest. 40 credits remain until the plan renews on 2026-11-30, below the 80-credit render minimum.
+- Arabella at speed 1.0 reads 3.05 words/s; `FABLES.everygen.wordsPerSecond` is now set, so the review site warns about script length.
+- Seedance 2 Mini refuses a first frame together with a reference audio. Pip-on-camera clips pass the start frame as a reference image instead; lip movement worked and Pip stayed on-model.
