@@ -38,8 +38,8 @@ export const FABLES = {
     title: 'World Folktales with Pip',
     description: 'Folktales and fables from around the world, retold in about a minute by Pip the fox. Narration voice is AI-generated.',
   },
-  /** Everygen voice id: Arabella, "natural-sounding young female" (Thomas, 2026-10-31; video 139 used `everygen`). */
-  everygenVoice: 'arabella',
+  /** Everygen voice id. Back to `everygen`, the voice of video 139 (Thomas, 2026-11-01); Arabella was tried on video 142. */
+  everygenVoice: 'everygen',
   brand: { accent: '#E8742A' }, // Pip's fox orange, from channels/fables/art/banner-source.html
   /**
    * Everygen settings for /render-approved. Seedance 2 Mini at 480p: ~40 credits of clips per
@@ -61,10 +61,10 @@ export const FABLES = {
     /**
      * Spoken words per second of `everygenVoice` at `voiceSpeed`, so the review site can warn
      * when a script won't land in 50–65 s. Measured on the first render with a voice
-     * (the `everygen` voice: 151 words in 42.4 s = 3.56). Arabella at 1.0, video 142:
-     * 152 words in 49.8 s of speech = 3.05. null = not measured yet.
+     * (the `everygen` voice at 1.0, video 139: 151 words in 42.4 s = 3.56; Arabella at 1.0,
+     * video 142: 152 words in 49.8 s = 3.05). null = not measured yet.
      */
-    wordsPerSecond: 3.05 as number | null,
+    wordsPerSecond: 3.56 as number | null,
     /** Saved Everygen character "Pip (Pocket Fables)", made for video 139. Reuse it: Pip looks the same in every video. */
     pipCharacterId: 'cmvwtswdm000jp002a20oquw6',
     /** Pip's character sheet, passed as a reference image when a frame also uses the story's hero character. */

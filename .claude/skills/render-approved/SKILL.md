@@ -56,11 +56,11 @@ A failed clip: change the prompt (simpler action) and try once more with a new k
   1. `compose_video` of only the **story** scenes' clips, in order, windows from the plan, no audio, no overlays → the story cut (`--step compose-story`).
   2. `compose_video` of [intro clip { durationSeconds: its window, audioUrl: intro voiceover }, story cut { durationSeconds: the story scenes' total window, audioUrl: story voiceover }, outro clip { durationSeconds: its window, audioUrl: outro voiceover }], leaving out whichever Pip scene the script doesn't have. Overlays by time from the plan: `{ text, style: "label", position: "top", startSeconds: start, endSeconds: end }`. Each clip's own audio is muted; Pip's voiceover plays over the clip it drove.
 - Log each compose; poll `get_compose_status` every ~10 s until done.
-- `add_captions` on the composed URL: style `story-box`, overrides `{ font: "fredoka", yPercent: 70 }` (clear of the bottom 20% where YouTube's buttons sit), language `en`. Log it; poll `get_caption_render_status` until done. If captions fail twice, use the uncaptioned video and say so.
+- `add_captions` on the composed URL: style `story-box`, `position: "bottom"` (Thomas, 2026-11-01: subtitles at the bottom; Everygen's bottom zone sits above the app's on-screen buttons), overrides `{ font: "fredoka" }`, language `en`. Log it; poll `get_caption_render_status` until done. If captions fail twice, use the uncaptioned video and say so.
 
 ## 6. Before finishing
 Download the captioned file to the scratchpad and look at 5–6 frames (ffmpeg), including the Pip scenes. Check:
-- captions are readable and above the bottom 20%, and overlays sit at the top;
+- captions are readable at the bottom and not cut off or hidden behind where YouTube's buttons go (right edge), and overlays sit at the top;
 - Pip and the hero look the same throughout, and Pip's mouth moves while he speaks;
 - nothing is scary.
 

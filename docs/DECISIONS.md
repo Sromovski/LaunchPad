@@ -207,3 +207,4 @@ Thomas approved video 139 but found the voice machine-like and asked for four ch
 - 72 credits (139 used 66): hero sheet 2, voiceovers 3, 12 frames 24 (one redo), 11 clips 39, compose and captions the rest. 40 credits remain until the plan renews on 2026-11-30, below the 80-credit render minimum.
 - Arabella at speed 1.0 reads 3.05 words/s; `FABLES.everygen.wordsPerSecond` is now set, so the review site warns about script length.
 - Seedance 2 Mini refuses a first frame together with a reference audio. Pip-on-camera clips pass the start frame as a reference image instead; lip movement worked and Pip stayed on-model.
+- Later the same day Thomas chose to go back to the `everygen` voice of video 139 at natural speed (3.56 words/s), with captions at the bottom (`position: "bottom"`) instead of 70% down.
