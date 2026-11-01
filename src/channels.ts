@@ -38,8 +38,8 @@ export const FABLES = {
     title: 'World Folktales with Pip',
     description: 'Folktales and fables from around the world, retold in about a minute by Pip the fox. Narration voice is AI-generated.',
   },
-  /** Everygen voice id (Thomas, 2026-10-31). */
-  everygenVoice: 'everygen',
+  /** Everygen voice id: Arabella, "natural-sounding young female" (Thomas, 2026-10-31; video 139 used `everygen`). */
+  everygenVoice: 'arabella',
   brand: { accent: '#E8742A' }, // Pip's fox orange, from channels/fables/art/banner-source.html
   /**
    * Everygen settings for /render-approved. Seedance 2 Mini at 480p: ~40 credits of clips per

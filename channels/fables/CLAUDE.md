@@ -3,7 +3,7 @@
 > Lives at `channels/fables/CLAUDE.md`. Claude Code loads this file automatically when working in this folder.
 > Channel name: **Pocket Fables**. Channel key **`fables`** (alongside `blast` and `wonder` in `src/channels.ts`; commands take `--channel fables`). Audience: ages 5–10, Made for Kids.
 > YouTube channel ID: **`UCV0cfNkj1zyBopSoByRkgkw`** (Brand Account, Made for Kids). Approving a video in the review site uploads it to this channel (public, Made for Kids) and adds it to the "World Folktales with Pip" playlist. One-time sign-in: `npm run youtube:auth -- --channel fables` (token in `data/google/token-fables.json`). Hand upload stays available as a fallback.
-> Narrator voice: Everygen voice id **`everygen`** (chosen by Thomas 2026-10-31), read at natural speed (slowing it to 0.8 sounded machine-like). Settings in `FABLES.everygen` in `src/channels.ts`.
+> Narrator voice: Everygen voice id **`arabella`** (Thomas, 2026-10-31; video 139 used `everygen`), read at natural speed (slowing it to 0.8 sounded machine-like). Settings in `FABLES.everygen` in `src/channels.ts`.
 > **Careful when adding `fables` to `src/channels.ts`:** `CHANNEL_KEYS` drives the Windows scheduler (`src/cli/schedule.ts`) and the NASA/Kokoro build. Pocket Fables must get **no** `makeTimes`/`postTimes` and must never run the NASA pipeline. Also widen the `videos.channel` CHECK in `src/db/index.ts` with a migration. Check every place that loops over `CHANNEL_KEYS` before adding it.
 > Hand-written sample script for testing: `channels/fables/samples/pf-001/` ("The Magic Paintbrush").
 > Content lane for the test month: **world folktales and fables retold in 60 seconds**. Bedtime stories may be added later.
