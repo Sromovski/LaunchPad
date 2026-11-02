@@ -5,9 +5,9 @@
 > YouTube channel ID: **`UCV0cfNkj1zyBopSoByRkgkw`** (Brand Account, Made for Kids). Approving a video in the review site uploads it to this channel (public, Made for Kids) and adds it to the "World Folktales with Pip" playlist. One-time sign-in: `npm run youtube:auth -- --channel fables` (token in `data/google/token-fables.json`). Hand upload stays available as a fallback.
 > Narrator voice: Everygen voice id **`everygen`** (the voice of video 139; Arabella was tried on video 142 and dropped, Thomas 2026-11-01), read at natural speed (slowing it to 0.8 sounded machine-like). At that pace (3.56 words/s) a 45–65 s Short needs about 160–210 spoken words. Captions sit at the bottom. Settings in `FABLES.everygen` in `src/channels.ts`.
 > **Careful when adding `fables` to `src/channels.ts`:** `CHANNEL_KEYS` drives the Windows scheduler (`src/cli/schedule.ts`) and the NASA/Kokoro build. Pocket Fables must get **no** `makeTimes`/`postTimes` and must never run the NASA pipeline. Also widen the `videos.channel` CHECK in `src/db/index.ts` with a migration. Check every place that loops over `CHANNEL_KEYS` before adding it.
-> Hand-written sample script for testing: `channels/fables/samples/pf-001/` ("The Magic Paintbrush").
-> Content lane for the test month: **world folktales and fables retold in 60 seconds**. Bedtime stories may be added later.
-> Narrator: **Pip**, a tiny red fox with a patched backpack full of story pockets. Every Short opens with Pip pulling one object from a pocket that hints at the story, and ends with Pip saying the lesson in one line. Pip's voice: warm, playful, gentle, young-sounding but not squeaky. Pip's look stays identical in every video.
+> Sample scripts: `channels/fables/samples/pf-001/` ("The Magic Paintbrush", single part) and `channels/fables/samples/ep02/` ("The Lantern Bridge", Parts 1 and 2).
+> **Main format (Thomas, 2026-11-01): "Pip & Ma Adventures"**, two-part adventure episodes (see §2a). "The Magic Paintbrush" is Episode 1, the origin story of how Ma Liang got his brush. Single-part folktales are still allowed but are no longer the main lane.
+> Characters: **Pip**, a tiny red fox with a patched backpack full of pockets, is the narrator and talks to the viewer; every episode he pulls one helpful object from a pocket. **Ma Liang** ("Ma"), a cheerful boy about 9 with a magic golden paintbrush whose paintings come to life, is Pip's best friend and sidekick. Pip's voice: warm, playful, gentle, young-sounding but not squeaky. Both characters' looks stay identical in every video (save each as an Everygen character once and reuse it).
 > Third channel inside Launchpad, next to Blast of Facts and I Wonder Why. Shares the SQLite DB, `runs/` folder and review site, but has its **own workflow** (Everygen instead of NASA footage + local TTS) and its own tab on the review site. Do not change the `blast`/`wonder` pipelines when working here.
 
 ## 1. The workflow (two human review gates)
@@ -32,9 +32,9 @@ Max 2 revision loops per video at either gate; after that it's `rejected` unless
 
 ## 2. Scripts
 
-- Target: 60-second vertical Short, about 130–150 spoken words.
-- Every script has a clear beginning, middle and end (YouTube's inauthentic-content policy targets templated or plotless videos). No two scripts may reuse the same structure with names swapped.
-- No animals or children in peril or exaggerated distress. Nervous or sad is fine; scary is not.
+- Target: 45–65 s vertical Short (each part of an episode is its own Short), about 160–210 spoken words at the narrator's pace.
+- Every script has a clear beginning, middle and end (YouTube's inauthentic-content policy targets templated or plotless videos). The episode *shape* in §2a repeats; the plot, place, puzzle and solution must be genuinely different every episode, never the same story with names swapped.
+- Excitement comes from puzzles and races against time (a wobbly bridge, a rising river, a lost map), never threats. No animals or children hurt, frightened or in exaggerated distress, and no villains who menace. Surprised or worried for a moment is fine; scared is not.
 - Folktales: name the culture of origin in the description; retell in our own words.
 - Written to be read aloud: use contractions (he's, didn't, we'll) and mix very short lines with longer ones. Flat, uncontracted, evenly sized sentences make the AI voice sound robotic; the review site warns about both (same rules as Everygen's free `check_voice_cadence`).
 - Fit the narrator's natural pace, not a slowed voice: once `FABLES.everygen.wordsPerSecond` is measured, the review site warns when the words won't land in 45–65 s.
@@ -44,11 +44,26 @@ Max 2 revision loops per video at either gate; after that it's `rejected` unless
   - `runs/<video_id>/script.json` (source of truth, shape below)
   - `runs/<video_id>/script.md` (human-readable, rendered in the review site)
 
+## 2a. Two-part episodes ("Pip & Ma Adventures")
+
+**Part 1 (~45–55 s):** Pip says hi on camera and introduces Ma → Pip pulls an object from a pocket that hints at the place → they arrive in a real country (on-screen country name) → one true, kid-level fact about it → a first small challenge with a **viewer question** (two choices, ~2 s pause for kids to answer, then Pip confirms) → trouble starts → **cliffhanger** → Pip on camera: "Find out in Part Two! Same pocket, same fox!" with a "To be continued..." card.
+
+**Part 2 (~45–55 s):** Pip on camera with a 5-second "Last time on Pocket Fables…" recap (Part 2 must make sense to a kid who never saw Part 1) → a second **viewer question** → the solution uses Ma's brush and/or Pip's pocket object → celebration → **word of the day** in that country's language with its meaning on screen → Pip on camera says the lesson and goodbye.
+
+Rules:
+- Facts and foreign words must be correct; put them in `episode.fact` and `episode.word_of_day` so they can be checked at script review.
+- Original only: no map songs, no sneaky-thief character and no catchphrases borrowed from Dora or any other show.
+- Titles: `<Episode title> <emoji> Part 1 | Pip & Ma in <Country> | Pocket Fables` (Part 2 likewise). Each description names the other part.
+- Review both parts together: Part 2's script is approved with Part 1's. Render them back to back and **reuse Part 1's saved characters and place pictures in Part 2** to save credits.
+- Post Part 1 first and Part 2 the next day. Put both in an "Pip & Ma Adventures" playlist.
+- The review site shows the two parts of a pair side by side and warns if a pair has only one part approved.
+
 ```json
 {
   "video_id": "",
   "title": "",
-  "lane": "folktale | bedtime | lesson",
+  "lane": "adventure | folktale | bedtime | lesson",
+  "episode": { "series": "Pip & Ma Adventures", "pair_id": "ep02", "episode": 2, "part": 1, "of": 2, "country": "Japan", "word_of_day": { "word": "arigatō", "meaning": "thank you" }, "fact": "one true kid-level fact" },
   "origin": "e.g. Ghana (Akan) or 'original'",
   "lesson": "one sentence",
   "narrator": "recurring narrator character + voice style",

@@ -77,3 +77,41 @@ describe('videos table rebuild for Pocket Fables', () => {
     expect(db.prepare('SELECT COUNT(*) AS n FROM videos').get()).toEqual({ n: 2 });
   });
 });
+
+describe('scripts table rebuild for the adventure lane (2026-11-01)', () => {
+  /** A DB from before two-part episodes: scripts.lane allowed only folktale/bedtime/lesson. */
+  function preAdventureDb(): string {
+    const path = oldDbFile();
+    openDb(path).close(); // today's DB as it was on 2026-10-31 after the fables migration…
+    const db = new Database(path);
+    db.pragma('foreign_keys = OFF');
+    db.exec(`
+      CREATE TABLE scripts_old AS SELECT * FROM scripts;
+      DROP TABLE scripts;
+      CREATE TABLE scripts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, video_id INTEGER NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+        version INTEGER NOT NULL, hook TEXT NOT NULL, body_json TEXT NOT NULL CHECK (json_valid(body_json)),
+        word_count INTEGER, reading_grade REAL, created_by TEXT,
+        scenes_json TEXT CHECK (scenes_json IS NULL OR json_valid(scenes_json)),
+        lane TEXT CHECK (lane IS NULL OR lane IN ('folktale','bedtime','lesson')), origin TEXT, UNIQUE (video_id, version));
+      DROP TABLE scripts_old;
+      INSERT INTO scripts (id, video_id, version, hook, body_json, lane) VALUES (7, 1, 1, 'Hi', '{}', 'folktale');
+      INSERT INTO fact_checks (script_id, claim, verdict) VALUES (7, 'Mars is red', 'supported');
+    `);
+    expect(() => db.prepare("INSERT INTO scripts (video_id, version, hook, body_json, lane) VALUES (1, 2, 'x', '{}', 'adventure')").run()).toThrow(/CHECK/);
+    db.close();
+    return path;
+  }
+
+  it('allows the adventure lane and keeps every script, id and fact check', () => {
+    const db = openDb(preAdventureDb());
+    db.prepare("INSERT INTO scripts (video_id, version, hook, body_json, lane) VALUES (1, 2, 'x', '{}', 'adventure')").run();
+    expect(() => db.prepare("INSERT INTO scripts (video_id, version, hook, body_json, lane) VALUES (1, 3, 'x', '{}', 'horror')").run()).toThrow(/CHECK/);
+    expect(db.prepare('SELECT id, lane FROM scripts ORDER BY id').all()).toEqual([
+      { id: 7, lane: 'folktale' },
+      { id: 8, lane: 'adventure' },
+    ]);
+    expect(db.prepare('SELECT script_id FROM fact_checks').all()).toEqual([{ script_id: 7 }]);
+    expect(db.prepare('PRAGMA foreign_key_check').all()).toEqual([]);
+  });
+});

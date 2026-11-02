@@ -209,3 +209,10 @@ Thomas approved video 139 but found the voice machine-like and asked for four ch
 - Seedance 2 Mini refuses a first frame together with a reference audio. Pip-on-camera clips pass the start frame as a reference image instead; lip movement worked and Pip stayed on-model.
 - Later the same day Thomas chose to go back to the `everygen` voice of video 139 at natural speed (3.56 words/s), with captions at the bottom (`position: "bottom"`) instead of 70% down.
 - Shorts may now be 45–65 s (was 50–65; YouTube allows any length under 3 minutes), so the natural-pace voice fits without slowing it down. A re-render that reuses an earlier render's frames and clips may start from 20 credits instead of 80 (`rerenderMinBalance`). Anansi is re-rendered this way with the `everygen` voice and bottom captions.
+
+## 2026-11-01: Pocket Fables two-part episodes ("Pip & Ma Adventures"), step 1
+- Thomas made two-part adventure episodes the main format (channels/fables/CLAUDE.md §2a). Scripts get the `adventure` lane and an `episode` block (pair_id, part/of, country, fact, word of the day). An adventure without one is refused.
+- The §2a shape is checked as review-site warnings, not hard errors: title format, the description naming the other part, Pip on camera first and last, a two-choice viewer question, the "To be continued" card in Part 1, the "Last time" recap in Part 2, the word of the day said and shown, and no catchphrases borrowed from other shows. Thomas decides at script review.
+- The spoken-word target is now 160–210 words (it was still 130–150, from before the voice pace was measured).
+- `scripts.lane` had a CHECK, so the table-rebuild migration that widened `videos` now handles any table and rebuilds `scripts` once, keeping ids and fact checks (live DB: 201 scripts and 2688 fact checks kept).
+- The ep02 sample ("The Lantern Bridge") is videos 147 (Part 1) and 148 (Part 2) in Scripts to review. "Narration voice is AI-generated." was added to both descriptions (required on every channel).

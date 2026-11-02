@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS scripts (
   created_by    TEXT,
   -- Pocket Fables only: the scene list, story lane and culture of origin (channels/fables/CLAUDE.md §2)
   scenes_json   TEXT CHECK (scenes_json IS NULL OR json_valid(scenes_json)),
-  lane          TEXT CHECK (lane IS NULL OR lane IN ('folktale','bedtime','lesson')),
+  lane          TEXT CHECK (lane IS NULL OR lane IN ('adventure','folktale','bedtime','lesson')),
   origin        TEXT,
   UNIQUE (video_id, version)
 );

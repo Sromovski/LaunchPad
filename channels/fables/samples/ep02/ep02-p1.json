@@ -1,0 +1,117 @@
+{
+  "video_id": "ep02-p1",
+  "title": "The Lantern Bridge (Part 1)",
+  "lane": "adventure",
+  "origin": "original (set in Japan)",
+  "episode": {
+    "series": "Pip & Ma Adventures",
+    "pair_id": "ep02",
+    "episode": 2,
+    "part": 1,
+    "of": 2,
+    "country": "Japan",
+    "word_of_day": {
+      "word": "arigatō",
+      "meaning": "thank you"
+    },
+    "fact": "Japanese paper lanterns called chōchin are made of paper stretched over a bamboo frame."
+  },
+  "lesson": "Stay curious and pay attention, and you'll find the way.",
+  "narrator": "Pip, a tiny red fox with amber eyes, white chest and a patched brown backpack covered in little pockets. Everygen voice 'everygen', natural speed. Pip narrates and talks to the viewer.",
+  "visual_style": "Hand-painted 2D children's storybook look, soft watercolor and gouache textures, warm golden lantern light against a deep-blue dusk sky, gentle rounded shapes, friendly faces. A small Japanese festival town by a river: wooden houses with tiled roofs, a big old tree, a little pond, and a wooden footbridge strung with red and white paper lanterns. Same style, same characters, same bridge and town in every scene. Calm camera moves only. Exciting but never scary.",
+  "hero": {
+    "name": "Ma Liang",
+    "look": "Cheerful Chinese boy about 9, short black hair with a small topknot, simple patched blue cotton tunic and trousers, cloth shoes, always carries a glowing golden paintbrush. Same look as in 'The Magic Paintbrush'."
+  },
+  "est_seconds": 53,
+  "word_count": 168,
+  "scenes": [
+    {
+      "n": 1,
+      "narration": "Hi, I'm Pip! And this is my best friend, Ma Liang. He's got a magic paintbrush!",
+      "visuals": "Pip on a grassy hill at dusk waves at the camera; Ma Liang steps in beside him and gives a little wave, holding his glowing golden brush.",
+      "on_screen_text": "Pocket Fables",
+      "pip_on_camera": true,
+      "seconds": 5
+    },
+    {
+      "n": 2,
+      "narration": "What's in my pocket today? A paper crane! That means... we're going to Japan! Ma, grab my paw!",
+      "visuals": "Pip pulls a small white origami paper crane from a backpack pocket. It sparkles and they're swept up in a swirl of soft golden sparkles.",
+      "on_screen_text": "",
+      "pip_on_camera": false,
+      "seconds": 6
+    },
+    {
+      "n": 3,
+      "narration": "Whoosh! We're at a lantern festival in a little town by the river. Look at all those glowing lanterns! Red ones, white ones, round ones!",
+      "visuals": "Pip and Ma land on a lane in the Japanese festival town at dusk. Red and white paper lanterns glow along the houses and the wooden bridge in the distance.",
+      "on_screen_text": "Japan 🇯🇵",
+      "pip_on_camera": false,
+      "seconds": 8
+    },
+    {
+      "n": 4,
+      "narration": "These are called chōchin. They're made of paper on a bamboo frame. So pretty!",
+      "visuals": "Close-up of one round paper lantern glowing, showing its thin bamboo ribs. Ma gently touches it and smiles.",
+      "on_screen_text": "chōchin = paper lantern",
+      "pip_on_camera": false,
+      "seconds": 5
+    },
+    {
+      "n": 5,
+      "narration": "The festival's across the river, on the Lantern Bridge. But which way do we go? By the big tree, or by the little pond?",
+      "visuals": "A fork in the path: one way leads past a big old tree, the other past a little pond. Pip looks at the camera and taps his chin. Hold 2 seconds for viewers to answer.",
+      "on_screen_text": "Big tree 🌳 or little pond? 🐟",
+      "pip_on_camera": false,
+      "seconds": 7
+    },
+    {
+      "n": 6,
+      "narration": "The big tree? Yes, you're right! I can see the bridge from here. Great job, friend!",
+      "visuals": "Pip points past the big tree; the lantern-lit wooden footbridge comes into view over the river. Ma cheers.",
+      "on_screen_text": "",
+      "pip_on_camera": false,
+      "seconds": 5
+    },
+    {
+      "n": 7,
+      "narration": "Uh oh. Do you feel that? Here comes the wind. Whoooosh! Hold on, Ma! The lanterns are floating away!",
+      "visuals": "A strong breeze tugs the lanterns loose from the bridge; they drift gently up into the night sky like little glowing balloons. Pip's ears flap in the wind. Surprised faces, not scared.",
+      "on_screen_text": "",
+      "pip_on_camera": false,
+      "seconds": 6
+    },
+    {
+      "n": 8,
+      "narration": "Now the bridge is dark, and it's starting to wiggle and sway! We need those lights back before the festival starts. How will we ever get across?",
+      "visuals": "The bridge is dim, lit only by moonlight, swaying a little over the calm river. Pip and Ma hold the rope rail at the start of the bridge and look at each other, determined.",
+      "on_screen_text": "",
+      "pip_on_camera": false,
+      "seconds": 8
+    },
+    {
+      "n": 9,
+      "narration": "Find out in Part Two! Same pocket, same fox!",
+      "visuals": "Pip turns to the camera with a brave grin and a wink. Frame freezes with a storybook 'To be continued' banner.",
+      "on_screen_text": "To be continued...",
+      "pip_on_camera": true,
+      "seconds": 3
+    }
+  ],
+  "youtube": {
+    "title": "The Lantern Bridge 🏮 Part 1 | Pip & Ma in Japan | Pocket Fables",
+    "description": "Pip finds a paper crane in his pocket, and he and his best friend Ma Liang zoom off to a lantern festival in Japan! But when the wind blows the lanterns away, the bridge goes dark and starts to sway. How will they get across?\n\nLearn what Japanese paper lanterns are called, and help Pip pick the right path!\n\nPart 2 is next on the channel.\n\nNarration voice is AI-generated.\n\n#kidsstories #japan #pocketfables #storiesforkids",
+    "tags": [
+      "Pocket Fables",
+      "Pip and Ma",
+      "Japan for kids",
+      "lantern festival",
+      "kids adventure story",
+      "stories for kids",
+      "learn about Japan",
+      "Part 1"
+    ],
+    "made_for_kids": true
+  }
+}

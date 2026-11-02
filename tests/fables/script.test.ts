@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
 import { openDb } from '../../src/db/index.js';
-import { FableScript, cadenceWarnings, countContractions, countWords, narrationWords, saveFableScript, scriptMarkdown, scriptWarnings } from '../../src/fables/script.js';
+import { FableScript, cadenceWarnings, countContractions, countWords, episodeWarnings, narrationWords, pairVideos, saveFableScript, scriptMarkdown, scriptWarnings } from '../../src/fables/script.js';
 import { decideScript } from '../../src/review/fables.js';
 
 const SAMPLE = JSON.parse(readFileSync(new URL('../../channels/fables/samples/pf-001/script.json', import.meta.url), 'utf8'));
@@ -160,5 +160,82 @@ describe('next-short improvements (2026-10-31)', () => {
   it('refuses Pip on camera in a middle scene', () => {
     const bad = { ...SAMPLE, scenes: SAMPLE.scenes.map((x: object, i: number) => ({ ...x, pip_on_camera: i === 3 })) };
     expect(() => FableScript.parse(bad)).toThrow(/first and last scenes/);
+  });
+});
+
+describe('two-part episodes (Pip & Ma Adventures, §2a)', () => {
+  const read = (f: string) => JSON.parse(readFileSync(new URL(`../../channels/fables/samples/ep02/${f}`, import.meta.url), 'utf8'));
+  const P1 = read('ep02-p1.json');
+  const P2 = read('ep02-p2.json');
+  const episodeOnly = (raw: unknown) => {
+    const s = FableScript.parse(raw);
+    return episodeWarnings(s, s.episode!);
+  };
+
+  it('accepts both parts of the ep02 sample with no episode warnings', () => {
+    for (const raw of [P1, P2]) {
+      const s = FableScript.parse(raw);
+      expect(s.lane).toBe('adventure');
+      expect(s.episode).toMatchObject({ pair_id: 'ep02', of: 2, country: 'Japan' });
+      expect(episodeOnly(raw)).toEqual([]);
+      expect(scriptWarnings(s).join('\n')).not.toMatch(/AI-generated|spoken words/);
+    }
+  });
+
+  it('an adventure needs its episode block, and part can not exceed of', () => {
+    const { episode: _e, ...noEpisode } = P1;
+    expect(FableScript.safeParse(noEpisode).success).toBe(false);
+    expect(FableScript.safeParse({ ...P1, episode: { ...P1.episode, part: 3 } }).success).toBe(false);
+    expect(FableScript.safeParse({ ...P1, episode: { ...P1.episode, pair_id: 'Ep 02' } }).success).toBe(false);
+  });
+
+  it('warns when a part breaks the episode shape', () => {
+    const lastP1 = P1.scenes.length - 1;
+    const p1 = {
+      ...P1,
+      youtube: { ...P1.youtube, title: 'The Lantern Bridge', description: P1.youtube.description.replace('Part 2', 'the next one') },
+      scenes: P1.scenes.map((x: Record<string, unknown>, i: number) => (i === lastP1 ? { ...x, on_screen_text: 'The end', pip_on_camera: false } : x)),
+    };
+    const w = episodeOnly(p1).join('\n');
+    expect(w).toMatch(/YouTube title should read/);
+    expect(w).toMatch(/name the other part/);
+    expect(w).toMatch(/To be continued/);
+    expect(w).toMatch(/last scene should be Pip on camera/);
+
+    const p2 = {
+      ...P2,
+      scenes: P2.scenes.map((x: Record<string, unknown>, i: number) => ({
+        ...x,
+        narration: i === 0 ? 'Hi, it is Pip! We are back at the bridge.' : String(x.narration).replace(/arigatō/gi, 'thanks').replace(/\bor\b/g, 'and'),
+        on_screen_text: i === 0 ? '' : String(x.on_screen_text).replace(/arigatō/gi, 'thanks').replace(/\bor\b/g, 'and'),
+      })),
+    };
+    const w2 = episodeOnly(p2).join('\n');
+    expect(w2).toMatch(/Last time/);
+    expect(w2).toMatch(/viewer question/);
+    expect(w2).toMatch(/is never said/);
+    expect(w2).toMatch(/on screen with its meaning/);
+  });
+
+  it('flags catchphrases borrowed from other shows', () => {
+    const p2 = { ...P2, scenes: P2.scenes.map((x: Record<string, unknown>, i: number) => (i === 6 ? { ...x, narration: 'We did it! We did it!' } : x)) };
+    expect(episodeOnly(p2).join('\n')).toMatch(/borrowed from another show/);
+  });
+
+  it('pairVideos links the two parts, and a part can only be saved once', () => {
+    const a = save(P1);
+    const b = save(P2);
+    expect(pairVideos(db, 'ep02')).toEqual([
+      { video_id: a.video_id, part: 1, status: 'script_review' },
+      { video_id: b.video_id, part: 2, status: 'script_review' },
+    ]);
+    expect(() => save({ ...P1, title: 'The Lantern Bridge (again)' })).toThrow(new RegExp(`ep02 part 1 is already video ${a.video_id}`));
+    expect(pairVideos(db, 'ep99')).toEqual([]);
+  });
+
+  it('script.md shows the fact and word of the day for checking', () => {
+    const md = scriptMarkdown(FableScript.parse(P2));
+    expect(md).toMatch(/\*\*Fact to check:\*\* Japanese paper lanterns/);
+    expect(md).toMatch(/\*\*Word of the day:\*\* arigatō = thank you/);
   });
 });

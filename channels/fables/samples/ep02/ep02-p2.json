@@ -1,0 +1,117 @@
+{
+  "video_id": "ep02-p2",
+  "title": "The Lantern Bridge (Part 2)",
+  "lane": "adventure",
+  "origin": "original (set in Japan)",
+  "episode": {
+    "series": "Pip & Ma Adventures",
+    "pair_id": "ep02",
+    "episode": 2,
+    "part": 2,
+    "of": 2,
+    "country": "Japan",
+    "word_of_day": {
+      "word": "arigatō",
+      "meaning": "thank you"
+    },
+    "fact": "Japanese paper lanterns called chōchin are made of paper stretched over a bamboo frame."
+  },
+  "lesson": "We're braver when we help each other.",
+  "narrator": "Pip, a tiny red fox with amber eyes, white chest and a patched brown backpack covered in little pockets. Everygen voice 'everygen', natural speed. Pip narrates and talks to the viewer.",
+  "visual_style": "Hand-painted 2D children's storybook look, soft watercolor and gouache textures, warm golden lantern light against a deep-blue dusk sky, gentle rounded shapes, friendly faces. A small Japanese festival town by a river: wooden houses with tiled roofs, a big old tree, a little pond, and a wooden footbridge strung with red and white paper lanterns. Same style, same characters, same bridge and town in every scene. Calm camera moves only. Exciting but never scary.",
+  "hero": {
+    "name": "Ma Liang",
+    "look": "Cheerful Chinese boy about 9, short black hair with a small topknot, simple patched blue cotton tunic and trousers, cloth shoes, always carries a glowing golden paintbrush. Same look as in 'The Magic Paintbrush'."
+  },
+  "est_seconds": 51,
+  "word_count": 165,
+  "scenes": [
+    {
+      "n": 1,
+      "narration": "Hi, it's Pip! Last time, the wind blew the lanterns away, and the Lantern Bridge went dark!",
+      "visuals": "Quick recap montage in the same style: the paper crane, the glowing bridge, the wind lifting the lanterns into the sky. Pip waves to the camera at the start.",
+      "on_screen_text": "Last time on Pocket Fables...",
+      "pip_on_camera": true,
+      "seconds": 5
+    },
+    {
+      "n": 2,
+      "narration": "It's so dark, I can't even see my own tail! Hold the rope tight, Ma. Don't worry. Let's think!",
+      "visuals": "Pip and Ma at the start of the dim, gently swaying bridge, holding the rope rail. Pip taps his head thinking.",
+      "on_screen_text": "",
+      "pip_on_camera": false,
+      "seconds": 6
+    },
+    {
+      "n": 3,
+      "narration": "Can you help us? What should Ma paint? A big rock... or a gentle wind?",
+      "visuals": "Ma raises his golden brush, looking at the camera. Two little thought bubbles appear: a rock and a swirl of wind. Hold 2 seconds for viewers to answer.",
+      "on_screen_text": "A rock 🪨 or a wind? 🌬️",
+      "pip_on_camera": false,
+      "seconds": 5
+    },
+    {
+      "n": 4,
+      "narration": "A wind? That's what I'd pick too! Good thinking! Ma paints a gentle breeze, blowing the other way. Swoosh!",
+      "visuals": "Ma paints a swirly golden breeze in the air; it glows and comes to life, flowing up toward the sky in the opposite direction.",
+      "on_screen_text": "",
+      "pip_on_camera": false,
+      "seconds": 6
+    },
+    {
+      "n": 5,
+      "narration": "Then I reach into my pocket... my paper crane! Fly, little crane! Bring the lanterns home!",
+      "visuals": "Pip pulls out the origami crane; it unfolds its paper wings, glows softly and flies up riding Ma's painted breeze.",
+      "on_screen_text": "",
+      "pip_on_camera": false,
+      "seconds": 5
+    },
+    {
+      "n": 6,
+      "narration": "Look! One by one, the lanterns follow the crane, floating back like little ducklings following their mom.",
+      "visuals": "In the night sky, the paper crane leads a line of glowing lanterns back down toward the bridge, one after another.",
+      "on_screen_text": "",
+      "pip_on_camera": false,
+      "seconds": 5
+    },
+    {
+      "n": 7,
+      "narration": "The bridge glows again, and it's not wiggly anymore! We cross together, step by step. We made it!",
+      "visuals": "The lanterns settle back onto the bridge, lighting it warmly; the bridge is steady now. Pip and Ma walk across hand in paw and jump down on the other side into the festival.",
+      "on_screen_text": "",
+      "pip_on_camera": false,
+      "seconds": 6
+    },
+    {
+      "n": 8,
+      "narration": "Everyone cheers, and a little girl gives us a big smile and a bow. In Japan, when someone helps you, you say arigatō. That means thank you!",
+      "visuals": "A cheerful festival crowd of friendly townsfolk and kids waves and claps; a little girl bows and smiles at Pip and Ma. The crane perches on Ma's shoulder.",
+      "on_screen_text": "arigatō = thank you",
+      "pip_on_camera": false,
+      "seconds": 8
+    },
+    {
+      "n": 9,
+      "narration": "Remember, we're braver when we help each other. Arigatō for watching! See you on our next adventure!",
+      "visuals": "Pip on the glowing bridge waves goodbye to the camera with Ma beside him; fireworks bloom softly in the sky.",
+      "on_screen_text": "Word of the day: arigatō 🙏",
+      "pip_on_camera": true,
+      "seconds": 5
+    }
+  ],
+  "youtube": {
+    "title": "The Lantern Bridge 🏮 Part 2 | Pip & Ma in Japan | Pocket Fables",
+    "description": "The Lantern Bridge has gone dark! Can Ma Liang's magic paintbrush and Pip's paper crane bring the lanterns home? Help them choose what to paint, and learn how to say thank you in Japanese!\n\nWatch Part 1 first on the channel.\n\nLesson: we're braver when we help each other.\n\nNarration voice is AI-generated.\n\n#kidsstories #japan #pocketfables #storiesforkids",
+    "tags": [
+      "Pocket Fables",
+      "Pip and Ma",
+      "Japan for kids",
+      "arigato",
+      "thank you in Japanese",
+      "kids adventure story",
+      "stories for kids",
+      "Part 2"
+    ],
+    "made_for_kids": true
+  }
+}
