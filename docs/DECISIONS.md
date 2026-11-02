@@ -216,3 +216,10 @@ Thomas approved video 139 but found the voice machine-like and asked for four ch
 - The spoken-word target is now 160–210 words (it was still 130–150, from before the voice pace was measured).
 - `scripts.lane` had a CHECK, so the table-rebuild migration that widened `videos` now handles any table and rebuilds `scripts` once, keeping ids and fact checks (live DB: 201 scripts and 2688 fact checks kept).
 - The ep02 sample ("The Lantern Bridge") is videos 147 (Part 1) and 148 (Part 2) in Scripts to review. "Narration voice is AI-generated." was added to both descriptions (required on every channel).
+
+## 2026-11-01: Pip & Ma Adventures, step 2 (pairs, pauses, posting)
+- **Posting (Thomas's choice):** approving Part 1's video uploads it public. Approving Part 2's uploads it private with YouTube's `publishAt` set 24 h after Part 1 (`FABLES.partGapHours`), so YouTube publishes it by itself. There's still no Pocket Fables scheduler or `postTimes`. Part 2 refuses to upload before Part 1. If Part 1 has been up a day already, Part 2 just goes public. Both parts go in a "Pip & Ma Adventures" playlist. `posts.publish_at` records the time and the review site shows "Scheduled".
+- **Viewer-question pauses (Thomas's choice):** split the voiceover instead of trusting a pause tag. `fables:render voiceovers` lists the exact pieces. In an adventure the story is split after each two-choice question, and `plan` takes one `--story` timing per piece and holds the question scene 2 s longer in silence (`questionPauseSeconds`). This costs about 1 extra voiceover credit per part.
+- **Pairs render together:** `fables:render start` refuses either part until both are approved in the review site. The review site shows both parts side by side and warns when only one is approved.
+- **Ma Liang** gets a saved Everygen character (`maCharacterId`, made at the first adventure render, like Pip). Part 2 reuses Part 1's character and frames.
+- **Credits:** a pair is roughly two renders (about 120–140 credits at 142's rates, minus what Part 2 reuses). 25 credits are left until 2026-11-30, so ep02 can't render on the current balance.

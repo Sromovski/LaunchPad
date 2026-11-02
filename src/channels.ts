@@ -38,6 +38,13 @@ export const FABLES = {
     title: 'World Folktales with Pip',
     description: 'Folktales and fables from around the world, retold in about a minute by Pip the fox. Narration voice is AI-generated.',
   },
+  /** Two-part "Pip & Ma Adventures" episodes go here instead (channels/fables/CLAUDE.md §2a). */
+  adventurePlaylist: {
+    title: 'Pip & Ma Adventures',
+    description: 'Pip the fox and his best friend Ma Liang, with his magic paintbrush, visit a new country in every two-part adventure. Narration voice is AI-generated.',
+  },
+  /** Part 2 of an episode goes public this long after Part 1 (YouTube schedules it; there's no local scheduler). */
+  partGapHours: 24,
   /** Everygen voice id. Back to `everygen`, the voice of video 139 (Thomas, 2026-11-01); Arabella was tried on video 142. */
   everygenVoice: 'everygen',
   brand: { accent: '#E8742A' }, // Pip's fox orange, from channels/fables/art/banner-source.html
@@ -64,6 +71,12 @@ export const FABLES = {
      */
     voiceSpeed: 1.0,
     /**
+     * Quiet seconds held after a two-part adventure's viewer question so kids can answer
+     * (channels/fables/CLAUDE.md §2a). TTS never pauses on its own, so the story voiceover is
+     * split after the question and the plan holds the picture this long (Thomas, 2026-11-01).
+     */
+    questionPauseSeconds: 2,
+    /**
      * Spoken words per second of `everygenVoice` at `voiceSpeed`, so the review site can warn
      * when a script won't land in 45–65 s. Measured on the first render with a voice
      * (the `everygen` voice at 1.0, video 139: 151 words in 42.4 s = 3.56; Arabella at 1.0,
@@ -72,6 +85,12 @@ export const FABLES = {
     wordsPerSecond: 3.56 as number | null,
     /** Saved Everygen character "Pip (Pocket Fables)", made for video 139. Reuse it: Pip looks the same in every video. */
     pipCharacterId: 'cmvwtswdm000jp002a20oquw6',
+    /**
+     * Ma Liang, Pip's sidekick in every "Pip & Ma Adventures" episode (channels/fables/CLAUDE.md):
+     * saved once, at the first adventure render, then reused like Pip. null = not made yet.
+     */
+    maCharacterId: null as string | null,
+    maSheetUrl: null as string | null,
     /** Pip's character sheet, passed as a reference image when a frame also uses the story's hero character. */
     pipSheetUrl: 'https://media.viewmax.io/users/egJmG9TOyyA4oDHYC2fN4hD2QzOw8TNR/generated/3bb6b27b-1fd8-4c03-b434-dfa3bcaa8c47.jpg',
   },

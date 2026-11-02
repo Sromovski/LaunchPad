@@ -88,7 +88,18 @@ export interface FableScene {
 export interface FableScript {
   video_id: string;
   title: string;
-  lane: 'folktale' | 'bedtime' | 'lesson';
+  lane: 'adventure' | 'folktale' | 'bedtime' | 'lesson';
+  /** Two-part "Pip & Ma Adventures" episode (channels/fables/CLAUDE.md §2a). */
+  episode?: {
+    series: string;
+    pair_id: string;
+    episode: number;
+    part: number;
+    of: number;
+    country: string;
+    word_of_day: { word: string; meaning: string };
+    fact: string;
+  };
   origin: string;
   lesson: string;
   narrator: string;
@@ -126,12 +137,15 @@ export interface FableDetail {
   script_by: string | null;
   script_problem: string | null;
   warnings: string[];
+  /** Two-part episode: every part of the pair (this one included), and a warning if only one is approved. */
+  pair: { pair_id: string; parts: { video_id: number; part: number; status: string; title: string | null }[]; warning: string | null } | null;
   est_seconds: number | null;
   reviews: { id: number; gate: 'script' | 'video'; decision: string; notes: string | null; created_at: string }[];
   has_video: boolean;
   qa: { pass: boolean; checks: { name: string; ok: boolean; detail: string }[] } | null;
   credits: { credits_used: number; balance_after: number | null; created_at: string }[];
-  post: { url: string; visibility: 'public' | 'unlisted' | 'private'; posted_at: string } | null;
+  /** publish_at: a scheduled Part 2 goes public by itself at this time (ISO). */
+  post: { url: string; visibility: 'public' | 'unlisted' | 'private'; posted_at: string; publish_at: string | null } | null;
   /** The review server can upload to the Pocket Fables channel (youtube:auth was done). */
   youtube_connected: boolean;
 }
@@ -153,7 +167,7 @@ export const fablesApi = {
   reviewVideo: (id: number, decision: Decision, notes: string) =>
     call<{ review_id: number }>(`/api/fables/videos/${id}/video-review`, { method: 'POST', body: JSON.stringify({ decision, notes }) }),
   publish: (id: number) =>
-    call<{ url: string; visibility: string; playlist: 'added' | 'failed'; note?: string }>(`/api/fables/videos/${id}/publish`, { method: 'POST', body: '{}' }),
+    call<{ url: string; visibility: string; playlist: 'added' | 'failed'; scheduled_for?: string; note?: string }>(`/api/fables/videos/${id}/publish`, { method: 'POST', body: '{}' }),
   markUploaded: (id: number, url: string) =>
     call<{ url: string }>(`/api/fables/videos/${id}/uploaded`, { method: 'POST', body: JSON.stringify({ url }) }),
   reviewScript: (id: number, decision: Decision, notes: string, version: number | null) =>

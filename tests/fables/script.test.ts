@@ -183,7 +183,7 @@ describe('two-part episodes (Pip & Ma Adventures, §2a)', () => {
   });
 
   it('an adventure needs its episode block, and part can not exceed of', () => {
-    const { episode: _e, ...noEpisode } = P1;
+    const noEpisode = { ...P1, episode: undefined };
     expect(FableScript.safeParse(noEpisode).success).toBe(false);
     expect(FableScript.safeParse({ ...P1, episode: { ...P1.episode, part: 3 } }).success).toBe(false);
     expect(FableScript.safeParse({ ...P1, episode: { ...P1.episode, pair_id: 'Ep 02' } }).success).toBe(false);

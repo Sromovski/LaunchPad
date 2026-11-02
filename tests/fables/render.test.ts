@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
 import { openDb } from '../../src/db/index.js';
-import { saveFableScript } from '../../src/fables/script.js';
-import { assertScriptApproved, creditsSummary, fablesQa, finishRender, logJob, plannedWindows, readRenderLog, recordBalance, sceneWindows, startRender } from '../../src/fables/render.js';
+import { FableScript, saveFableScript } from '../../src/fables/script.js';
+import { assertPairApproved, assertScriptApproved, creditsSummary, fablesQa, finishRender, logJob, plannedWindows, readRenderLog, recordBalance, sceneWindows, startRender, voiceoverPieces } from '../../src/fables/render.js';
 import { ffmpegBin, run } from '../../src/media/probe.js';
 import { decideScript, decideVideo } from '../../src/review/fables.js';
 import { transitionVideo } from '../../src/db/status.js';
@@ -230,5 +230,67 @@ describe('plannedWindows (Pip talks to camera in the first and last scene)', () 
     const plain = scenes.map(({ narration }) => ({ narration }));
     expect(plannedWindows(plain, { total: 12, sentenceEnds: [] }, {}).every((x) => x.audio === 'story')).toBe(true);
     expect(() => plannedWindows(scenes, { total: 10, sentenceEnds: [] }, { outro: 3 })).toThrow(/--intro/);
+  });
+});
+
+describe('two-part episodes: voiceover sections, viewer-question pauses, pair approval', () => {
+  const ep = (f: string) => JSON.parse(readFileSync(new URL(`../../channels/fables/samples/ep02/${f}`, import.meta.url), 'utf8'));
+  const P1 = FableScript.parse(ep('ep02-p1.json'));
+  const P2 = FableScript.parse(ep('ep02-p2.json'));
+
+  it('splits the story voiceover right after each viewer question', () => {
+    expect(voiceoverPieces(P1).map((p) => [p.step, p.scenes, p.pause_after])).toEqual([
+      ['voiceover-intro', [1], 0],
+      ['voiceover-s1', [2, 3, 4, 5], 2],
+      ['voiceover-s2', [6, 7, 8], 0],
+      ['voiceover-outro', [9], 0],
+    ]);
+    expect(voiceoverPieces(P1)[1]!.text).toMatch(/^What's in my pocket today\?.*little pond\?$/);
+    expect(voiceoverPieces(P2).map((p) => [p.step, p.scenes])).toEqual([
+      ['voiceover-intro', [1]],
+      ['voiceover-s1', [2, 3]],
+      ['voiceover-s2', [4, 5, 6, 7, 8]],
+      ['voiceover-outro', [9]],
+    ]);
+  });
+
+  it('a single-part story keeps one story voiceover, even with a question in it', () => {
+    const steps = voiceoverPieces(FableScript.parse(SAMPLE)).map((p) => p.step);
+    expect(steps.filter((s) => s.startsWith('voiceover') && !/intro|outro/.test(s))).toEqual(['voiceover']);
+  });
+
+  it('holds the question scene 2 s longer and starts the next section after the pause', () => {
+    const w = plannedWindows(P1.scenes, [{ total: 20.4, sentenceEnds: [] }, { total: 17.6, sentenceEnds: [] }], { intro: 4.6, outro: 2.9 }, 4, { pauses: true });
+    expect(w).toHaveLength(9);
+    const q = w.find((x) => x.n === 5)!;
+    expect(q.pause_after).toBe(2);
+    expect(q.section).toBe(1);
+    expect(w.find((x) => x.n === 6)!.start).toBe(q.end);
+    expect(q.end).toBe(5 + 21 + 2); // intro 5 s + section 1 rounded up + the pause
+    expect(q.clip_seconds).toBeGreaterThanOrEqual(q.end - q.start);
+    expect(w.filter((x) => x.pause_after).map((x) => x.n)).toEqual([5]);
+    expect(w[w.length - 1]!.end).toBe(5 + 21 + 2 + 18 + 4);
+  });
+
+  it('asks for one story timing per section', () => {
+    expect(() => plannedWindows(P1.scenes, { total: 40, sentenceEnds: [] }, { intro: 4, outro: 3 }, 4, { pauses: true })).toThrow(/2 section\(s\).*2,3,4,5 \| 6,7,8/);
+  });
+
+  it('renders neither part until both are approved', () => {
+    const a = saveFableScript(db, ep('ep02-p1.json'), { createdBy: 'test', runsRoot }).video_id;
+    decideScript(db, a, { decision: 'approved', version: 1 });
+    expect(() => startRender(db, a, 200, runsRoot)).not.toThrow(); // the module itself doesn't know about pairs…
+    expect(() => assertPairApproved(db, a)).toThrow(/no Part 2 yet/);
+    const b = saveFableScript(db, ep('ep02-p2.json'), { createdBy: 'test', runsRoot }).video_id;
+    expect(() => assertPairApproved(db, a)).toThrow(`Part 2 (video ${b}) is script_review`);
+    decideScript(db, b, { decision: 'approved', version: 1 });
+    expect(assertPairApproved(db, b)).toEqual({
+      pair_id: 'ep02',
+      parts: [
+        { video_id: a, part: 1, status: 'rendering' },
+        { video_id: b, part: 2, status: 'script_approved' },
+      ],
+    });
+    expect(assertPairApproved(db, approved())).toBeNull();
   });
 });

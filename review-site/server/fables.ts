@@ -9,7 +9,7 @@ import type Database from 'better-sqlite3';
 import type { Hono } from 'hono';
 import { FABLES } from '../../src/channels.js';
 import { FABLES_STATUSES } from '../../src/db/status.js';
-import { FableScript, scriptWarnings, sceneSeconds } from '../../src/fables/script.js';
+import { FableScript, pairVideos, pairWarning, scriptWarnings, sceneSeconds, type PairPart } from '../../src/fables/script.js';
 import { ReviewError } from '../../src/review/decide.js';
 import { creditsSummary } from '../../src/fables/render.js';
 import { decideScript, decideVideo, markUploaded } from '../../src/review/fables.js';
@@ -82,6 +82,15 @@ export function fablesRoutes(app: Hono, db: Database.Database, runsRoot: string,
       else problem = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
     }
     const versions = (db.prepare('SELECT COUNT(*) AS n FROM scripts WHERE video_id = ?').get(id) as { n: number }).n;
+    // Two-part episode: the other part(s), shown side by side, and a warning when only one is approved.
+    let pair: { pair_id: string; parts: (PairPart & { title: string | null })[]; warning: string | null } | null = null;
+    if (script?.episode) {
+      const parts = pairVideos(db, script.episode.pair_id).map((p) => ({
+        ...p,
+        title: (db.prepare('SELECT title FROM videos WHERE id = ?').get(p.video_id) as { title: string | null }).title,
+      }));
+      pair = { pair_id: script.episode.pair_id, parts, warning: pairWarning(parts, script.episode.of) };
+    }
     return c.json({
       video,
       script,
@@ -90,12 +99,13 @@ export function fablesRoutes(app: Hono, db: Database.Database, runsRoot: string,
       script_by: row?.created_by ?? null,
       script_problem: problem,
       warnings: script ? scriptWarnings(script) : [],
+      pair,
       est_seconds: script ? sceneSeconds(script) : null,
       reviews: db.prepare('SELECT id, gate, decision, notes, created_at FROM reviews WHERE video_id = ? ORDER BY id DESC').all(id),
       has_video: existsSync(resolve(runsRoot, String(id), 'final.mp4')),
       qa: readJson(id, 'qa.json'),
       credits: db.prepare('SELECT credits_used, balance_after, created_at FROM credits WHERE video_id = ? ORDER BY id').all(id),
-      post: db.prepare("SELECT url, visibility, posted_at FROM posts WHERE video_id = ? AND platform = 'youtube'").get(id) ?? null,
+      post: db.prepare("SELECT url, visibility, posted_at, publish_at FROM posts WHERE video_id = ? AND platform = 'youtube'").get(id) ?? null,
       youtube_connected: !!fablesYoutube?.(),
     });
   });

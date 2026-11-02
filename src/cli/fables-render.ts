@@ -3,18 +3,22 @@
  *   fables:render -- balance --remaining <n> [--max 200] [--period-end <ISO>]   save a balance check for the review site
  *   fables:render -- list                                                 script_approved videos + Everygen settings
  *   fables:render -- start  --video <id> --balance <credits now>        script_approved → rendering
+ *   fables:render -- voiceovers --video <id>                            the exact texts to voice, in order (with pauses)
  *   fables:render -- log    --video <id> --step <name> --job <id> [--scene n] [--url https://…]
- *   fables:render -- plan   --video <id> --total <story voiceover s> --sentence-ends "2.1,5.8,…" [--intro <s>] [--outro <s>] [--min 4]
- *     (--intro/--outro: lengths of Pip's own voiceovers when the first/last scene has pip_on_camera)
+ *   fables:render -- plan   --video <id> --story "<s>:<end>,<end>,…" [--story …] [--intro <s>] [--outro <s>] [--min 4]
+ *     (one --story per story voiceover section from `voiceovers`: its length and sentence ends.
+ *      --total <s> --sentence-ends "…" still works for a one-section story.
+ *      --intro/--outro: lengths of Pip's own voiceovers when the first/last scene has pip_on_camera)
  *   fables:render -- finish --video <id> --url <final https mp4> --balance <credits now>
  *   fables:render -- fail   --video <id> --error "…"
- * start refuses unless Thomas approved the newest script version in the review site.
+ * start refuses unless Thomas approved the newest script version in the review site, and for a
+ * two-part episode unless every part of the pair is approved (they render back to back).
  */
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { FABLES } from '../channels.js';
 import { transitionVideo } from '../db/status.js';
-import { finishRender, latestScript, recordBalance, logJob, plannedWindows, readRenderLog, startRender } from '../fables/render.js';
+import { assertPairApproved, finishRender, latestScript, recordBalance, logJob, plannedWindows, readRenderLog, startRender, voiceoverPieces, type StoryTiming } from '../fables/render.js';
 import { SECONDS } from '../fables/script.js';
 import { RUNS_ROOT, args, main, requireVideoId, runDir } from './_lib.js';
 
@@ -27,6 +31,7 @@ const a = args({
   job: { type: 'string' },
   scene: { type: 'string' },
   url: { type: 'string' },
+  story: { type: 'string', multiple: true },
   total: { type: 'string' },
   'sentence-ends': { type: 'string' },
   intro: { type: 'string' },
@@ -43,6 +48,15 @@ const num = (v: string | undefined, name: string) => {
   if (v === undefined || !Number.isFinite(n) || n < 0) throw new Error(`--${name} <number> is required`);
   return n;
 };
+const ends = (s: string) => s.split(',').filter(Boolean).map(Number);
+
+/** "21.4:2.1,5.8,9.0" → one story section's timing. */
+function storyTiming(s: string): StoryTiming {
+  const [total, list = ''] = s.split(':');
+  const t: StoryTiming = { total: num(total, 'story'), sentenceEnds: ends(list) };
+  if (t.sentenceEnds.some((x) => !Number.isFinite(x))) throw new Error(`--story "${s}": sentence ends must be numbers`);
+  return t;
+}
 
 await main(async (db) => {
   if (command === 'balance') {
@@ -57,11 +71,16 @@ await main(async (db) => {
   switch (command) {
     case 'start': {
       const balance = num(a.balance, 'balance');
+      const pair = assertPairApproved(db, id);
       // A re-render reuses the earlier render's paid frames and clips, so it needs far fewer credits.
       const rerender = !!readRenderLog(RUNS_ROOT, id)?.jobs.some((j) => j.step === 'clip');
       const need = rerender ? FABLES.everygen.rerenderMinBalance : FABLES.everygen.minBalance;
       if (balance < need) throw new Error(`only ${balance} Everygen credits left (need ${need}${rerender ? ' for a re-render' : ''}); not starting a render that can't finish`);
-      return startRender(db, id, balance, RUNS_ROOT);
+      return { ...startRender(db, id, balance, RUNS_ROOT), ...(pair ? { pair } : {}) };
+    }
+    case 'voiceovers': {
+      const { script } = latestScript(db, id);
+      return { video_id: id, voice: FABLES.everygenVoice, pieces: voiceoverPieces(script) };
     }
     case 'log': {
       if (!a.step || !a.job) throw new Error('--step and --job are required');
@@ -71,18 +90,19 @@ await main(async (db) => {
     case 'plan': {
       if (!readRenderLog(RUNS_ROOT, id)) throw new Error(`video ${id} has no render log; run start first`);
       const { script } = latestScript(db, id);
-      const ends = (a['sentence-ends'] ?? '').split(',').filter(Boolean).map(Number);
+      const story = a.story?.length ? a.story.map(storyTiming) : [{ total: num(a.total, 'total'), sentenceEnds: ends(a['sentence-ends'] ?? '') }];
       const windows = plannedWindows(
         script.scenes,
-        { total: num(a.total, 'total'), sentenceEnds: ends },
+        story,
         { intro: a.intro ? num(a.intro, 'intro') : undefined, outro: a.outro ? num(a.outro, 'outro') : undefined },
         a.min ? Number(a.min) : FABLES.everygen.minClipSeconds,
+        { pauses: !!script.episode },
       );
       const total = windows[windows.length - 1]!.end;
       if (total < SECONDS.min || total > SECONDS.max) throw new Error(`the plan is ${total} s; a Short must be ${SECONDS.min}–${SECONDS.max} s`);
       const tooLong = windows.filter((w) => w.clip_seconds > FABLES.everygen.maxClipSeconds);
       if (tooLong.length) throw new Error(`scene(s) ${tooLong.map((w) => w.n).join(', ')} need more than ${FABLES.everygen.maxClipSeconds} s; split them in the script`);
-      const plan = windows.map((w, i) => ({ ...w, visuals: script.scenes[i]!.visuals, on_screen_text: script.scenes[i]!.on_screen_text }));
+      const plan = windows.map((w) => ({ ...w, visuals: script.scenes[w.n - 1]!.visuals, on_screen_text: script.scenes[w.n - 1]!.on_screen_text }));
       writeFileSync(resolve(runDir(id), 'scene-plan.json'), `${JSON.stringify({ visual_style: script.visual_style, scenes: plan }, null, 2)}\n`);
       return { video_id: id, total_s: total, clip_seconds: windows.reduce((n, w) => n + w.clip_seconds, 0), scenes: windows };
     }
@@ -93,6 +113,6 @@ await main(async (db) => {
       if (!a.error?.trim()) throw new Error('--error is required');
       return { video_id: id, ...transitionVideo(db, id, 'failed', { error: a.error.trim() }) };
     default:
-      throw new Error(`unknown command "${command}" (balance|list|start|log|plan|finish|fail)`);
+      throw new Error(`unknown command "${command}" (balance|list|start|voiceovers|log|plan|finish|fail)`);
   }
 });

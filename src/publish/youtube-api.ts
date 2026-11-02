@@ -11,7 +11,13 @@ const THUMBNAIL = 'https://www.googleapis.com/upload/youtube/v3/thumbnails/set';
 
 export interface VideoMetadata {
   snippet: { title: string; description: string; tags: string[]; categoryId: string; defaultLanguage: string; defaultAudioLanguage: string };
-  status: { privacyStatus: 'public' | 'unlisted' | 'private'; selfDeclaredMadeForKids: boolean; embeddable: boolean };
+  status: {
+    privacyStatus: 'public' | 'unlisted' | 'private';
+    selfDeclaredMadeForKids: boolean;
+    embeddable: boolean;
+    /** ISO time YouTube makes a private upload public by itself (Pocket Fables Part 2). Needs privacyStatus private. */
+    publishAt?: string;
+  };
 }
 
 export interface UploadResult {

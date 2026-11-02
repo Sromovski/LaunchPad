@@ -10,7 +10,7 @@ import type Database from 'better-sqlite3';
 import { FABLES } from '../channels.js';
 import { transitionVideo } from '../db/status.js';
 import { ffmpegBin, probe, run, type Probe } from '../media/probe.js';
-import { FableScript, SECONDS, countWords } from './script.js';
+import { FableScript, NOT_APPROVED_YET, SECONDS, countWords, pairVideos, type PairPart } from './script.js';
 
 const runFile = (runsRoot: string, id: number, name: string) => resolve(runsRoot, String(id), name);
 
@@ -43,6 +43,25 @@ export function assertScriptApproved(db: Database.Database, id: number): number 
     throw new Error(`video ${id}: no review-site approval of script version ${version} on record; refusing to spend credits`);
   }
   return version;
+}
+
+/**
+ * Two-part episodes are reviewed together and rendered back to back (Part 2 reuses Part 1's
+ * characters and places), so a part only starts when every part of its pair has been approved.
+ * Returns the pair, or null for a single-part script.
+ */
+export function assertPairApproved(db: Database.Database, id: number): { pair_id: string; parts: PairPart[] } | null {
+  const { episode } = latestScript(db, id).script;
+  if (!episode) return null;
+  const parts = pairVideos(db, episode.pair_id);
+  for (let p = 1; p <= episode.of; p++) {
+    const v = parts.find((x) => x.part === p);
+    if (!v) throw new Error(`${episode.pair_id} has no Part ${p} yet; both parts are approved and rendered together`);
+    if (NOT_APPROVED_YET.includes(v.status)) {
+      throw new Error(`${episode.pair_id} Part ${p} (video ${v.video_id}) is ${v.status}; approve both parts in the review site before rendering either`);
+    }
+  }
+  return { pair_id: episode.pair_id, parts };
 }
 
 // ---- Everygen balance (the review site's credits panel) ------------------------------
@@ -177,24 +196,84 @@ export function sceneWindows(narrations: string[], sentenceEnds: number[], total
 export interface PlannedWindow extends SceneWindow {
   /** Which voiceover plays under this scene: Pip's own intro/outro line, or the story narration. */
   audio: 'intro' | 'story' | 'outro';
+  /** Story scenes: which story voiceover section (1, 2…) plays under it. */
+  section?: number;
+  /** Quiet seconds held at the end of this scene so kids can answer its viewer question. */
+  pause_after?: number;
+}
+
+type PlanScene = { narration: string; pip_on_camera?: boolean };
+export interface StoryTiming {
+  total: number;
+  sentenceEnds: number[];
+}
+
+/** A two-choice viewer question ("By the big tree, or by the little pond?"), as episodeWarnings finds it. */
+export const isViewerQuestion = (narration: string) => /\bor\b[^.!]*\?/i.test(narration);
+
+/**
+ * The story scenes (between Pip's intro and outro) split into voiceover sections. In a two-part
+ * adventure each viewer question ends a section, so the render can hold a quiet pause after it
+ * (TTS never pauses on its own). Other scripts have one section.
+ */
+export function storySections(scenes: PlanScene[], pauses: boolean): number[][] {
+  const hasIntro = !!scenes[0]?.pip_on_camera;
+  const hasOutro = scenes.length > 1 && !!scenes[scenes.length - 1]?.pip_on_camera;
+  const first = hasIntro ? 1 : 0;
+  const last = hasOutro ? scenes.length - 2 : scenes.length - 1;
+  const sections: number[][] = [[]];
+  for (let i = first; i <= last; i++) {
+    sections[sections.length - 1]!.push(i + 1);
+    if (pauses && i < last && isViewerQuestion(scenes[i]!.narration)) sections.push([]);
+  }
+  return sections;
+}
+
+export interface VoiceoverPiece {
+  /** Render-log step: voiceover-intro, voiceover (one story section) or voiceover-s<k>, voiceover-outro. */
+  step: string;
+  scenes: number[];
+  text: string;
+  /** Quiet seconds the plan holds after this piece (a viewer question). */
+  pause_after: number;
+}
+
+/** Exactly what to voice, in order, so the skill never joins narration by hand. */
+export function voiceoverPieces(script: Pick<FableScript, 'scenes' | 'episode'>, pauseSeconds = FABLES.everygen.questionPauseSeconds): VoiceoverPiece[] {
+  const { scenes } = script;
+  const sections = storySections(scenes, !!script.episode);
+  const text = (ns: number[]) => ns.map((n) => scenes[n - 1]!.narration).join(' ');
+  const pieces: VoiceoverPiece[] = [];
+  if (scenes[0]?.pip_on_camera) pieces.push({ step: 'voiceover-intro', scenes: [1], text: scenes[0].narration, pause_after: 0 });
+  sections.forEach((ns, k) => {
+    const endsOnQuestion = !!script.episode && isViewerQuestion(scenes[ns[ns.length - 1]! - 1]!.narration);
+    pieces.push({ step: sections.length === 1 ? 'voiceover' : `voiceover-s${k + 1}`, scenes: ns, text: text(ns), pause_after: endsOnQuestion ? pauseSeconds : 0 });
+  });
+  const lastScene = scenes[scenes.length - 1]!;
+  if (scenes.length > 1 && lastScene.pip_on_camera) pieces.push({ step: 'voiceover-outro', scenes: [scenes.length], text: lastScene.narration, pause_after: 0 });
+  return pieces;
 }
 
 /**
  * Scene windows when Pip talks to camera in the first and/or last scene. Those scenes get
  * their own short voiceover (it drives the clip's mouth movement and plays over it), and the
  * story voiceover covers the scenes in between. A small breath after Pip's line, then the cut.
+ * `story` is one timing per story section (voiceoverPieces); a section that ends on a viewer
+ * question is held `pauseSeconds` longer, silent, before the next one starts.
  */
 export function plannedWindows(
-  scenes: { narration: string; pip_on_camera?: boolean }[],
-  story: { total: number; sentenceEnds: number[] },
+  scenes: PlanScene[],
+  story: StoryTiming | StoryTiming[],
   pip: { intro?: number; outro?: number },
   minClip = 4,
+  opts: { pauses?: boolean; pauseSeconds?: number } = {},
 ): PlannedWindow[] {
   const hasIntro = !!scenes[0]?.pip_on_camera;
   const hasOutro = scenes.length > 1 && !!scenes[scenes.length - 1]?.pip_on_camera;
   if (hasIntro && !pip.intro) throw new Error("scene 1 has Pip talking to camera: pass Pip's intro voiceover length (--intro)");
   if (hasOutro && !pip.outro) throw new Error("the last scene has Pip talking to camera: pass Pip's outro voiceover length (--outro)");
   const pipWindow = (secs: number) => Math.max(minClip, Math.ceil(secs + 0.3));
+  const pauseSeconds = opts.pauseSeconds ?? FABLES.everygen.questionPauseSeconds;
 
   const out: PlannedWindow[] = [];
   let offset = 0;
@@ -203,16 +282,35 @@ export function plannedWindows(
     out.push({ n: 1, start: 0, end: len, clip_seconds: len, audio: 'intro' });
     offset = len;
   }
-  const middle = scenes.slice(hasIntro ? 1 : 0, hasOutro ? -1 : undefined);
-  if (middle.length === 0) throw new Error('no story scenes between Pip’s intro and outro');
-  for (const w of sceneWindows(
-    middle.map((s) => s.narration),
-    story.sentenceEnds,
-    story.total,
-    minClip,
-  )) {
-    out.push({ ...w, n: out.length + 1, start: w.start + offset, end: w.end + offset, audio: 'story' });
+  const sections = storySections(scenes, !!opts.pauses);
+  if (sections[0]!.length === 0) throw new Error('no story scenes between Pip’s intro and outro');
+  const timings = Array.isArray(story) ? story : [story];
+  if (timings.length !== sections.length) {
+    throw new Error(`the story is voiced in ${sections.length} section(s) (scenes ${sections.map((s) => s.join(',')).join(' | ')}); pass one --story timing for each`);
   }
+  sections.forEach((ns, k) => {
+    const windows = sceneWindows(
+      ns.map((n) => scenes[n - 1]!.narration),
+      timings[k]!.sentenceEnds,
+      timings[k]!.total,
+      minClip,
+    );
+    windows.forEach((w, i) => {
+      const n = ns[i]!;
+      const pause = opts.pauses && i === windows.length - 1 && isViewerQuestion(scenes[n - 1]!.narration) ? pauseSeconds : 0;
+      const end = w.end + pause;
+      out.push({
+        n,
+        start: w.start + offset,
+        end: end + offset,
+        clip_seconds: Math.max(minClip, Math.ceil(end - w.start)),
+        audio: 'story',
+        section: k + 1,
+        ...(pause ? { pause_after: pause } : {}),
+      });
+    });
+    offset += windows[windows.length - 1]!.end + (opts.pauses && isViewerQuestion(scenes[ns[ns.length - 1]! - 1]!.narration) ? pauseSeconds : 0);
+  });
   if (hasOutro) {
     const start = out[out.length - 1]!.end;
     const len = pipWindow(pip.outro!);

@@ -306,6 +306,7 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
         <h1 className="font-display text-4xl font-bold leading-tight">{script?.title ?? video.topic}</h1>
         {script && <p className="mt-2 max-w-2xl font-display text-2xl font-semibold leading-snug text-fox">“{script.lesson}”</p>}
         {!reviewable && <p className="mt-3 inline-block rounded-lg bg-panel px-3 py-1 font-semibold">{STATUS_LABEL[video.status] ?? video.status}</p>}
+        {script?.episode && data.pair && <EpisodeParts episode={script.episode} pair={data.pair} current={video.id} />}
 
         {data.has_video && (
           <dl className="mt-6 grid max-w-3xl gap-x-6 gap-y-3 sm:grid-cols-[11rem_1fr]" data-testid="fables-render">
@@ -335,6 +336,14 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
         {script && (
           <>
             <dl className="mt-6 grid max-w-3xl gap-x-6 gap-y-3 sm:grid-cols-[11rem_1fr]" data-testid="fables-header">
+              {script.episode && (
+                <>
+                  <Meta term="Fact to check">{script.episode.fact}</Meta>
+                  <Meta term="Word of the day">
+                    <span className="font-semibold">{script.episode.word_of_day.word}</span> = {script.episode.word_of_day.meaning}
+                  </Meta>
+                </>
+              )}
               <Meta term="Lane">{script.lane}</Meta>
               <Meta term="Origin">{script.origin}</Meta>
               <Meta term="Length">
@@ -428,6 +437,47 @@ function ScriptDetail({ id, queue, onDecided }: { id: number; queue: FableSummar
 
       {!data.has_video && <aside className="lg:sticky lg:top-4 lg:self-start">{decision}</aside>}
     </div>
+  );
+}
+
+/** A two-part episode: both parts side by side (this one marked), and a warning when only one is approved. */
+function EpisodeParts({ episode, pair, current }: { episode: NonNullable<FableScript['episode']>; pair: NonNullable<FableDetail['pair']>; current: number }) {
+  const parts = Array.from({ length: episode.of }, (_, i) => i + 1).map((n) => ({ n, v: pair.parts.find((p) => p.part === n) }));
+  return (
+    <section className="mt-5 max-w-3xl" data-testid="fables-episode">
+      <p className="text-muted">
+        {episode.series}, episode {episode.episode}, in {episode.country}
+      </p>
+      <ol className="mt-2 grid gap-3 sm:grid-cols-2">
+        {parts.map(({ n, v }) => {
+          const here = v?.video_id === current;
+          const body = (
+            <>
+              <span className="font-display text-lg font-semibold">Part {n}</span>
+              <span className="block text-sm text-muted">{v ? (STATUS_LABEL[v.status] ?? v.status) : 'Not written yet'}</span>
+              {here && <span className="block text-sm font-semibold text-fox">You're reviewing this part</span>}
+            </>
+          );
+          return (
+            <li key={n} className={`rounded-xl border p-3 ${here ? 'border-fox bg-panel' : 'border-line'}`} data-testid={`fables-part-${n}`}>
+              {v && !here ? (
+                <a href={`#/fables/v/${v.video_id}`} className="block text-ink no-underline">
+                  {body}
+                  <span className="mt-1 block text-sm underline">Open Part {n}</span>
+                </a>
+              ) : (
+                body
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      {pair.warning && (
+        <p className="mt-3 rounded-lg bg-dust-soft p-3" role="status" data-testid="fables-pair-warning">
+          {pair.warning}
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -551,7 +601,11 @@ function ScriptDecision({
       if (gate === 'video' && mode === 'approve' && autoUpload) {
         try {
           const r = await fablesApi.publish(id);
-          uploaded = r.visibility === 'public' ? ' Uploaded to YouTube.' : ` Uploaded to YouTube as ${r.visibility}.`;
+          uploaded = r.scheduled_for
+            ? ` Uploaded to YouTube; it goes public by itself on ${new Date(r.scheduled_for).toLocaleString()}.`
+            : r.visibility === 'public'
+              ? ' Uploaded to YouTube.'
+              : ` Uploaded to YouTube as ${r.visibility}.`;
         } catch (e) {
           // Approved either way; the upload can be retried from Ready to upload.
           uploaded = ` The YouTube upload didn't work (${(e as Error).message}); try again from Ready to upload.`;
@@ -724,8 +778,15 @@ function UploadPanel({
         <a href={post.url} target="_blank" rel="noreferrer" className="mt-1 block break-all">
           {post.url}
         </a>
-        {post.visibility !== 'public' && (
-          <p className="mt-2 rounded-lg bg-dust-soft p-2 text-sm">YouTube shows it as {post.visibility}. Make it public in YouTube Studio.</p>
+        {post.publish_at ? (
+          <p className="mt-2 rounded-lg bg-panel p-2 text-sm" data-testid="fables-scheduled">
+            {new Date(post.publish_at) > new Date() ? 'Scheduled: YouTube makes it public by itself on' : 'Scheduled to go public on'}{' '}
+            {new Date(post.publish_at).toLocaleString()}.
+          </p>
+        ) : (
+          post.visibility !== 'public' && (
+            <p className="mt-2 rounded-lg bg-dust-soft p-2 text-sm">YouTube shows it as {post.visibility}. Make it public in YouTube Studio.</p>
+          )
         )}
       </div>
     );

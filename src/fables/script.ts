@@ -327,3 +327,21 @@ export function pairVideos(db: Database.Database, pairId: string): PairPart[] {
     )
     .all(FABLES.key, pairId) as PairPart[];
 }
+
+/** Statuses where Thomas hasn't approved the script yet. */
+export const NOT_APPROVED_YET = ['idea', 'scripted', 'script_review', 'script_changes'];
+
+/**
+ * The review site's pair warning: a missing part, or one part approved while the other isn't
+ * (both render together, so neither starts until both are approved). null when the pair is fine.
+ */
+export function pairWarning(parts: PairPart[], of: number): string | null {
+  const missing = Array.from({ length: of }, (_, i) => i + 1).filter((p) => !parts.some((x) => x.part === p));
+  if (missing.length) return `Part ${missing.join(' and ')} isn't written yet. Both parts are reviewed and rendered together.`;
+  const approved = parts.filter((x) => !NOT_APPROVED_YET.includes(x.status));
+  if (approved.length > 0 && approved.length < parts.length) {
+    const waiting = parts.filter((x) => NOT_APPROVED_YET.includes(x.status)).map((x) => `Part ${x.part}`);
+    return `Only ${approved.map((x) => `Part ${x.part}`).join(' and ')} is approved. Approve ${waiting.join(' and ')} too: neither part renders until both are.`;
+  }
+  return null;
+}

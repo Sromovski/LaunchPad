@@ -121,3 +121,68 @@ describe('POST /api/fables/videos/:id/publish', () => {
     expect(d).toMatchObject({ youtube_connected: true, post: { visibility: 'public' } });
   });
 });
+
+describe('two-part episodes: Part 2 goes public a day after Part 1', () => {
+  const ep = (f: string) => JSON.parse(readFileSync(new URL(`../../channels/fables/samples/ep02/${f}`, import.meta.url), 'utf8'));
+  const approvedPart = (f: string) => {
+    const id = saveFableScript(db, ep(f), { createdBy: 'test', runsRoot }).video_id;
+    db.prepare("UPDATE videos SET status = 'approved' WHERE id = ?").run(id);
+    mkdirSync(join(runsRoot, String(id)), { recursive: true });
+    writeFileSync(join(runsRoot, String(id), 'final.mp4'), 'fake mp4');
+    return id;
+  };
+  /** Records the full upload metadata, and gives each upload its own YouTube id. */
+  function recordingYt() {
+    const metas: Parameters<FablesYouTube['upload']>[1][] = [];
+    const playlists: string[] = [];
+    const yt: FablesYouTube = {
+      channel: async () => ({ id: FABLES.youtubeId, title: 'Pocket Fables' }),
+      upload: async (_b, meta) => {
+        metas.push(meta);
+        return { id: `vid${metas.length}xxxxxxx`, privacyStatus: meta.status.privacyStatus, uploadStatus: 'uploaded' };
+      },
+      findOrCreatePlaylist: async (title) => (playlists.push(title), 'PL2'),
+      addToPlaylist: async () => {},
+    };
+    return { yt, metas, playlists };
+  }
+  const opts = (now: Date) => ({ runsRoot, pendingDir, now });
+
+  it('refuses Part 2 before Part 1 is on YouTube, without touching YouTube', async () => {
+    approvedPart('ep02-p1.json');
+    const p2 = approvedPart('ep02-p2.json');
+    const { yt, metas } = recordingYt();
+    await expect(publishFable(db, p2, yt, opts(new Date()))).rejects.toThrow(/upload ep02 Part 1 \(video \d+\) first/);
+    expect(metas).toEqual([]);
+    expect(db.prepare('SELECT status FROM videos WHERE id = ?').get(p2)).toEqual({ status: 'approved' });
+  });
+
+  it('Part 1 goes public now; Part 2 uploads private with publishAt 24 h after Part 1; both in the adventures playlist', async () => {
+    const p1 = approvedPart('ep02-p1.json');
+    const p2 = approvedPart('ep02-p2.json');
+    const { yt, metas, playlists } = recordingYt();
+    const r1 = await publishFable(db, p1, yt, opts(new Date()));
+    expect(r1).toMatchObject({ visibility: 'public' });
+    expect(r1.scheduled_for).toBeUndefined();
+    db.prepare("UPDATE posts SET posted_at = '2026-11-02 18:00:00' WHERE video_id = ?").run(p1);
+
+    const r2 = await publishFable(db, p2, yt, opts(new Date('2026-11-02T18:05:00Z')));
+    expect(metas[1]!.status).toMatchObject({ privacyStatus: 'private', publishAt: '2026-11-03T18:00:00Z', selfDeclaredMadeForKids: true });
+    expect(r2).toMatchObject({ visibility: 'private', scheduled_for: '2026-11-03T18:00:00Z' });
+    expect(r2.note).toMatch(/public on its own/);
+    expect(db.prepare('SELECT publish_at FROM posts WHERE video_id = ?').get(p2)).toEqual({ publish_at: '2026-11-03T18:00:00Z' });
+    expect(playlists).toEqual(['Pip & Ma Adventures', 'Pip & Ma Adventures']);
+  });
+
+  it('Part 2 goes public straight away when Part 1 has already been up for a day', async () => {
+    const p1 = approvedPart('ep02-p1.json');
+    const p2 = approvedPart('ep02-p2.json');
+    const { yt, metas } = recordingYt();
+    await publishFable(db, p1, yt, opts(new Date()));
+    db.prepare("UPDATE posts SET posted_at = '2026-11-01 08:00:00' WHERE video_id = ?").run(p1);
+    const r2 = await publishFable(db, p2, yt, opts(new Date('2026-11-02T09:00:00Z')));
+    expect(metas[1]!.status.privacyStatus).toBe('public');
+    expect(metas[1]!.status.publishAt).toBeUndefined();
+    expect(r2.scheduled_for).toBeUndefined();
+  });
+});

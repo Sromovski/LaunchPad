@@ -55,8 +55,10 @@ Rules:
 - Original only: no map songs, no sneaky-thief character and no catchphrases borrowed from Dora or any other show.
 - Titles: `<Episode title> <emoji> Part 1 | Pip & Ma in <Country> | Pocket Fables` (Part 2 likewise). Each description names the other part.
 - Review both parts together: Part 2's script is approved with Part 1's. Render them back to back and **reuse Part 1's saved characters and place pictures in Part 2** to save credits.
-- Post Part 1 first and Part 2 the next day. Put both in an "Pip & Ma Adventures" playlist.
-- The review site shows the two parts of a pair side by side and warns if a pair has only one part approved.
+- Post Part 1 first and Part 2 the next day. Put both in a "Pip & Ma Adventures" playlist. How (Thomas, 2026-11-01): approving Part 1's video uploads it public; approving Part 2's uploads it private with YouTube's `publishAt` set `FABLES.partGapHours` (24 h) after Part 1, so YouTube makes it public by itself. No local scheduler, no `postTimes`. Part 2 can't upload before Part 1.
+- Viewer-question pauses: the render splits the story voiceover right after each viewer question and holds the picture `FABLES.everygen.questionPauseSeconds` (2 s) in silence (`fables:render voiceovers` / `plan`).
+- Ma Liang is saved once as an Everygen character (`FABLES.everygen.maCharacterId`) and reused in every episode, like Pip.
+- The review site shows the two parts of a pair side by side and warns if a pair has only one part approved. The render starts neither part until both are approved.
 
 ```json
 {

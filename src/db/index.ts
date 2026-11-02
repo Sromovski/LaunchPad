@@ -44,6 +44,8 @@ function migrate(db: Database.Database) {
   addColumn('posts', 'thumbnail', 'TEXT');
   addColumn('posts', 'thumbnail_note', 'TEXT');
   addColumn('posts', 'thumbnail_at', 'TEXT');
+  // Pocket Fables Part 2 uploads private with YouTube's publishAt (ISO time it goes public by itself).
+  addColumn('posts', 'publish_at', 'TEXT');
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_sources_ref ON sources(video_id, ref)');
   // Pocket Fables (2026-10-31): scripts carry scenes, reviews say which gate.
   addColumn('scripts', 'scenes_json', 'TEXT CHECK (scenes_json IS NULL OR json_valid(scenes_json))');
