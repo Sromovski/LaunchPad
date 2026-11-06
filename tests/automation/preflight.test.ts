@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { QUEUE_CAP, evaluatePreflight, type PreflightFacts } from '../../src/automation/preflight.js';
+import { CHANNEL_VIDEO_CAP, QUEUE_CAP, evaluatePreflight, type PreflightFacts } from '../../src/automation/preflight.js';
 
 const ok = (): PreflightFacts => ({
   inReview: 2,
+  channelTotal: 10,
   tools: [
     { name: 'ffmpeg', ok: true },
     { name: 'whisper', ok: true },
@@ -21,6 +22,13 @@ describe('evaluatePreflight', () => {
     expect(r).toMatchObject({ go: false, outcome: 'skip' });
     expect(r.reasons[0]).toMatch(/queue is full/);
     expect(evaluatePreflight({ ...ok(), inReview: QUEUE_CAP - 1 }).go).toBe(true);
+  });
+
+  it(`skips (not fails) when the channel already has ${CHANNEL_VIDEO_CAP} videos`, () => {
+    const r = evaluatePreflight({ ...ok(), channelTotal: CHANNEL_VIDEO_CAP });
+    expect(r).toMatchObject({ go: false, outcome: 'skip' });
+    expect(r.reasons[0]).toMatch(/paused/);
+    expect(evaluatePreflight({ ...ok(), channelTotal: CHANNEL_VIDEO_CAP - 1 }).go).toBe(true);
   });
 
   it('skips when the backlog is empty', () => {

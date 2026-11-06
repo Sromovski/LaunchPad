@@ -4,9 +4,16 @@
  */
 export const QUEUE_CAP = 6; // Thomas: stop producing when 6 videos are waiting (3 days' worth)
 export const MIN_FREE_BYTES = 2 * 1024 ** 3;
+/**
+ * Thomas (2026-11-06): pause new builds at 60 videos per channel until he says to restart.
+ * To restart, raise this number. Posting isn't affected, so approved videos keep going out.
+ */
+export const CHANNEL_VIDEO_CAP = 60;
 
 export interface PreflightFacts {
   inReview: number;
+  /** The channel's videos that are posted or on their way (see scheduled-run.ts). */
+  channelTotal: number;
   tools: { name: string; ok: boolean }[];
   freeBytes: number | null;
   nextTopic: string | null;
@@ -26,6 +33,7 @@ export function evaluatePreflight(f: PreflightFacts, cap = QUEUE_CAP): Preflight
   if (missing.length) fail.push(`missing tools: ${missing.join(', ')} (run npm run doctor)`);
   if (f.freeBytes !== null && f.freeBytes < MIN_FREE_BYTES) fail.push(`low disk space: ${(f.freeBytes / 1024 ** 3).toFixed(1)} GB free`);
   if (f.inReview >= cap) skip.push(`review queue is full (${f.inReview} waiting, cap ${cap})`);
+  if (f.channelTotal >= CHANNEL_VIDEO_CAP) skip.push(`new builds paused: channel has ${f.channelTotal} videos (cap ${CHANNEL_VIDEO_CAP})`);
   if (!f.nextTopic) skip.push("no open topics left in this channel's TOPICS file");
   if (fail.length) return { go: false, outcome: 'fail', reasons: [...fail, ...skip] };
   if (skip.length) return { go: false, outcome: 'skip', reasons: skip };

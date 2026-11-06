@@ -97,9 +97,17 @@ try {
         | { id: number; title: string | null }
         | undefined);
   const label = revision ? `revise video ${revision.id}: ${revision.title ?? ''}`.trim() : topic;
+  // Posted or on their way. Held-back videos (do_not_post) will never post, so they don't count.
+  const channelTotal = (
+    db
+      .prepare("SELECT COUNT(*) n FROM videos WHERE channel = ? AND do_not_post = 0 AND status IN ('in_review','changes_requested','approved','scheduled','published')")
+      .get(channel.key) as { n: number }
+  ).n;
 
   const pre = evaluatePreflight({
     inReview: revision ? 0 : inReview,
+    // The cap stops new scheduled builds only: a revision adds no video, and --topic is someone asking by hand.
+    channelTotal: revision || a.topic ? 0 : channelTotal,
     tools: [
       { name: 'ffmpeg', ok: !!ffmpegPath() },
       { name: 'ffprobe', ok: !!ffprobePath() },
