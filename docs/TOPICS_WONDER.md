@@ -23,6 +23,10 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] Where do big waves come from? | query: ocean waves — video 96 in review
 - [x] Why does the Pacific Ocean sometimes get extra warm? | query: el nino — video 100 in review
 
+- [ ] What are the ocean's biggest whirlpools? | query: ocean eddies
+- [ ] What is a tsunami? | query: tsunami
+- [ ] What is a mangrove forest? | query: mangrove
+
 ## Volcanoes | playlist: Volcanoes for Kids
 
 - [x] What does a volcano look like from space? | query: volcano eruption from space — video 43 in review
@@ -32,6 +36,12 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 
 - [x] What is an earthquake? | query: earthquake — video 102 in review
 - [x] How tall is the tallest mountain? | query: mount everest — video 104 in review
+
+- [ ] How do mountains grow? | query: himalayas
+- [ ] How was the Grand Canyon made? | query: grand canyon
+- [ ] How did Hawaii get its islands? | query: hawaiian islands
+- [ ] Why do Yellowstone geysers shoot water? | query: yellowstone
+- [ ] What is a landslide? | query: landslide
 
 ## Wild Weather | playlist: Wild Weather for Kids
 
@@ -47,6 +57,12 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] What is a drought? | query: drought — video 114 in review
 - [x] What is a rainbow? | query: rainbow — video 117 in review
 
+- [ ] What is the jet stream? | query: jet stream
+- [ ] What are the highest clouds in the sky? | query: noctilucent clouds
+- [ ] How do we know what the weather will be? | query: weather satellite
+- [ ] What is hail? | query: hail storm
+- [ ] Why do clouds make giant swirls? | query: von karman vortices
+
 ## Ice and Snow | playlist: Ice and Snow for Kids
 
 - [x] What is a glacier? | query: glacier — video 65 in review
@@ -57,6 +73,9 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] How big is Greenland's ice? | query: greenland ice sheet — video 119 in review
 - [x] How do scientists read old ice? | query: ice core — video 121 in review
 - [x] What does snow do for our planet? | query: snow cover — video 123 in review
+
+- [ ] How do scientists fly over the ice? | query: operation icebridge
+- [ ] What is permafrost? | query: permafrost
 
 ## Our Amazing Planet | playlist: Our Wild Planet
 
@@ -72,3 +91,12 @@ Scope: our planet, seen with NASA footage (oceans, volcanoes, weather, ice, the 
 - [x] How does Earth turn green in spring? | query: vegetation seasons earth — video 135 in review
 - [x] How big are the Great Lakes? | query: great lakes — video 137 in review
 - [x] How do sand dunes move? | query: sand dunes — video 140 in review
+
+<!-- Added 2026-11-06 to take the channel to 60 (Thomas). 21 topics for 19 slots: spares cover failures, and the cap stops builds at 60. -->
+
+- [ ] How long is the Nile River? | query: nile river
+- [ ] Why do some farms look like circles from space? | query: center pivot irrigation
+- [ ] What is the ozone layer? | query: ozone layer
+- [ ] What is a salt flat? | query: salt flat
+- [ ] What happened to the Aral Sea? | query: aral sea
+- [ ] What is the deepest lake? | query: lake baikal
