@@ -5,11 +5,20 @@ import { History } from './History';
 import { Detail } from './Detail';
 import { Views } from './Views';
 import { Fables } from './Fables';
-import { fablesApi } from './api';
+import { Clips } from './Clips';
+import { clipsApi, fablesApi } from './api';
 
-type Route = { page: 'queue' } | { page: 'history' } | { page: 'views' } | { page: 'video'; id: number } | { page: 'fables'; id: number | null };
+type Route =
+  | { page: 'queue' }
+  | { page: 'history' }
+  | { page: 'views' }
+  | { page: 'video'; id: number }
+  | { page: 'fables'; id: number | null }
+  | { page: 'clips'; id: number | null };
 
 function parseHash(): Route {
+  const k = /^#\/clips(?:\/v\/(\d+))?/.exec(location.hash);
+  if (k) return { page: 'clips', id: k[1] ? Number(k[1]) : null };
   const f = /^#\/fables(?:\/v\/(\d+))?/.exec(location.hash);
   if (f) return { page: 'fables', id: f[1] ? Number(f[1]) : null };
   const m = /^#\/v\/(\d+)/.exec(location.hash);
@@ -47,6 +56,14 @@ export function App() {
       .catch(() => setFablesCount(null));
   }, []);
   useEffect(loadFablesCount, [loadFablesCount, route]);
+  const [clipsCount, setClipsCount] = useState<number | null>(null);
+  const loadClipsCount = useCallback(() => {
+    clipsApi
+      .counts()
+      .then((r) => setClipsCount((r.counts.script_review ?? 0) + (r.counts.video_review ?? 0) + (r.counts.approved ?? 0)))
+      .catch(() => setClipsCount(null));
+  }, []);
+  useEffect(loadClipsCount, [loadClipsCount, route]);
 
   const pickChannel = (key: string) => {
     setChannel(key);
@@ -102,9 +119,13 @@ export function App() {
               Pocket Fables
               {fablesCount ? <span className="ml-2 rounded-full bg-fox px-2 text-sm font-bold text-bg">{fablesCount}</span> : null}
             </NavLink>
+            <NavLink href="#/clips" active={route.page === 'clips'}>
+              Curious Clips
+              {clipsCount ? <span className="ml-2 rounded-full bg-glow px-2 text-sm font-bold text-bg">{clipsCount}</span> : null}
+            </NavLink>
           </nav>
-          {/* The channel filter is for the NASA channels; Pocket Fables is its own tab. */}
-          {channels.length > 1 && route.page !== 'fables' && (
+          {/* The channel filter is for the NASA channels; Pocket Fables and Curious Clips are their own tabs. */}
+          {channels.length > 1 && route.page !== 'fables' && route.page !== 'clips' && (
             <div className="flex flex-wrap gap-1" role="group" aria-label="Channel" data-testid="channel-filter">
               {[{ key: '', title: 'All channels' }, ...channels].map((c) => (
                 <button
@@ -127,6 +148,7 @@ export function App() {
         {route.page === 'history' && <History channel={channel} />}
         {route.page === 'views' && <Views channel={channel} />}
         {route.page === 'fables' && <Fables id={route.id} onChanged={loadFablesCount} />}
+        {route.page === 'clips' && <Clips id={route.id} onChanged={loadClipsCount} />}
         {route.page === 'video' && <Detail key={route.id} id={route.id} queue={queue ?? []} onDecided={loadQueue} />}
       </main>
     </div>

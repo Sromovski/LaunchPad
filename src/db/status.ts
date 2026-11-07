@@ -49,9 +49,12 @@ export type Status = (typeof NASA_STATUSES)[number] | (typeof FABLES_STATUSES)[n
 /** Every status any channel uses (the videos.status CHECK in schema.sql lists exactly these). */
 export const STATUSES: readonly Status[] = [...new Set<Status>([...NASA_STATUSES, ...FABLES_STATUSES])];
 
-/** Which workflow a channel runs. Anything but `fables` is the NASA one, as before Pocket Fables. */
+/**
+ * Which workflow a channel runs. Curious Clips (`clips`) has the same two gates as Pocket Fables.
+ * Anything else is the NASA one, as before Pocket Fables.
+ */
 export type Workflow = 'nasa' | 'fables';
-export const workflowOf = (channel: string | null | undefined): Workflow => (channel === 'fables' ? 'fables' : 'nasa');
+export const workflowOf = (channel: string | null | undefined): Workflow => (channel === 'fables' || channel === 'clips' ? 'fables' : 'nasa');
 
 export interface TransitionOptions {
   /** videos.channel: picks which workflow's moves apply. Default: NASA. */

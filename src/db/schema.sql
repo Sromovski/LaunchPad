@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS videos (
   topic              TEXT NOT NULL,
   -- Which YouTube channel this video is for (src/channels.ts). Widening either CHECK is
   -- done by src/db/index.ts, which rebuilds this table when a listed value is missing.
-  channel            TEXT NOT NULL DEFAULT 'blast' CHECK (channel IN ('blast','wonder','fables')),
+  channel            TEXT NOT NULL DEFAULT 'blast' CHECK (channel IN ('blast','wonder','fables','clips')),
   -- NASA and Pocket Fables statuses (src/db/status.ts)
   status             TEXT NOT NULL DEFAULT 'idea' CHECK (status IN (
                        'idea','researched','scripted','fact_checked','rendered','qa_passed',

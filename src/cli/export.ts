@@ -44,7 +44,7 @@ function exportOne(db: Database.Database, v: Row, override?: { nasaId: string; a
 await main((db) => {
   const rows = (
     a.all
-      ? db.prepare(`SELECT id, status, title, topic, description, hashtags FROM videos WHERE status IN (${POSTABLE.map(() => '?').join(',')}) AND channel != 'fables' ORDER BY id`).all(...POSTABLE)
+      ? db.prepare(`SELECT id, status, title, topic, description, hashtags FROM videos WHERE status IN (${POSTABLE.map(() => '?').join(',')}) AND channel NOT IN ('fables', 'clips') ORDER BY id`).all(...POSTABLE)
       : db.prepare('SELECT id, status, title, topic, description, hashtags FROM videos WHERE id = ?').all(Number(a.video))
   ) as Row[];
   if (rows.length === 0) throw new Error(a.all ? 'no approved videos' : '--video <id> (approved) or --all is required');

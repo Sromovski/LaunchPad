@@ -17,7 +17,7 @@ export type ChannelKey = (typeof CHANNEL_KEYS)[number];
 export const DEFAULT_CHANNEL: ChannelKey = 'blast';
 
 /** Every value videos.channel may hold (the CHECK in src/db/schema.sql). */
-export const VIDEO_CHANNEL_KEYS = [...CHANNEL_KEYS, 'fables'] as const;
+export const VIDEO_CHANNEL_KEYS = [...CHANNEL_KEYS, 'fables', 'clips'] as const;
 export type VideoChannelKey = (typeof VIDEO_CHANNEL_KEYS)[number];
 
 /**
@@ -96,9 +96,33 @@ export const FABLES = {
   },
 } as const;
 
+/**
+ * Curious Clips (channels/clips/CLAUDE.md): stick figure reels made in the separate
+ * stick-ai-shorts project, reviewed and posted from here. The only channel NOT made for
+ * kids. Deliberately not a `Channel`: no NASA steps, no scheduled builds, no posting job.
+ */
+export const CLIPS = {
+  key: 'clips',
+  title: 'Curious Clips',
+  /** The channel's UC… ID. Empty until Thomas supplies it: sign-in and uploading refuse until then. */
+  youtubeId: '' as string,
+  madeForKids: false,
+  /** Refresh token from `npm run youtube:auth -- --channel clips` (gitignored). */
+  tokenFile: resolve(PROJECT_ROOT, 'data/google', 'token-clips.json'),
+  /** YouTube category 23 = Comedy. */
+  categoryId: '23',
+  /** One video goes public per day, at this local hour (the same afternoon slot as the other channels). */
+  postHour: 16,
+  playlists: {
+    reel: { title: 'The Butter Eye', description: 'One stick figure, five polite insults and one wink. Voices are AI-generated.' },
+    show: { title: 'AI Explained by Stick Figures', description: 'A cast of stick figure AIs explains how AI really works, with jokes. Voices are AI-generated.' },
+  },
+} as const;
+
 /** Display name for any videos.channel value (review-site badges). */
 export function channelTitle(key: string): string {
   if (key === FABLES.key) return FABLES.title;
+  if (key === CLIPS.key) return CLIPS.title;
   return isChannelKey(key) ? CHANNELS[key].title : key;
 }
 

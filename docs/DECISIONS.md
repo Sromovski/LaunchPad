@@ -223,3 +223,12 @@ Thomas approved video 139 but found the voice machine-like and asked for four ch
 - **Pairs render together:** `fables:render start` refuses either part until both are approved in the review site. The review site shows both parts side by side and warns when only one is approved.
 - **Ma Liang** gets a saved Everygen character (`maCharacterId`, made at the first adventure render, like Pip). Part 2 reuses Part 1's character and frames.
 - **Credits:** a pair is roughly two renders (about 120–140 credits at 142's rates, minus what Part 2 reuses). 25 credits are left until 2026-11-30, so ep02 can't render on the current balance.
+
+## 2026-11-07 — Curious Clips, a fourth channel (stick figure reels, not made for kids)
+- **Thomas's decisions:** the channel takes both the insult reels and the AI show, follows the same two gates as Pocket Fables, and posts one video a day.
+- **Not made for kids:** the first channel that isn't. `src/clips/publish.ts` is its own upload path, so the kids' channels' hard-coded `selfDeclaredMadeForKids: true` stays untouched. The channel ID check stops these reaching a kids' channel under the shared Google login.
+- **One a day:** approving uploads private with YouTube's `publishAt` on the next open day at 16:00 local, so approving several at once can't flood the channel. No local posting job, same mechanism as Pocket Fables Part 2.
+- **Videos are made in `stick-ai-shorts`,** not here. `npm run clips:import` copies them in, and it can only land at a gate. The state machine still requires a review-site click to leave one.
+- **One exception to gate 1:** ten videos whose scripts Thomas approved in chat before the tab existed start at Videos to review (`APPROVED_BEFORE_TAB`). New ids can't.
+- **Also fixed:** `export --all` only excluded `fables`, so it would have picked up approved `clips` videos.
+- Backup before the `videos` CHECK rebuild: `data/launchpad.before-clips-2026-11-07.db`.

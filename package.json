@@ -50,6 +50,7 @@
     "youtube:auth": "tsx src/cli/youtube-auth.ts",
     "publish": "tsx src/cli/publish.ts",
     "stats": "tsx src/cli/stats.ts",
+    "clips:import": "tsx src/cli/clips-import.ts",
     "fables:script": "tsx src/cli/fables-script.ts",
     "fables:render": "tsx src/cli/fables-render.ts"
   },

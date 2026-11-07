@@ -177,6 +177,58 @@ export const fablesApi = {
     }),
 };
 
+// ---- Curious Clips (channels/clips/CLAUDE.md) --------------------------------
+
+export interface ClipSummary {
+  id: number;
+  topic: string;
+  title: string | null;
+  status: string;
+  duration_s: number | null;
+  playlist: string | null;
+  version: number | null;
+  youtube_url: string | null;
+  publish_at: string | null;
+}
+
+export interface ClipDraft {
+  title: string;
+  description: string;
+  hashtags: string[];
+  kind: 'reel' | 'show';
+}
+
+export interface ClipDetail {
+  video: { id: number; topic: string; title: string | null; status: string; revision_count: number; duration_s: number | null };
+  script: { kind: string; lines: { speaker?: string; text: string }[] } | null;
+  script_version: number | null;
+  draft: ClipDraft;
+  youtube: { title: string; description: string; tags: string[]; made_for_kids: boolean };
+  reviews: { id: number; gate: 'script' | 'video'; decision: string; notes: string | null; created_at: string }[];
+  has_video: boolean;
+  post: { url: string; visibility: 'public' | 'unlisted' | 'private'; posted_at: string; publish_at: string | null } | null;
+  youtube_connected: boolean;
+  /** When the next approved video would go public (ISO). */
+  next_slot: string;
+}
+
+export const clipsApi = {
+  list: (status: string) => call<{ videos: ClipSummary[] }>(`/api/clips/videos?status=${encodeURIComponent(status)}`),
+  counts: () => call<{ counts: Record<string, number> }>('/api/clips/counts'),
+  detail: (id: number) => call<ClipDetail>(`/api/clips/videos/${id}`),
+  saveDraft: (id: number, d: { title: string; description: string; hashtags: string[] }) =>
+    call<{ ok: true }>(`/api/clips/videos/${id}/draft`, { method: 'PUT', body: JSON.stringify(d) }),
+  reviewVideo: (id: number, decision: Decision, notes: string) =>
+    call<{ review_id: number }>(`/api/clips/videos/${id}/video-review`, { method: 'POST', body: JSON.stringify({ decision, notes }) }),
+  reviewScript: (id: number, decision: Decision, notes: string, version: number | null) =>
+    call<{ review_id: number }>(`/api/clips/videos/${id}/script-review`, {
+      method: 'POST',
+      body: JSON.stringify({ decision, notes, ...(version ? { version } : {}) }),
+    }),
+  publish: (id: number) => call<{ url: string; visibility: string; scheduled_for: string; playlist: 'added' | 'failed' }>(`/api/clips/videos/${id}/publish`, { method: 'POST' }),
+  markUploaded: (id: number, url: string) => call<{ url: string }>(`/api/clips/videos/${id}/uploaded`, { method: 'POST', body: JSON.stringify({ url }) }),
+};
+
 export const STATUS_LABEL: Record<string, string> = {
   script_review: 'Script waiting for review',
   script_approved: 'Script approved, waiting for Everygen',

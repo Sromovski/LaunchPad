@@ -30,11 +30,14 @@ const VIDEO_GATE: Record<z.infer<typeof ScriptReviewInput>['decision'], Status> 
   rejected: 'rejected',
 };
 
+/** Which two-gate channel a decision is for: Pocket Fables, or Curious Clips (same gates). */
+type GateChannel = { key: string; title: string };
+
 /** Gate 2: the rendered video. Changes send the script back through gate 1 (and cost a re-render). */
-export function decideVideo(db: Database.Database, videoId: number, raw: unknown): { review_id: number; state: VideoState } {
+export function decideVideo(db: Database.Database, videoId: number, raw: unknown, channel: GateChannel = FABLES): { review_id: number; state: VideoState } {
   const input = ScriptReviewInput.omit({ version: true }).parse(raw);
   const video = db.prepare('SELECT channel, status FROM videos WHERE id = ?').get(videoId) as { channel: string; status: string } | undefined;
-  if (!video || video.channel !== FABLES.key) throw new ReviewError(`Pocket Fables video ${videoId} not found`, 404);
+  if (!video || video.channel !== channel.key) throw new ReviewError(`${channel.title} video ${videoId} not found`, 404);
   if (video.status !== 'video_review') throw new ReviewError(`video ${videoId} is ${video.status}, not video_review`, 409);
   if (input.decision === 'changes_requested' && !input.notes.trim()) throw new ReviewError('request changes needs notes');
   return db.transaction(() => {
@@ -51,10 +54,10 @@ export function decideVideo(db: Database.Database, videoId: number, raw: unknown
   })();
 }
 
-export function decideScript(db: Database.Database, videoId: number, raw: unknown): { review_id: number; state: VideoState } {
+export function decideScript(db: Database.Database, videoId: number, raw: unknown, channel: GateChannel = FABLES): { review_id: number; state: VideoState } {
   const input = ScriptReviewInput.parse(raw);
   const video = db.prepare('SELECT channel, status FROM videos WHERE id = ?').get(videoId) as { channel: string; status: string } | undefined;
-  if (!video || video.channel !== FABLES.key) throw new ReviewError(`Pocket Fables video ${videoId} not found`, 404);
+  if (!video || video.channel !== channel.key) throw new ReviewError(`${channel.title} video ${videoId} not found`, 404);
   if (video.status !== 'script_review') throw new ReviewError(`video ${videoId} is ${video.status}, not script_review`, 409);
   if (input.decision === 'changes_requested' && !input.notes.trim()) throw new ReviewError('request changes needs notes');
 
@@ -86,10 +89,10 @@ export const UploadedInput = z.object({ url: z.string().trim().min(1, 'paste the
  * Step 4, after Thomas uploads by hand in YouTube Studio: approved → uploaded, with the
  * Short's link saved in `posts` (method 'manual') so it is never recorded twice.
  */
-export function markUploaded(db: Database.Database, videoId: number, raw: unknown): { url: string; state: VideoState } {
+export function markUploaded(db: Database.Database, videoId: number, raw: unknown, channel: GateChannel = FABLES): { url: string; state: VideoState } {
   const input = UploadedInput.parse(raw);
   const video = db.prepare('SELECT channel, status FROM videos WHERE id = ?').get(videoId) as { channel: string; status: string } | undefined;
-  if (!video || video.channel !== FABLES.key) throw new ReviewError(`Pocket Fables video ${videoId} not found`, 404);
+  if (!video || video.channel !== channel.key) throw new ReviewError(`${channel.title} video ${videoId} not found`, 404);
   if (video.status !== 'approved') throw new ReviewError(`video ${videoId} is ${video.status}, not approved`, 409);
   let externalId: string;
   try {
