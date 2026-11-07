@@ -104,8 +104,8 @@ export const FABLES = {
 export const CLIPS = {
   key: 'clips',
   title: 'Curious Clips',
-  /** The channel's UC… ID. Empty until Thomas supplies it: sign-in and uploading refuse until then. */
-  youtubeId: '' as string,
+  /** Checked before every upload, so these can never reach a kids' channel under the shared login. */
+  youtubeId: 'UCbPtvhcYsmVOAngshzpMfjw' as string,
   madeForKids: false,
   /** Refresh token from `npm run youtube:auth -- --channel clips` (gitignored). */
   tokenFile: resolve(PROJECT_ROOT, 'data/google', 'token-clips.json'),

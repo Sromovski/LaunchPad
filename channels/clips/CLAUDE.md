@@ -1,6 +1,6 @@
 # Curious Clips — CLAUDE.md
 
-> Lives at `channels/clips/CLAUDE.md`. Channel name: **Curious Clips**, YouTube Shorts. Channel key **`clips`** (`CLIPS` in `src/channels.ts`).
+> Lives at `channels/clips/CLAUDE.md`. Channel name: **Curious Clips**, YouTube Shorts. Channel key **`clips`** (`CLIPS` in `src/channels.ts`). YouTube channel ID: **`UCbPtvhcYsmVOAngshzpMfjw`**.
 > Fourth channel inside Launchpad. **The only one that is NOT made for kids.** It has stick figure insult reels and the AI show, so its content must never reach the kids' channels, and the kids' rules in the root CLAUDE.md (§1, §6, §7, §11) don't apply to it.
 > The videos are made in a separate project, `C:\Projects\stick\stick-ai-shorts` (Remotion and Kokoro). Launchpad only reviews and posts them. Don't change the `blast`, `wonder` or `fables` pipelines when working here.
 
@@ -40,8 +40,7 @@ The MP4 is copied to `runs/<id>/final.mp4` (gitignored). `APPROVED_BEFORE_TAB` i
 ## 4. Setup Thomas does once
 
 1. YouTube Studio → Settings → Channel → Advanced: audience **No, not made for kids**.
-2. Give Claude the channel's `UC…` ID for `CLIPS.youtubeId`.
-3. `npm run youtube:auth -- --channel clips`, pick Curious Clips. Then restart the review site.
+2. `npm run youtube:auth -- --channel clips`, pick Curious Clips. Then restart the review site.
 
 The same Google Cloud project and login as the other channels (`docs/YOUTUBE_CHANNEL_PLAYBOOK.md`).
 
